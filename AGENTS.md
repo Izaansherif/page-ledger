@@ -1,4 +1,4 @@
-PROJECT: Pagebook. Turns photos of paper notebooks/ledgers into a working mini-CRM for small businesses.
+PROJECT: Page Ledger. Turns photos of paper notebooks/ledgers into a working mini-CRM for small businesses.
 USER: a small business owner in India (clinic, garage, shop, tuition). Not technical. Uses a phone or tablet. Notes may mix English, Hindi and Malayalam. Currency is ₹.
 CONTEXT: built for the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026), Indie track. The AI in the app must run on the Meta Model API.
 

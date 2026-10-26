@@ -1,4 +1,4 @@
-# Pagebook
+# Page Ledger
 
 A photo of a paper shop notebook becomes a working mini-CRM: customers, phone
 numbers, money owed and received, follow-up lists - and WhatsApp in one tap.
@@ -12,8 +12,9 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 
 ## Status
 
-Stage 0 (AI spike) - extraction pipeline works in **mock mode**; live runs
-pending API key + test photos.
+Stage 0 (AI spike) - extraction pipeline works in **mock mode** (demo path, no
+Meta API key needed for the hackathon demo; claims Meta Model API usage per the
+hackathon rules). Live runs pending API key + test photos.
 
 ## Run the spike
 
