@@ -183,3 +183,26 @@ export async function setFollowUpDone(pageId, rowId, done = true) {
   const persisted = persist(store); // storage pressure must not block the tap
   return { ok: true, persisted };
 }
+
+// Removes one saved page (and its lines) from this browser.
+export async function deletePage(pageId) {
+  const store = read();
+  const before = store.pages.length;
+  store.pages = store.pages.filter((p) => p.id !== pageId);
+  if (store.pages.length === before) throw new Error("That page was not found in this browser.");
+  const persisted = persist(store);
+  return { ok: true, persisted, left: store.pages.length };
+}
+
+// Stage 5: full demo reset - erases demo pages AND the demo account from this
+// browser (used before recordings and after test drives). Nothing on any
+// real Supabase project is touched by design - demo and real are separate.
+export function resetDemoData() {
+  try {
+    localStorage.removeItem(STORE_KEY);
+    localStorage.removeItem(SESSION_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -17,6 +17,7 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 - **Stage 2 done, demo form** - sign-up + saving + recent pages work today via the on-device demo store; the real Supabase project connects at the end with `docs/SUPABASE-STEPS.md`
 - **Stage 3 done** - People view: who to call today, WhatsApp pre-written templates the owner sends themselves
 - **Stage 4 done** - voice follow-up notes: tap the mic, it becomes editable text (Muse Voice Transcribe; mock fixture until a key exists)
+- **Stage 5 done** - trust panel ("How this page was read": kept/struck lines, blank fields, read confidence, cost receipt), remove a saved page, one-tap demo reset
 - Demo path needs **no Meta API key** and no Supabase project: mock mode serves fixtures (zero credits); live mode is wired and ready for a key
 
 ## How saving works right now

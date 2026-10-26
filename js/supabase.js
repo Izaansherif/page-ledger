@@ -231,3 +231,24 @@ export async function setFollowUpDone(rowId, done = true) {
   if (!res.ok) throw new Error(`Could not update the follow-up (${res.status}). Try again.`);
   return { ok: true };
 }
+
+// Removes one page and its lines. RLS scopes both tables to the signed-in
+// owner, so a crafted id can only ever delete the owner's own page.
+export async function deletePage(pageId) {
+  await withFreshToken();
+  if (!session?.access) throw new Error("Please sign in first.");
+  const id = encodeURIComponent(pageId);
+  // lines first: harmless if the schema already cascades, safe if it does not
+  const { res: rRows } = await call(`/rest/v1/page_rows?page_id=eq.${id}`, {
+    method: "DELETE",
+    auth: true,
+    extraHeaders: { Prefer: "return=minimal" },
+  });
+  const { res: rPage } = await call(`/rest/v1/pages?id=eq.${id}`, {
+    method: "DELETE",
+    auth: true,
+    extraHeaders: { Prefer: "return=minimal" },
+  });
+  if (!rPage.ok) throw new Error(`Removing the page failed (${rPage.status}). Try again.`);
+  return { ok: true };
+}

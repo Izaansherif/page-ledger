@@ -1230,3 +1230,73 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 @media (prefers-reduced-motion: reduce) {
   .mic-btn--rec::after { animation: none; opacity: 0.35; }
 }
+
+/* ============================================================
+   Stage 5 - grounded read details, page removal, demo reset
+   ============================================================ */
+.readbox {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  overflow: hidden;
+}
+.readbox summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  user-select: none;
+}
+.readbox summary::-webkit-details-marker { display: none; }
+.readbox summary::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-right: 2px solid var(--ink-faint);
+  border-bottom: 2px solid var(--ink-faint);
+  transform: rotate(-45deg);
+  transition: transform 0.18s ease;
+  margin-top: -3px;
+}
+.readbox[open] summary::before { transform: rotate(45deg); margin-top: 1px; }
+.readbox__body { padding: 0 14px 13px; }
+.readbox__grid { display: flex; flex-wrap: wrap; gap: 7px 16px; color: var(--ink-soft); }
+.readbox__grid strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.readbox__tech {
+  margin: 10px 0 0;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.readbox__honest {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 8px 11px;
+}
+
+.recent__del {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-faint);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  margin: -8px -6px -8px 0;
+}
+.recent__del:hover { color: var(--red); border-color: var(--line-strong); }
+.recent__del:disabled { opacity: 0.4; cursor: default; }
+
+.btn--danger:hover { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, transparent); }

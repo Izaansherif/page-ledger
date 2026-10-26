@@ -420,11 +420,76 @@ function renderReview() {
   setBadge();
   renderRows();
   renderWarnings(state.extraction);
+  updateReadbox();
   updateTotals();
   resetSaveUi();
   setStageNotes();
   showView("view-review");
   window.scrollTo(0, 0);
+}
+
+/* --------------------------------------------------- grounded read details */
+// Stage 5: the honesty panel. Counts what the read actually produced - kept
+// lines, struck lines, blank fields, check-flags, page-level notes - plus the
+// technical receipt (model, latency, retries, tokens, cost). Nothing invented:
+// everything here is derived from the extraction object and the server reply.
+function updateReadbox() {
+  const box = $("#readbox");
+  const ex = state.extraction;
+  if (!box || !ex) {
+    if (box) box.hidden = true;
+    return;
+  }
+  const rows = ex.rows ?? [];
+  const kept = rows.filter((r) => !r.struck_out).length;
+  const struck = rows.length - kept;
+
+  const blanks = { name: 0, phone: 0, amount_paid: 0, amount_due: 0 };
+  let confCount = 0;
+  let confSum = 0;
+  let flagsCount = 0;
+  for (const r of rows) {
+    for (const k of Object.keys(blanks)) if (r[k] == null) blanks[k]++;
+    const c = r.confidence ?? {};
+    for (const k of ["name", "phone", "amount_paid", "amount_due", "follow_up_date"]) {
+      if (typeof c[k] === "number") {
+        confCount++;
+        confSum += c[k];
+      }
+    }
+    flagsCount += (r.flags ?? []).length;
+  }
+  const blanksTotal = blanks.name + blanks.phone + blanks.amount_paid + blanks.amount_due;
+  const avg = confCount ? Math.round((confSum / confCount) * 100) : null;
+  const warns = ex.page_warnings ?? [];
+
+  const tech = [
+    state.model ? `model ${state.model}` : null,
+    state.latencyMs != null ? `${(state.latencyMs / 1000).toFixed(1)}s read time` : null,
+    state.retries ? `${state.retries} retr${state.retries === 1 ? "y" : "ies"}` : null,
+    state.usage ? `${state.usage.input} + ${state.usage.output} tokens` : null,
+    state.estCostUSD != null ? `≈ $${state.estCostUSD} this read` : "no charge (demo fixture)",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  $("#readbox-body").innerHTML = `
+    <div class="readbox__grid">
+      <span><strong>${kept}</strong> line${kept === 1 ? "" : "s"} kept for your check</span>
+      ${struck ? `<span><strong>${struck}</strong> struck out and excluded</span>` : ""}
+      ${blanksTotal ? `<span><strong>${blanksTotal}</strong> field${blanksTotal === 1 ? "" : "s"} left blank - not stated (or unclear) on the page; fill any you know</span>` : ""}
+      ${avg != null ? `<span>reading confidence ≈ <strong>${avg}%</strong> over ${confCount} value${confCount === 1 ? "" : "s"}</span>` : ""}
+      ${flagsCount ? `<span><strong>${flagsCount}</strong> check-flag${flagsCount === 1 ? "" : "s"} marked for your eye</span>` : ""}
+      ${warns.length ? `<span><strong>${warns.length}</strong> whole-page note${warns.length === 1 ? "" : "s"} (in the yellow box)</span>` : ""}
+    </div>
+    <p class="readbox__tech">${escapeHTML(tech)}</p>
+    <p class="readbox__honest">${
+      state.demoMode
+        ? "Demo read: a saved sample page stands in for your photo so no credits are spent - its rows are stand-in data, clearly re-labeled, never invented live."
+        : "Nothing is invented: a field stays empty unless the page really shows it, and every line waits for your check before saving."
+    }</p>
+  `;
+  box.hidden = false;
 }
 
 /* ---------------------------------------------------------- extraction */
@@ -555,6 +620,7 @@ async function showSignedInHome() {
   setPeopleVisible();
   const sess = auth().getSession();
   $("#account-email").textContent = signedIn ? `${sess?.user?.email || ""}${state.demoStore ? " · demo" : ""}` : "";
+  $("#btn-reset-demo").hidden = !state.demoStore;
   setStageNotes();
   showView("view-upload");
   if (signedIn) await loadRecent();
@@ -646,6 +712,9 @@ async function loadRecent() {
         return `<div class="recent__row">
           <span class="recent__when">${escapeAttr(day)}</span>
           <span class="recent__stats">${people} ${people === 1 ? "person" : "people"} · ${rows.length} lines · due ₹${fmtMoney(due)}</span>
+          <button class="recent__del" data-del-page="${escapeAttr(p.id)}" type="button" title="Remove this page from your ledger" aria-label="Remove this page from your ledger">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2m-7 0 1 13h8l1-13M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
         </div>`;
       })
       .join("");
@@ -1149,6 +1218,38 @@ function wire() {
     if (!sheetPerson?.waOk) return;
     const text = encodeURIComponent($("#msg-text").value);
     location.href = `https://wa.me/${sheetPerson.digits}?text=${text}`;
+  };
+
+  /* ---------------- Stage 5: honesty panel + page removal + demo reset ---------------- */
+  $("#recent-list").addEventListener("click", async (e) => {
+    const del = e.target.closest("button[data-del-page]");
+    if (!del) return;
+    if (
+      !confirm(
+        "Remove this page from your ledger? The notebook itself is untouched, and this cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    del.disabled = true;
+    try {
+      await auth().deletePage(del.dataset.delPage);
+      await loadRecent();
+    } catch {
+      del.disabled = false;
+    }
+  });
+
+  $("#btn-reset-demo").onclick = () => {
+    if (
+      !confirm(
+        "Erase every demo page AND the demo account from this browser? Nothing on any real project is touched, and this cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    demo.resetDemoData();
+    location.reload();
   };
 }
 
