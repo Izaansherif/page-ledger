@@ -1,6 +1,6 @@
 PROJECT: Page Ledger. Turns photos of paper notebooks/ledgers into a working mini-CRM for small businesses.
 USER: a small business owner in India (clinic, garage, shop, tuition). Not technical. Uses a phone or tablet. Notes may mix English, Hindi and Malayalam. Currency is ₹.
-CONTEXT: built for the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026), Indie track. The AI in the app must run on the Meta Model API.
+CONTEXT: built for the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026), Indie Developer track, solo participant. The AI in the app must run on the Meta Model API. Building period Oct 27–Nov 4; submission due Wed Nov 4, 9:00 PM ET via the CV platform; requires a public repo, public live URL, and a 3-minute demo video.
 
 STACK (do not add anything else without asking me):
 - Plain HTML/CSS/JS with ES modules. No framework, no build step unless essential.
