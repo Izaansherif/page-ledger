@@ -1,0 +1,14 @@
+{
+  "name": "pagebook",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pagebook - a photo of a paper shop notebook becomes a working mini-CRM (Meta Global AI Developer Hackathon)",
+  "scripts": {
+    "spike": "node scripts/spike-extract.js",
+    "check": "node scripts/run-checks.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

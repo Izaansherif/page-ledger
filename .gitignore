@@ -1,0 +1,24 @@
+# secrets
+.env
+.env.local
+
+# dependencies (project has zero, but just in case)
+node_modules/
+
+# raw AI responses and private fixtures - never commit
+fixtures/private/
+
+# test photos stay local-only; fake demo pages for judges live in fixtures/demo-pages later
+test-pages/*.jpg
+test-pages/*.jpeg
+test-pages/*.png
+test-pages/*.webp
+test-pages/*.heic
+test-pages/*.heif
+
+# netlify local state
+.netlify/
+
+# OS / editor noise
+Thumbs.db
+.DS_Store
