@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Page Ledger - your notebook becomes your CRM</title>
   <meta name="description" content="Photograph a page of your paper notebook. Page Ledger turns it into customers, dues and follow-ups. Check every line before it is kept." />
-  <meta name="theme-color" content="#f7f5f0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z' fill='%23fff' opacity='.92'/%3E%3Cpath d='M13 12h7M13 16h7M13 20h4' stroke='%230f766e' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E" />
 </head>
@@ -14,7 +16,7 @@
     <div class="appbar__inner">
       <a class="brand" href="/" id="brand">
         <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" width="22" height="22"><rect width="32" height="32" rx="7" fill="currentColor" opacity="0.12"/><path d="M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z" fill="currentColor"/><path d="M13 12h7M13 16h7M13 20h4" stroke="var(--paper)" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 32 32" width="22" height="22"><rect width="32" height="32" rx="7" fill="currentColor" opacity="0.12"/><link d="M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z" fill="currentColor"/><path d="M13 12h7M13 16h7M13 20h4" stroke="#f7f5f0" stroke-width="1.6" stroke-linecap="round"/></svg>
         </span>
         Page Ledger
       </a>
@@ -27,7 +29,7 @@
     <section id="view-upload" class="home" aria-labelledby="upload-title">
       <div class="hero">
         <div class="hero__copy">
-          <h1 class="hero-title" id="upload-title">Your shop runs on a notebook.<br/>Now the notebook runs on&nbsp;you.</h1>
+          <h1 class="hero-title" id="upload-title">Your shop runs on a notebook.<br/>Now give it a&nbsp;memory.</h1>
           <p class="hero-sub">
             Photograph any page. Page Ledger reads the customers, the money taken
             and the money owed - and you check every line before anything is kept.
@@ -206,7 +208,12 @@
     <!-- ================================================= loading view -->
     <section id="view-loading" class="panel" hidden>
       <div class="loading" role="status" aria-live="polite">
-        <div class="loading__ring" aria-hidden="true"></div>
+        <div class="scan" aria-hidden="true">
+          <i class="scan__bar" style="top:15px"></i>
+          <i class="scan__bar" style="top:27px"></i>
+          <i class="scan__bar" style="top:39px"></i>
+          <span class="scan__line"></span>
+        </div>
         <p class="loading__title" id="loading-title">Reading your page&hellip;</p>
         <p class="loading__sub" id="loading-phase">Finding the columns&hellip;</p>
       </div>
@@ -264,6 +271,13 @@
     <!-- ================================================= empty state -->
     <template id="tpl-empty">
       <div class="card card--empty">
+        <svg class="empty-art" viewBox="0 0 96 72" aria-hidden="true">
+          <rect x="8" y="10" width="52" height="52" rx="5" fill="var(--surface)" stroke="var(--line-strong)" transform="rotate(-4 34 36)"/>
+          <path d="M16 22h30M16 29h26M16 36h30M16 43h22" stroke="var(--line)" stroke-width="2" stroke-linecap="round" transform="rotate(-4 34 36)"/>
+          <circle cx="64" cy="44" r="16" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.5"/>
+          <path d="M47 59 55 51" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="64" cy="44" r="9" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="3 4"/>
+        </svg>
         <h2 class="card__title">No rows found on this page</h2>
         <p class="card__body">The page may be blurry, tilted, or simply not a customer page. Try a clearer photo - or add rows yourself below.</p>
       </div>

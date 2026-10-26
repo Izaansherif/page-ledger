@@ -221,7 +221,7 @@ function inputHTML(row, key, label, type) {
   </div>`;
 }
 
-function rowCardHTML(row, index) {
+function rowCardHTML(row, index, noAnim = false) {
   const flagsHTML = (row.flags ?? [])
     .filter((fl) => fl !== "struck_out")
     .map((fl) => `<span class="flag">${FLAG_LABELS[fl] ?? escapeAttr(fl)}</span>`)
@@ -240,7 +240,7 @@ function rowCardHTML(row, index) {
     : "";
 
   return `
-  <div class="rowcard${row.struckOut ? " struck" : ""}" role="listitem" data-id="${row.id}">
+  <div class="rowcard${row.struckOut ? " struck" : ""}${noAnim ? " no-anim" : ""}" role="listitem"${noAnim ? "" : ` style="--i:${index}"`} data-id="${row.id}">
     <div class="rowcard__top">
       <span class="rowcard__num">${index + 1}</span>
       <div class="rowcard__flags">${flagsHTML}</div>
@@ -273,7 +273,7 @@ function refreshRow(id, focusKey = null) {
   const keep = focusKey || (active?.dataset?.id === id ? active.dataset.key : null);
   const selStart = active?.selectionStart ?? null;
   const selEnd = active?.selectionEnd ?? null;
-  card.outerHTML = rowCardHTML(state.rows[idx], idx);
+  card.outerHTML = rowCardHTML(state.rows[idx], idx, true);
   if (keep) {
     const el = $(`#rows .rowcard[data-id="${id}"] input[data-key="${keep}"]`);
     if (el) {
@@ -290,7 +290,7 @@ function renderRows() {
     container.innerHTML = $("#tpl-empty").innerHTML;
     return;
   }
-  container.innerHTML = state.rows.map(rowCardHTML).join("");
+  container.innerHTML = state.rows.map((r, i) => rowCardHTML(r, i)).join("");
 }
 
 function renderWarnings(extraction) {
