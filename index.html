@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Page Ledger</title>
+  <meta name="description" content="Photograph a page of your paper notebook - Page Ledger turns it into customers, dues and follow-ups." />
+  <meta name="theme-color" content="#f7f5f0" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z' fill='%23fff' opacity='.92'/%3E%3Cpath d='M13 12h7M13 16h7M13 20h4' stroke='%230f766e' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="appbar">
+    <div class="appbar__inner">
+      <a class="brand" href="/" id="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="22" height="22"><rect width="32" height="32" rx="7" fill="currentColor" opacity="0.12"/><path d="M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z" fill="currentColor"/><path d="M13 12h7M13 16h7M13 20h4" stroke="var(--paper)" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </span>
+        Page Ledger
+      </a>
+      <span class="mode-badge" id="mode-badge" hidden>Sample reading</span>
+    </div>
+  </header>
+
+  <main id="view" class="view">
+    <!-- ================================================= upload view -->
+    <section id="view-upload" class="panel" aria-labelledby="upload-title">
+      <h1 class="hero-title" id="upload-title">Photograph a page.</h1>
+      <p class="hero-sub">
+        Page Ledger reads your paper notebook and turns it into customers,
+        money owed and follow-ups. You check every row before it is kept.
+      </p>
+
+      <div class="card card--cta" id="dropzone">
+        <button id="btn-camera" class="btn btn--primary btn--block" type="button">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l.9-1.4A1.5 1.5 0 0 1 9.9 4h4.2a1.5 1.5 0 0 1 1.3.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12.4" r="3.1" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+          Add a notebook page
+        </button>
+        <input id="file-input" type="file" accept="image/*" capture="environment" hidden />
+
+        <div class="rule"><span>or</span></div>
+
+        <button id="btn-sample" class="btn btn--ghost btn--block" type="button">
+          Try a sample page
+          <span class="btn__hint">no credits used</span>
+        </button>
+
+        <p class="dropzone__hint" id="drop-hint">
+          On a computer you can also drag a photo here.
+        </p>
+      </div>
+
+      <div class="tips">
+        <p class="tips__title">For a clean reading</p>
+        <ul class="tips__list">
+          <li>Hold the phone flat, page fills the frame</li>
+          <li>Plenty of light, avoid shadows across lines</li>
+          <li>One page per photo, whole page visible</li>
+        </ul>
+      </div>
+
+      <p class="stage-note">Stage&nbsp;1 preview: pages are read and checked, nothing is saved yet.</p>
+    </section>
+
+    <!-- ================================================= loading view -->
+    <section id="view-loading" class="panel" hidden>
+      <div class="loading" role="status" aria-live="polite">
+        <div class="loading__ring" aria-hidden="true"></div>
+        <p class="loading__title" id="loading-title">Reading your page&hellip;</p>
+        <p class="loading__sub">Matching handwriting line by line. Some cells may stay unsure - you can fix those.</p>
+      </div>
+    </section>
+
+    <!-- ================================================= error view -->
+    <section id="view-error" class="panel" hidden>
+      <div class="card card--error">
+        <h2 class="card__title">Couldn&rsquo;t finish reading</h2>
+        <p class="card__body" id="error-msg">Something went wrong.</p>
+        <p class="card__body card__body--detail" id="error-detail" hidden></p>
+        <div class="card__actions">
+          <button id="btn-retry" class="btn btn--primary" type="button">Try again</button>
+          <button id="btn-error-back" class="btn btn--ghost" type="button">Choose another page</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================= review view -->
+    <section id="view-review" class="panel review-wrap" hidden>
+      <div class="review-head">
+        <div>
+          <h1 class="review-title">Check what was read</h1>
+          <p class="review-sub" id="review-summary">0 rows</p>
+        </div>
+        <div class="review-totals" id="review-totals"></div>
+      </div>
+
+      <div id="warnings" class="warnings" hidden></div>
+
+      <div class="review-grid">
+        <figure class="photo-pane">
+          <button id="btn-zoom" class="photo-thumb" type="button" aria-label="Tap to zoom the original photo">
+            <img id="thumb-img" alt="Original notebook page photo" />
+            <span class="photo-thumb__zoom-tag">Tap to zoom</span>
+          </button>
+          <figcaption class="photo-note">Compare any line with the original before keeping it.</figcaption>
+        </figure>
+
+        <div class="table-pane">
+          <div class="table-cols table-cols--head" aria-hidden="true">
+            <span>Who</span><span>Phone</span><span>Note</span><span>Paid</span><span>Due</span><span>Follow-up</span><span></span>
+          </div>
+          <div id="rows" class="rows" role="list"></div>
+          <button id="btn-add-row" class="btn btn--ghost add-row" type="button">+ Add a row the page missed</button>
+        </div>
+      </div>
+
+      <div class="review-actions">
+        <button id="btn-back" class="btn btn--ghost" type="button">Read another page</button>
+        <p class="stage-note">Stage&nbsp;1 preview: nothing is saved yet - saving arrives in Stage&nbsp;2.</p>
+      </div>
+    </section>
+
+    <!-- ================================================= empty state -->
+    <template id="tpl-empty">
+      <div class="card card--empty">
+        <h2 class="card__title">No rows found on this page</h2>
+        <p class="card__body">The page may be blurry, tilted, or simply not a customer page. Try a clearer photo - or add rows yourself below.</p>
+      </div>
+    </template>
+  </main>
+
+  <!-- zoom overlay -->
+  <div id="zoom-overlay" class="zoom" hidden>
+    <img id="zoom-img" alt="Original notebook page, zoomed" />
+    <button id="btn-zoom-close" class="zoom__close" type="button" aria-label="Close zoom">Close</button>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

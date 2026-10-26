@@ -73,7 +73,7 @@ if (mode === "live") {
   imageMeta = { path: abs, kb: Math.round((fs.statSync(abs).size / 1024) * 10) / 10 };
 }
 
-console.log(`\n=== Pagebook spike - mode: ${mode} ===`);
+console.log(`\n=== Page Ledger spike - mode: ${mode} ===`);
 console.log(`System prompt BASE_DATE: ${baseDate}`);
 console.log(`Prompt characters: ${buildExtractionSystemPrompt(baseDate).length}`);
 

@@ -1,0 +1,23 @@
+# Netlify configuration for Page Ledger
+# Same function files that dev-server.js runs locally.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Netlify must bundle the mock fixtures with the functions so AI_MODE=mock
+# works in production (demo mode for judges).
+[functions]
+  included_files = ["fixtures/**"]
+
+[[redirects]]
+  from = "/extract"
+  to = "/.netlify/functions/extract"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
