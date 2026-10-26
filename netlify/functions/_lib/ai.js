@@ -48,6 +48,15 @@ export function getAiMode() {
   return AI_CONFIG.mode;
 }
 
+// muse-voice-transcribe-1.0: USD 0.18 per hour of processed audio
+// (docs/speech-to-text, read 2026-10-26).
+const TRANSCRIBE_USD_PER_HOUR = 0.18;
+
+export function estimateTranscribeCostUSD(audioDurationMs) {
+  if (!Number.isFinite(audioDurationMs) || audioDurationMs <= 0) return null;
+  return Math.round(((audioDurationMs / 3_600_000) * TRANSCRIBE_USD_PER_HOUR) * 1e6) / 1e6;
+}
+
 // ---------------------------------------------------------------- callModel
 /**
  * One door to the model.
@@ -190,7 +199,124 @@ export function estimateCostUSD(usage) {
   return Math.round(cost * 1e6) / 1e6; // keep 6 decimals (fractions of a cent)
 }
 
-// ------------------------------------------------------------- extractPage
+// ------------------------------------------------- transcribeAudio (Stage 4)
+/**
+ * Voice notes -> transcript text via Muse Voice Transcribe.
+ * Facts read from https://dev.meta.ai/docs/speech-to-text on 2026-10-26:
+ *   - File endpoint: POST {baseUrl}/asr/transcribe (baseUrl ends in /v1)
+ *   - multipart/form-data parts: "request" (JSON, application/json) and
+ *     "audio" (RIFF/WAVE, mono 16-bit PCM at 16 or 24 kHz)
+ *   - request settings: { mode, model, audioEncoding, languageBias?, keywords? }
+ *   - Auth: "Authorization: Bearer <key>" (only the WebSocket ignores the header)
+ *   - JSON response: { sessionId, transcript, audioDurationMs, turns[] }
+ *   - mode PUSH_TO_TALK returns one complete transcript, turns empty
+ *   - caps: body 32 MB, audio 10 min; rate limits -> 429
+ * Push-to-talk fits the mic-button UX. Returns { transcript, audioDurationMs,
+ * turns, usage: { audioSeconds }, latencyMs, model, retries }.
+ */
+export async function transcribeAudio({ wavBase64, fixture = "voice/note" }) {
+  const t0 = Date.now();
+
+  const validShape = (parsed) =>
+    parsed &&
+    typeof parsed.transcript === "string" &&
+    parsed.transcript.trim().length > 0 &&
+    parsed.transcript.length <= 4000 &&
+    Array.isArray(parsed.turns ?? []);
+
+  if (AI_CONFIG.mode === "mock") {
+    const file = path.join(REPO_ROOT, "fixtures", `${fixture}.json`);
+    let parsed;
+    try {
+      parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+    } catch (e) {
+      throw new Error(`Mock fixture "${fixture}" could not be read (${file}): ${e.message}`);
+    }
+    if (!validShape(parsed)) throw new Error(`Mock fixture "${fixture}" has no usable transcript.`);
+    return {
+      transcript: parsed.transcript,
+      audioDurationMs: parsed.audioDurationMs ?? null,
+      turns: parsed.turns ?? [],
+      usage: parsed.audioDurationMs ? { audioSeconds: Math.floor(parsed.audioDurationMs / 1000) } : null,
+      latencyMs: Date.now() - t0,
+      model: "mock-fixture",
+      retries: 0,
+    };
+  }
+
+  // ---- live (docs-verified request shape) ----
+  if (!AI_CONFIG.apiKey) {
+    throw new Error(
+      "META_API_KEY is missing. Put it in .env (gitignored) or Netlify env vars, with AI_MODE=live.",
+    );
+  }
+  let wav = null;
+  if (wavBase64) {
+    try {
+      wav = Buffer.from(wavBase64, "base64");
+    } catch {
+      wav = null;
+    }
+  }
+  if (!wav || wav.length < 44 || wav.toString("ascii", 0, 4) !== "RIFF") {
+    throw new Error("The recording did not arrive as a WAV file. Tap the mic again and speak once more.");
+  }
+
+  const requestPart = {
+    mode: "PUSH_TO_TALK",
+    model: AI_CONFIG.models.transcribe,
+    audioEncoding: "WAV",
+    // the shop's languages - biasing only, never forced (docs/speech-to-text)
+    languageBias: ["English", "Hindi", "Malayalam"],
+  };
+
+  const attempt = async () => {
+    const fd = new FormData();
+    fd.append("request", new Blob([JSON.stringify(requestPart)], { type: "application/json" }));
+    fd.append("audio", new Blob([wav], { type: "audio/wav" }), "note.wav");
+    return fetch(`${AI_CONFIG.baseUrl}/asr/transcribe?sessionId=pl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${AI_CONFIG.apiKey}` },
+      body: fd,
+      signal: AbortSignal.timeout(120_000),
+    });
+  };
+
+  let res = await attempt();
+  let retries = 0;
+  if ((!res.ok && (res.status >= 500 || res.status === 429)) || (res.ok && res.status === 204)) {
+    retries = 1; // rule 4: retry once on busy/server trouble
+    res = await attempt();
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    const err = new Error(`Meta ASR error ${res.status}: ${text.slice(0, 400)}`);
+    err.status = res.status;
+    throw err;
+  }
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+  if (!validShape(data) /* sessionId is optional */) {
+    const err = new Error("The transcript came back unreadable despite a valid response.");
+    err.status = 502;
+    throw err;
+  }
+  return {
+    transcript: data.transcript,
+    audioDurationMs: data.audioDurationMs ?? wav.length / (24_000 * 2) * 1000,
+    turns: data.turns ?? [],
+    usage: data.audioDurationMs ? { audioSeconds: Math.floor(data.audioDurationMs / 1000) } : null,
+    latencyMs: Date.now() - t0,
+    model: AI_CONFIG.models.transcribe,
+    retries,
+  };
+}
+
+// ---------------------------------------------------------------- extractPage
 /**
  * The one path for notebook-page extraction (spike script now, /extract
  * Netlify function from Stage 1, mock and live).

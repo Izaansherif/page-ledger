@@ -82,7 +82,7 @@ function serveStatic(req, res, pathname) {
   });
 }
 
-const FUNCTIONS = new Set(["extract", "config"]);
+const FUNCTIONS = new Set(["extract", "config", "transcribe"]);
 
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, `http://localhost:${PORT}`);

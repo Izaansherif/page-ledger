@@ -6,11 +6,12 @@
 // Stage 1 saves nothing: this screen's job is a trustworthy read + review.
 // ===========================================================================
 import { resizeImageToJpeg } from "./resize.js";
-import { extractPage } from "./api.js";
+import { extractPage, transcribeAudio } from "./api.js";
 import { getConfig } from "./config.js";
 import * as sb from "./supabase.js";
 import * as demo from "./demo-store.js";
 import * as ppl from "./people.js";
+import { MicSession, recordingSupported } from "./record.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -76,6 +77,10 @@ function setBadge() {
 function resetToUpload() {
   state.busy = false;
   state.demoMode = false;
+  micStatus.rowId = null;
+  micStatus.mode = null;
+  micStatus.message = null;
+  mic?.stop({ discard: true }).catch(() => {});
   state.thumbSrc = null;
   state.jpegBlob = null;
   state.savedPageId = null;
@@ -289,6 +294,14 @@ function rowCardHTML(row, index, noAnim = false) {
       <div class="followup-row">
         ${inputHTML(row, "follow", "Follow-up", "date")}
         <label class="followup-confirm"><input type="checkbox" data-act="confirm-follow" data-id="${row.id}" ${row.follow.confirmed ? "checked" : ""}/> Confirm</label>
+        <div class="field followup-note" data-part="followText">
+          <label>Note said</label>
+          <input type="text" data-act="edit" data-id="${row.id}" data-key="followText" value="${escapeAttr(row.follow.text ?? "")}" placeholder="tap the mic and say it" />
+          <span class="hint${micStatusHint(row).isError ? " hint--err" : ""}">${micStatusHint(row).text}</span>
+        </div>
+        <button class="mic-btn${micStatusHint(row).cls}" type="button" data-act="mic" data-id="${row.id}" ${micBtnDisabled(row)} title="Speak a follow-up note (tap again to stop)" aria-label="Speak a follow-up note">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="4" width="6" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 12a6 6 0 0 0 12 0M12 18v3M9.5 21h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
       </div>
       ${rawLine}
     </div>
@@ -296,8 +309,68 @@ function rowCardHTML(row, index, noAnim = false) {
 }
 
 /* re-render one row card in place, restoring focus + caret to the edited input */
-function refreshRow(id, focusKey = null) {
-  const idx = state.rows.findIndex((r) => r.id === id);
+/* ------------------------------------------------------- mic (Stage 4) */
+const micStatus = { rowId: null, mode: null, message: null };
+
+function micStatusHint(row) {
+  if (micStatus.rowId !== row.id) return { text: "speak it or type it", cls: "", isError: false };
+  if (micStatus.mode === "recording") return { text: "listening… tap the mic to stop", cls: " mic-btn--rec", isError: false };
+  if (micStatus.mode === "transcribing") return { text: "checking your voice note…", cls: " mic-btn--busy", isError: false };
+  if (micStatus.mode === "error") return { text: micStatus.message || "The mic did not work - type the note.", cls: " mic-btn--err", isError: true };
+  if (micStatus.mode === "desc") return { text: micStatus.message || "", cls: "", isError: false };
+  return { text: "speak it or type it", cls: "", isError: false };
+}
+
+function micBtnDisabled(row) {
+  return micStatus.rowId && micStatus.rowId !== row.id ? "disabled" : "";
+}
+
+let mic = null;
+
+async function handleMic(rowId) {
+  const row = state.rows.find((r) => r.id === rowId);
+  if (!row) return;
+
+  // second tap on the same row = stop and transcribe
+  if (micStatus.rowId === rowId && micStatus.mode === "recording") {
+    micStatus.mode = "transcribing";
+    refreshRow(rowId);
+    try {
+      const { wavBase64, durationMs } = await mic.stop();
+      const token = auth().getSession()?.access || null;
+      const res = await transcribeAudio({ wavBase64: durationMs > 250 ? wavBase64 : null, token });
+      row.follow.text = res.transcribed;
+      row.follow.edited = true; // it came from the owner's own voice
+      micStatus.rowId = rowId;
+      micStatus.mode = "desc";
+      micStatus.message = res.demoMode ? "Demo transcript filled - edit it to your words." : "Whispered words filled - check and edit.";
+      refreshRow(rowId, "followText");
+    } catch (e) {
+      micStatus.rowId = rowId;
+      micStatus.mode = "error";
+      micStatus.message = e?.message || "The mic did not work - type the note.";
+      refreshRow(rowId);
+    }
+    return;
+  }
+
+  // first tap = start recording
+  if (!mic) mic = new MicSession();
+  try {
+    await mic.start();
+    micStatus.rowId = rowId;
+    micStatus.mode = "recording";
+    micStatus.message = null;
+    refreshRow(rowId);
+  } catch (e) {
+    micStatus.rowId = rowId;
+    micStatus.mode = "error";
+    micStatus.message = e?.message || "The mic did not work - type the note.";
+    refreshRow(rowId);
+  }
+}
+
+function refreshRow(id, focusKey = null) {  const idx = state.rows.findIndex((r) => r.id === id);
   if (idx < 0) return;
   const card = $(`#rows .rowcard[data-id="${id}"]`);
   if (!card) return;
@@ -960,6 +1033,16 @@ function wire() {
       refreshRow(t.dataset.id, "follow");
       return;
     }
+    if (key === "followText") {
+      row.follow.text = t.value;
+      row.follow.edited = true;
+      if (micStatus.rowId === row.id && micStatus.mode === "desc") {
+        micStatus.rowId = null; // owner touched the filled note - quiet down
+        micStatus.mode = null;
+      }
+      refreshRow(t.dataset.id, null);
+      return;
+    }
     const f = row.fields[key];
     if (!f) return;
     if (key === "amountPaid" || key === "amountDue") {
@@ -987,6 +1070,11 @@ function wire() {
   });
 
   rowsEl.addEventListener("click", (e) => {
+    const micBtn = e.target.closest("button[data-act='mic']");
+    if (micBtn) {
+      handleMic(micBtn.dataset.id);
+      return;
+    }
     const rawBtn = e.target.closest("button[data-act='raw']");
     if (rawBtn) {
       const line = document.querySelector(`.rawline[data-rawid="${rawBtn.dataset.id}"]`);
