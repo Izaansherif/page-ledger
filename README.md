@@ -27,3 +27,11 @@ Live mode (burns a few hundredths of a cent per page):
 1. Put your key in `.env` as `META_API_KEY=...` and set `AI_MODE=live`.
 2. Drop 3 notebook photos into `test-pages/`.
 3. `node scripts/spike-extract.js test-pages/page1.jpg`
+
+## Hackathon
+
+Meta Global AI Developer Hackathon (Oct 26–Nov 4 2026), Indie Developer track, solo participant.
+- Problem statement: **Build for Your World** — Meta's models into small-shop paper ledgers in India.
+- Meta models used: `muse-spark-1.3` (image extraction, structured output Q&A, weekly digest), `muse-voice-transcribe-1.0` (voice notes). All calls through `netlify/functions/_lib/ai.js`, `AI_MODE=live|mock`. Demo runs in **mock mode** (fixtures, zero credits); live mode is wired and ready for a key.
+- Submission: public repo ✅ (https://github.com/Izaansherif/page-ledger), public live URL (Netlify, Stage 7), 3-minute demo video (docs/DEMO-SCRIPT.md, Stage 7), due **Wed Nov 4, 9:00 PM ET** via the CV platform.
+- See `docs/SUBMISSION.md` for the full submission checklist and judging-rubric mapping.
