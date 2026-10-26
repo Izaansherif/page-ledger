@@ -15,6 +15,16 @@
   to = "/.netlify/functions/extract"
   status = 200
 
+[[redirects]]
+  from = "/transcribe"
+  to = "/.netlify/functions/transcribe"
+  status = 200
+
+[[redirects]]
+  from = "/ask"
+  to = "/.netlify/functions/ask"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]

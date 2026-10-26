@@ -3,9 +3,14 @@
 **Track:** Indie Developer (solo participant)
 **Repo:** https://github.com/Izaansherif/page-ledger  (public — required by rules)
 **Live URL:** TBD — Netlify deploy in Stage 7
-**Demo video:** TBD — 3-minute video per Stage 7 (docs/DEMO-SCRIPT.md), required primary judging artifact
+**Demo video:** script ready — docs/DEMO-SCRIPT.md (record after Stage 7 deploy)
 **Submission deadline:** Wed Nov 4, 9:00 PM ET via CV platform (Meta Global AI Developer Hackathon – Cerebral Valley)
 **Problem statement:** Build for Your World — brings Meta's models into a domain I know firsthand (small-shop paper ledgers in India), frees up time, and makes something possible that wasn't before (photo-to-CRM in one tap).
+
+## Build status (as of Oct 26)
+
+- Stages 0–6 **done and pushed**: extraction pipeline, upload/review, demo-mode accounts + saving, People view + call-today + WhatsApp templates, voice follow-up notes, grounded trust panel, "Ask my ledger".
+- Remaining: Stage 7 only — Netlify deploy (needs the user's Netlify account + keys), video recording, CV submission.
 
 ## What was built during the hackathon (new work only)
 
@@ -18,9 +23,9 @@ No code, data, or assets are used that we don't have rights to; all demo data an
 | Feature | Meta model | How it's used |
 |---|---|---|
 | Read notebook photo | `muse-spark-1.3` (image understanding) via Meta Model API, Chat Completions + structured output (JSON schema) | Photo → structured JSON rows (name, phone, paid, due, follow-up, flags, confidence) |
-| Ask your business | `muse-spark-1.3` | Question → validated query plan JSON → app runs it on Supabase (RLS applies) → model writes 1–3 sentence answer using only returned rows |
-| Voice notes | `muse-voice-transcribe-1.0` (file endpoint POST /v1/asr/transcribe) + `muse-spark-1.3` | Speech → text → proposed CRM actions (add payment/charge/note/follow-up) → owner confirms before anything is saved |
-| Weekly digest | `muse-spark-1.3` | App computes numbers; model only words them into a paragraph + suggested actions |
+| Ask your business | `muse-spark-1.3` | The app computes a compact figures brief from the owner's own saved pages; the model turns question+brief into a validated JSON answer that cites the figures it used — numbers only from the brief, "data missing" allowed |
+| Voice notes | `muse-voice-transcribe-1.0` (file endpoint POST /v1/asr/transcribe, WAV PCM16 24 kHz) | Owner dictates a follow-up note; transcript lands as EDITABLE text the owner checks before saving — no AI-written message is ever sent |
+| Weekly digest | folded into "Ask my ledger" preset questions (`muse-spark-1.3`) | Same grounded answer path; app computes numbers, model only words them |
 | (Stretch) Row highlight on photo | `muse-spark-1.3` perception grounding (normalized 0–1000 boxes) — cheaper than SAM 3.1; SAM 3.1 available as fallback | Highlight where each row came from on the original photo |
 
 Auth: Bearer token `MODEL_API_KEY` at `https://api.meta.ai/v1`; all AI calls go through `netlify/functions/_lib/ai.js` with `AI_MODE=live|mock`. Demo runs in mock mode (fixtures) so no credits are burned; live mode verified end-to-end in mock and ready for a key.
