@@ -10,6 +10,7 @@ import { extractPage } from "./api.js";
 import { getConfig } from "./config.js";
 import * as sb from "./supabase.js";
 import * as demo from "./demo-store.js";
+import * as ppl from "./people.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -57,7 +58,7 @@ const FLAG_LABELS = {
 };
 
 function showView(name) {
-  for (const v of ["view-upload", "view-loading", "view-error", "view-review", "view-auth"]) {
+  for (const v of ["view-upload", "view-loading", "view-error", "view-review", "view-auth", "view-people"]) {
     $(`#${v}`).hidden = v !== name;
   }
 }
@@ -219,6 +220,21 @@ function hintForFollow(row) {
 
 function escapeAttr(v) {
   return String(v ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function escapeHTML(v) {
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function niceDay(day) {
+  // "2026-10-26" -> "Sun 26 Oct" (kept mild; unknown input passes through)
+  const d = new Date(`${day}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return day || "";
+  return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
 }
 
 function inputHTML(row, key, label, type) {
@@ -463,6 +479,7 @@ async function showSignedInHome() {
   const signedIn = (state.sbConfigured || state.demoStore) && signedInNow();
   $("#recent").hidden = !signedIn;
   $("#account").hidden = !(state.sbConfigured || state.demoStore);
+  setPeopleVisible();
   const sess = auth().getSession();
   $("#account-email").textContent = signedIn ? `${sess?.user?.email || ""}${state.demoStore ? " · demo" : ""}` : "";
   setStageNotes();
@@ -473,6 +490,7 @@ async function showSignedInHome() {
 function showAuth() {
   $("#account").hidden = true;
   $("#btn-save").hidden = true;
+  setPeopleVisible();
   $("#review-note").textContent = state.demoStore
     ? "Sign in to save pages on this device (demo mode)."
     : "Sign in to save pages - your account, your data, protected by rules.";
@@ -541,6 +559,7 @@ async function loadRecent() {
   const list = $("#recent-list");
   try {
     const pages = await auth().listRecentPages();
+    if (pages.length) applyPeopleData(ppl.buildPeople(pages));
     if (!pages.length) {
       list.innerHTML = `<p class="recent__empty">No pages yet - your first photo will appear here.</p>`;
       return;
@@ -562,7 +581,183 @@ async function loadRecent() {
   }
 }
 
-/* ------------------------------------------------------------- saving */
+/* ------------------------------------------------------------------ people */
+const peopleCache = { data: null, byKey: new Map() };
+
+function setPeopleVisible() {
+  const on = !!((state.sbConfigured || state.demoStore) && auth().getSession());
+  $("#btn-people").hidden = !on;
+  $("#tile-people").hidden = !on;
+  if (!on) $("#badge-people").hidden = true;
+}
+
+// Badge + home tile line are driven by the same fold as the People view.
+function applyPeopleData(data) {
+  peopleCache.data = data;
+  peopleCache.byKey = new Map((data.all ?? []).map((p) => [p.key, p]));
+  $("#badge-people").hidden = !(data.totals.toCall > 0);
+  $("#badge-people").textContent = data.totals.toCall;
+  const sub = $("#tile-people-sub");
+  if (data.totals.people === 0) {
+    sub.textContent = "Save a page to begin";
+  } else if (data.totals.toCall > 0) {
+    sub.textContent = `${data.totals.toCall} to call today · ${data.totals.people} people`;
+  } else {
+    sub.textContent = `${data.totals.people} people · due ₹${ppl.fmtRupees(data.totals.due)} · paid ₹${ppl.fmtRupees(data.totals.paid)}`;
+  }
+}
+
+async function loadPeople() {
+  if (!(state.sbConfigured || state.demoStore) || !auth().getSession()) {
+    showAuth();
+    return;
+  }
+  let pages = [];
+  try {
+    pages = await auth().listRecentPages();
+  } catch {
+    $("#people-empty").hidden = false;
+    $("#people-empty").querySelector(".card__body").textContent = "Could not load your people (offline?). Try again in a moment.";
+    return;
+  }
+  const data = ppl.buildPeople(pages);
+  applyPeopleData(data);
+  renderPeople(data, pages.length);
+  showView("view-people");
+  window.scrollTo(0, 0);
+}
+
+function summaryChips(data) {
+  const t = data.totals;
+  const chip = (label, val, cls = "") => `<span class="chip--info ${cls}">${label} <strong>${val}</strong></span>`;
+  return [
+    chip("To call", t.toCall, t.toCall > 0 ? "chip--since" : ""),
+    chip("People", t.people),
+    chip("Due", `₹${ppl.fmtRupees(t.due)}`),
+    chip("Paid in", `₹${ppl.fmtRupees(t.paid)}`),
+  ].join("");
+}
+
+function personCard(p, todayList) {
+  const money = [
+    p.due > 0 ? `<span class="money money--due">due ₹${ppl.fmtRupees(p.due)}</span>` : "",
+    p.paid > 0 ? `<span class="money money--in">in ₹${ppl.fmtRupees(p.paid)}</span>` : "",
+  ].filter(Boolean).join("") || `<span class="money money--none">no amounts yet</span>`;
+
+  const seen = p.pagesCount ? `${p.pagesCount} ${p.pagesCount === 1 ? "page" : "pages"}${p.lastOn ? ` · last ${niceDay(p.lastOn)}` : ""}` : "";
+  const contact = p.waOk ? `+${escapeHTML(p.digits)}` : escapeHTML(String(p.phone ?? "")) || "no phone yet";
+
+  let follow = "";
+  if (p.followUp) {
+    const f = p.followUp;
+    const overdue = f.date < ppl.localToday();
+    const when = f.date === ppl.localToday() ? "today" : niceDay(f.date);
+    const dueTag = overdue ? ' <span class="fc fc--amber">overdue</span>' : "";
+    const doneBtn =
+      f.rowId
+        ? `<button class="pcard__done" data-page-id="${escapeAttr(f.pageId)}" data-row-id="${escapeAttr(f.rowId)}" type="button" aria-label="Mark follow-up done">Done</button>`
+        : "";
+    follow = `<div class="pcard__follow${p.toCall ? " pcard__follow--due" : ""}">
+        <div class="pcard__follow-text">Follow-up · ${escapeHTML(when)}${f.text ? ` · ${escapeHTML(f.text)}` : ""} ${dueTag}</div>
+        ${doneBtn}
+      </div>`;
+  }
+
+  return `<article class="pcard${p.toCall ? " pcard--due" : ""}" role="listitem">
+    <div class="pcard__line">
+      <div class="pcard__who">
+        <h3 class="pcard__name">${p.nameMissing ? `Name missing <span class="chip chip--amber">check the page</span>` : escapeHTML(p.name)}</h3>
+        <p class="pcard__meta">${contact}${seen ? ` · ${escapeHTML(seen)}` : ""}</p>
+      </div>
+      <div class="pcard__money">${money}</div>
+    </div>
+    ${follow}
+    <div class="pcard__actions">
+      <button class="btn btn--primary btn--small msg-btn" data-key="${escapeAttr(p.key)}" type="button" ${p.waOk ? "" : "disabled"}>
+        ${p.waOk ? "WhatsApp message" : "Phone missing - add it later"}
+      </button>
+    </div>
+  </article>`;
+}
+
+function renderPeople(data, pagesCount) {
+  const hasPeople = data.all.length > 0;
+  const emptyEl = $("#people-empty");
+  if (!hasPeople) {
+    emptyEl.hidden = false;
+    emptyEl.querySelector(".card__body").textContent = pagesCount
+      ? "The pages you saved did not keep any names or numbers yet. Check them from Recent pages."
+      : "Save a page and its people appear here with money in, money owed and who to call. Nothing is shared - the ledger is yours.";
+  } else {
+    emptyEl.hidden = true;
+  }
+  $("#today-block").hidden = data.toCall.length === 0;
+  $("#today-list").innerHTML = data.toCall.map((p) => personCard(p, true)).join("");
+  $("#all-block").hidden = data.rest.length === 0;
+  $("#people-list").innerHTML = data.rest.map((p) => personCard(p, false)).join("");
+  $("#people-summary").innerHTML = hasPeople ? summaryChips(data) : "";
+  const sk = $("#people-skipped");
+  if (data.skipped) {
+    sk.hidden = false;
+    sk.textContent = `Also on your pages: ${data.skipped.count} line${data.skipped.count === 1 ? "" : "s"} with no name or phone (due ₹${ppl.fmtRupees(data.skipped.due)}). Fix them on the page and they join in.`;
+  } else {
+    sk.hidden = true;
+  }
+}
+
+/* --------------------------------------------------- WhatsApp message sheet */
+let sheetPerson = null;
+let sheetKind = "reminder";
+
+function sheetSetText() {
+  if (!sheetPerson) return;
+  $("#msg-text").value = ppl.fillTemplate(sheetKind, sheetPerson);
+}
+
+function openMsgSheet(person) {
+  if (!person) return;
+  sheetPerson = person;
+  sheetKind = "reminder";
+  $(".pill[data-kind='reminder']").classList.add("pill--on");
+  $(".pill[data-kind='thanks']").classList.remove("pill--on");
+  $("#sheet-name").textContent = person.nameMissing ? "Message this number" : `Message ${person.name}`;
+  $("#sheet-sub").textContent = person.waOk ? `to +${person.digits}` : "No usable number on this person";
+  const ok = person.waOk;
+  $("#btn-wa").disabled = !ok;
+  const hint = $("#sheet-hint");
+  hint.hidden = ok;
+  hint.textContent = "Add a +91 phone number on the page first (review, save, then come back).";
+  sheetSetText();
+  $("#sheet-msg").hidden = false;
+  $("#msg-text").focus();
+}
+
+function closeMsgSheet() {
+  $("#sheet-msg").hidden = true;
+}
+
+async function handleFollowDone(pageId, rowId) {
+  try {
+    await auth().setFollowUpDone(pageId, rowId, true);
+  } catch {
+    // the button stays; nothing loses data
+  }
+  await loadPeople();
+}
+
+function onPeopleAction(e) {
+  const done = e.target.closest(".pcard__done");
+  if (done) {
+    done.disabled = true;
+    handleFollowDone(done.dataset.pageId, done.dataset.rowId);
+    return;
+  }
+  const msg = e.target.closest(".msg-btn");
+  if (msg && !msg.disabled) openMsgSheet(peopleCache.byKey.get(msg.dataset.key));
+}
+
+
+/* ----------------------------------------------------------------- saving */
 // Demo pages keep a small readable thumbnail (device storage is limited).
 async function shrinkForDemo(blob) {
   if (!blob) return null;
@@ -842,6 +1037,31 @@ function wire() {
     showAuth();
   };
   $("#btn-save").onclick = handleSave;
+
+  /* ---------------- Stage 3: People view + WhatsApp message sheet ---------------- */
+  $("#btn-people").onclick = () => loadPeople();
+  $("#tile-people").onclick = () => loadPeople();
+  $("#btn-people-back").onclick = () => showView("view-upload");
+  $("#today-list").addEventListener("click", onPeopleAction);
+  $("#people-list").addEventListener("click", onPeopleAction);
+  $("#btn-sheet-close").onclick = closeMsgSheet;
+  $("#sheet-backdrop").onclick = closeMsgSheet;
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("#sheet-msg").hidden) closeMsgSheet();
+  });
+  [...document.querySelectorAll(".sheet__pills .pill")].forEach((pill) => {
+    pill.onclick = () => {
+      [...document.querySelectorAll(".sheet__pills .pill")].forEach((x) => x.classList.remove("pill--on"));
+      pill.classList.add("pill--on");
+      sheetKind = pill.dataset.kind;
+      sheetSetText();
+    };
+  });
+  $("#btn-wa").onclick = () => {
+    if (!sheetPerson?.waOk) return;
+    const text = encodeURIComponent($("#msg-text").value);
+    location.href = `https://wa.me/${sheetPerson.digits}?text=${text}`;
+  };
 }
 
 wire();

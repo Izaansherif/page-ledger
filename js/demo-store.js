@@ -145,6 +145,7 @@ export async function savePage({ takenOn, pageTotalWritten, pageWarnings, rows, 
       follow_up_text: r.followUpText ?? null,
       follow_up_date: r.followUpDate ?? null,
       follow_up_confirmed: !!r.followUpConfirmed,
+      follow_up_done: !!r.followUpDone,
       struck_out: !!r.struckOut,
       included: r.included !== false,
       raw_text: r.raw ?? null,
@@ -163,17 +164,22 @@ export async function listRecentPages() {
   const u = session?.user;
   return store.pages
     .filter((p) => !u || p.owner === u.email)
-    .slice(0, 20)
+    .slice(0, 50)
     .map((p) => ({
       id: p.id,
       created_at: p.created_at,
       taken_on: p.taken_on,
-      page_rows: p.page_rows.map((r) => ({
-        name: r.name,
-        amount_paid: r.amount_paid,
-        amount_due: r.amount_due,
-        struck_out: r.struck_out,
-        included: r.included,
-      })),
+      page_rows: p.page_rows,
     }));
+}
+
+// Marks a follow-up as handled (People view "Done" tap). Returns ok.
+export async function setFollowUpDone(pageId, rowId, done = true) {
+  const store = read();
+  const page = store.pages.find((p) => p.id === pageId);
+  const row = page?.page_rows.find((r) => r.id === rowId);
+  if (!row) throw new Error("That follow-up could not be found.");
+  row.follow_up_done = !!done;
+  const persisted = persist(store); // storage pressure must not block the tap
+  return { ok: true, persisted };
 }

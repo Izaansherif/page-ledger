@@ -42,6 +42,7 @@ create table public.page_rows (
   follow_up_text      text,                       -- e.g. "after 2 weeks"
   follow_up_date      date,
   follow_up_confirmed boolean not null default false,
+  follow_up_done boolean not null default false,
   struck_out          boolean not null default false,
   included            boolean not null default true,
   row_index           integer not null default 0,

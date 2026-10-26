@@ -931,3 +931,244 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 @media (prefers-reduced-motion: reduce) {
   .btn--primary.is-saved { animation: none; }
 }
+
+/* ============================================================
+   Stage 3 - People view + WhatsApp message sheet
+   ============================================================ */
+.appbar-people { position: relative; }
+.appbar-people__badge {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  margin-left: 5px;
+}
+
+.card--tile {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  text-align: left;
+  padding: 16px 18px;
+  margin: 14px 0 0;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card--tile:hover { border-color: var(--accent); }
+.tile__ico {
+  width: 42px; height: 42px; flex: none;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid; place-items: center;
+}
+.tile__body { display: grid; gap: 2px; min-width: 0; }
+.tile__body strong { font-size: 15.5px; }
+.tile__sub { color: var(--ink-soft); font-size: 13.5px; }
+.tile__chev { margin-left: auto; color: var(--ink-faint); }
+
+.people-wrap { padding-top: 14px; }
+.people-head { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.people-title { font-size: 23px; margin: 0; letter-spacing: -0.01em; }
+.people-sub {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--ink-faint);
+  margin: 20px 2px 9px;
+}
+
+.people-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.chip--info {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 13px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.chip--info strong { font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.chip--info.chip--since { border-color: var(--amber); }
+.chip--info.chip--since strong { color: var(--amber); }
+
+.people-list { display: grid; gap: 11px; }
+.people-skipped { color: var(--ink-soft); font-size: 13.5px; background: var(--amber-bg); border: 1px solid color-mix(in srgb, var(--amber) 25%, transparent); border-radius: var(--radius-sm); padding: 10px 13px; margin: 14px 0 0; }
+
+.pcard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 15px 13px;
+}
+.pcard--due { border-color: color-mix(in srgb, var(--amber) 45%, var(--line)); }
+.pcard__line { display: flex; align-items: flex-start; gap: 12px; }
+.pcard__who { min-width: 0; flex: 1; }
+.pcard__name {
+  font-size: 16px; margin: 0 0 2px;
+  overflow-wrap: anywhere;
+}
+.pcard__meta { color: var(--ink-faint); font-size: 13px; margin: 0; overflow-wrap: anywhere; }
+.pcard__money { display: grid; gap: 3px; text-align: right; flex: none; font-variant-numeric: tabular-nums; }
+.money { font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.money--due { color: var(--amber); background: var(--amber-bg); }
+.money--in { color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
+.money--none { color: var(--ink-faint); background: var(--accent-soft); }
+
+.pcard__follow {
+  display: flex; align-items: center; gap: 10px;
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+}
+.pcard__follow--due { background: var(--amber-bg); }
+.pcard__follow-text { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--ink); }
+.pcard__follow--due .pcard__follow-text { color: var(--amber); }
+.fc--amber { color: var(--amber); font-weight: 700; }
+.pcard__done {
+  flex: none;
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 999px;
+  padding: 5px 13px;
+  min-height: 34px;
+  cursor: pointer;
+}
+.pcard__done:hover { background: var(--accent); color: var(--accent-ink); }
+.pcard__done:disabled { opacity: 0.55; cursor: default; }
+
+.pcard__actions { margin-top: 11px; display: flex; }
+.pcard__actions .btn { flex: 1; }
+.chip--amber {
+  color: var(--amber);
+  background: var(--amber-bg);
+  border-color: color-mix(in srgb, var(--amber) 30%, transparent);
+}
+
+/* ---------------- message sheet ---------------- */
+.sheet { position: fixed; inset: 0; z-index: 60; }
+.sheet__backdrop {
+  position: absolute; inset: 0;
+  background: rgb(20 17 15 / 0.42);
+  border: 0; padding: 0; cursor: default;
+}
+.sheet__panel {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  bottom: 0;
+  width: min(520px, 100%);
+  max-height: 86dvh;
+  overflow: auto;
+  background: var(--surface);
+  border-radius: 18px 18px 0 0;
+  border: 1px solid var(--line);
+  padding: 14px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 40px rgb(28 25 23 / 0.18);
+}
+.sheet__grip { width: 44px; height: 4px; border-radius: 2px; background: var(--line-strong); margin: 0 auto 12px; }
+.sheet__title { margin: 0; font-size: 18px; }
+.sheet__sub { color: var(--ink-soft); font-size: 13.5px; margin: 3px 0 12px; }
+.sheet__pills { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.pill {
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  min-height: 38px;
+  cursor: pointer;
+}
+.pill--on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.sheet__text {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.5;
+}
+.sheet__text:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus); }
+.sheet__hint {
+  color: var(--amber);
+  font-size: 13px;
+  margin: 9px 0 0;
+  background: var(--amber-bg);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+}
+.sheet__panel .btn--block { margin-top: 10px; }
+
+/* ============================================================
+   Motion pass - calm, physical, turned off under reduced motion
+   ============================================================ */
+
+/* views arrive with a soft rise (replays each time they un-hide) */
+.panel { animation: view-in 0.30s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* lists: gentle staggered entrance */
+.recent__row, .pcard, .chip--info, .story .card {
+  animation: item-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.recent__row:nth-child(1), .pcard:nth-child(1), .chip--info:nth-child(1) { animation-delay: 0.03s; }
+.recent__row:nth-child(2), .pcard:nth-child(2), .chip--info:nth-child(2) { animation-delay: 0.07s; }
+.recent__row:nth-child(3), .pcard:nth-child(3), .chip--info:nth-child(3) { animation-delay: 0.11s; }
+.recent__row:nth-child(4), .pcard:nth-child(4), .chip--info:nth-child(4) { animation-delay: 0.15s; }
+.recent__row:nth-child(5), .pcard:nth-child(5), .chip--info:nth-child(5) { animation-delay: 0.19s; }
+.recent__row:nth-child(n+6), .pcard:nth-child(n+6), .chip--info:nth-child(n+6) { animation-delay: 0.23s; }
+@keyframes item-in {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* buttons: press feedback everywhere */
+.btn { transition: transform 0.12s ease, box-shadow 0.2s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
+.btn:active { transform: translateY(1px) scale(0.99); }
+
+/* cards lift slightly on hover (desktop nicety) */
+@media (hover: hover) {
+  .pcard, .card--cta, .card--tile { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+  .pcard:hover, .card--tile:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgb(28 25 23 / 0.08); }
+}
+
+/* sheet: slide up with the wake of backdrop fade - guard against "clicks" */
+.sheet__backdrop { animation: fade-in 0.22s ease both; }
+.sheet__panel { animation: sheet-up 0.32s cubic-bezier(0.2, 0.8, 0.25, 1) both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheet-up { from { transform: translate(-50%, 24px); opacity: 0.4; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+/* app bar: subtle slide on first paint */
+.appbar { animation: appbar-in 0.4s ease both; }
+@keyframes appbar-in { from { transform: translateY(-8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* status dot? none. Keep motion honest and short. */
+
+@media (prefers-reduced-motion: reduce) {
+  .panel, .recent__row, .pcard, .chip--info, .story .card,
+  .sheet__backdrop, .sheet__panel, .appbar,
+  .scene .chip-float, .scene .stack, .scene .flow,
+  .btn--primary.is-saved {
+    animation: none !important;
+  }
+  .btn, .pcard, .card--cta, .card--tile, .scene { transition: none !important; }
+}

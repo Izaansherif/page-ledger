@@ -206,14 +206,28 @@ export async function savePage({ photoPath, takenOn, pageTotalWritten, pageWarni
   return { pageId, savedRows: payload.length };
 }
 
-// Recent pages for the home strip (newest 20), with light row info.
+// Pages with their rows, newest first (used by the home strip and People view).
 export async function listRecentPages() {
   await withFreshToken();
   if (!session?.access) return [];
   const { res, data } = await call(
-    "/rest/v1/pages?select=id,created_at,taken_on,page_rows(name,amount_paid,amount_due,struck_out,included)&order=created_at.desc&limit=20",
+    "/rest/v1/pages?select=id,created_at,taken_on,page_rows(id,name,phone,amount_paid,amount_due,struck_out,included,follow_up_text,follow_up_date,follow_up_confirmed,follow_up_done)&order=created_at.desc&limit=100",
     { auth: true },
   );
   if (!res.ok) return [];
   return data ?? [];
+}
+
+// People view "Done" tap on a follow-up.
+export async function setFollowUpDone(rowId, done = true) {
+  await withFreshToken();
+  if (!session?.access) throw new Error("Please sign in first.");
+  const { res } = await call(`/rest/v1/page_rows?id=eq.${encodeURIComponent(rowId)}`, {
+    method: "PATCH",
+    auth: true,
+    extraHeaders: { Prefer: "return=minimal" },
+    body: { follow_up_done: !!done },
+  });
+  if (!res.ok) throw new Error(`Could not update the follow-up (${res.status}). Try again.`);
+  return { ok: true };
 }

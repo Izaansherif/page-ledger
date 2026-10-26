@@ -66,6 +66,7 @@ export async function callModel({
   maxTokens = 4000,
   temperature = 0,
   mockFixture = null,
+  baseDate = null, // {{TODAY±n}} resolution in mock mode
 }) {
   if (AI_CONFIG.mode === "mock") {
     if (!mockFixture) {
@@ -75,11 +76,24 @@ export async function callModel({
       );
     }
     const file = path.join(REPO_ROOT, "fixtures", `${mockFixture}.json`);
-    let parsed;
+    let text;
     try {
-      parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+      text = fs.readFileSync(file, "utf8");
     } catch (e) {
       throw new Error(`Mock fixture "${mockFixture}" could not be read (${file}): ${e.message}`);
+    }
+    // {{TODAY±n}} tokens keep demo follow-up dates believable: resolved against
+    // the baseDate the caller says "today" is. Mock-only; never touches live.
+    text = text.replace(/\{\{\s*TODAY([+-]\d+)?\s*\}\}/g, (_, off) => {
+      const d = new Date(`${baseDate || new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + (off ? parseInt(off, 10) : 0));
+      return d.toISOString().slice(0, 10);
+    });
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Mock fixture "${mockFixture}" is not valid JSON after {{TODAY}} resolution: ${e.message}`);
     }
     return { json: parsed, content: JSON.stringify(parsed), usage: null, latencyMs: 0, model: "mock-fixture" };
   }
@@ -199,6 +213,7 @@ export async function extractPage({ imageBase64, mime = "image/jpeg", baseDate, 
       schemaName: EXTRACTION_SCHEMA_NAME,
       temperature: 0,
       mockFixture: fixture,
+      baseDate,
     });
 
   let res = await attempt();
