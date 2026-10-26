@@ -57,7 +57,7 @@ function setBadge() {
     return;
   }
   badge.hidden = false;
-  badge.textContent = state.lastRequest?.mockFixture ? "Sample reading" : "Demo data";
+  badge.textContent = state.lastRequest?.mockFixture ? "Sample reading · demo" : "Demo data · mock";
 }
 
 function resetToUpload() {
@@ -82,6 +82,7 @@ function makeRow(src = {}) {
   const conf = src.confidence ?? {};
   return {
     id: childrenUid(),
+    raw: src.raw_text ?? null,
     struckOut: !!src.struck_out,
     included: !src.struck_out,
     flags: [...(src.flags ?? [])],
@@ -132,7 +133,8 @@ function updateTotals() {
   const sig = `${names.size}|${b.paid}|${b.due}|${activeRows().length}`;
   if (sig === lastTotalsSig) return;
   lastTotalsSig = sig;
-  $("#review-summary").textContent = `${activeRows().length} row${activeRows().length === 1 ? "" : "s"} on this page - check each one`;
+  const n = activeRows().length;
+  $("#review-summary").textContent = `${names.size} ${names.size === 1 ? "person" : "people"} · ${n} ${n === 1 ? "line" : "lines"} · due ₹${fmtMoney(b.due)} — check each line before keeping`;
   $("#review-totals").innerHTML = `
     <span class="stat"><span class="stat__label">People</span><span class="stat__value">${names.size}</span></span>
     <span class="stat"><span class="stat__label">Paid</span><span class="stat__value">&#8377;${fmtMoney(b.paid)}</span></span>
@@ -229,12 +231,20 @@ function rowCardHTML(row, index) {
     ? `<label class="included-toggle"><input type="checkbox" data-act="include" data-id="${row.id}" ${row.included ? "checked" : ""}/> keep</label>`
     : "";
 
+  const rawBtn = row.raw
+    ? `<button class="raw-toggle" type="button" data-act="raw" data-id="${row.id}" aria-expanded="false" title="Show the line as written on the page">see line</button>`
+    : "";
+
+  const rawLine = row.raw
+    ? `<p class="rawline" data-rawid="${row.id}" hidden><code>${escapeAttr(row.raw)}</code></p>`
+    : "";
+
   return `
   <div class="rowcard${row.struckOut ? " struck" : ""}" role="listitem" data-id="${row.id}">
     <div class="rowcard__top">
       <span class="rowcard__num">${index + 1}</span>
       <div class="rowcard__flags">${flagsHTML}</div>
-      <div class="rowcard__tools">${struckToggle}
+      <div class="rowcard__tools">${struckToggle}${rawBtn}
         <button class="row-del" type="button" data-act="del" data-id="${row.id}" title="Remove this row" aria-label="Remove this row">&#10005;</button>
       </div>
     </div>
@@ -248,6 +258,7 @@ function rowCardHTML(row, index) {
         ${inputHTML(row, "follow", "Follow-up", "date")}
         <label class="followup-confirm"><input type="checkbox" data-act="confirm-follow" data-id="${row.id}" ${row.follow.confirmed ? "checked" : ""}/> Confirm</label>
       </div>
+      ${rawLine}
     </div>
   </div>`;
 }
@@ -310,6 +321,25 @@ function renderReview() {
 }
 
 /* ---------------------------------------------------------- extraction */
+const PHASES = [
+  "Finding the columns\u2026",
+  "Reading names and phones\u2026",
+  "Checking the amounts\u2026",
+  "Marking what needs your eye\u2026",
+];
+
+function startPhases() {
+  let i = 0;
+  $("#loading-phase").textContent = PHASES[0];
+  const timer = setInterval(() => {
+    i = (i + 1) % PHASES.length;
+    $("#loading-phase").textContent = PHASES[i];
+  }, 420);
+  return () => clearInterval(timer);
+}
+
+let stopPhases = null;
+
 async function runExtraction(request) {
   state.busy = true;
   state.lastRequest = request;
@@ -317,6 +347,7 @@ async function runExtraction(request) {
   setBadge();
   $("#loading-title").textContent = "Reading your page\u2026";
   showView("view-loading");
+  stopPhases = startPhases();
 
   const t0 = performance.now();
   try {
@@ -355,6 +386,8 @@ async function runExtraction(request) {
     }
     showView("view-error");
   } finally {
+    if (stopPhases) stopPhases();
+    stopPhases = null;
     state.busy = false;
   }
 }
@@ -484,6 +517,16 @@ function wire() {
   });
 
   rowsEl.addEventListener("click", (e) => {
+    const rawBtn = e.target.closest("button[data-act='raw']");
+    if (rawBtn) {
+      const line = document.querySelector(`.rawline[data-rawid="${rawBtn.dataset.id}"]`);
+      if (line) {
+        line.hidden = !line.hidden;
+        rawBtn.setAttribute("aria-expanded", String(!line.hidden));
+        rawBtn.textContent = line.hidden ? "see line" : "hide line";
+      }
+      return;
+    }
     const t = e.target.closest("button[data-act='del']");
     if (!t) return;
     const row = state.rows.find((r) => r.id === t.dataset.id);
@@ -515,3 +558,21 @@ function wire() {
 
 wire();
 showView("view-upload");
+
+/* hero 3D tilt - pointer-driven, desktop pointers with reduced-motion respected */
+(() => {
+  const scene = $("#hero-scene");
+  if (!scene) return;
+  const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (!fine.matches || calm.matches) return;
+  scene.addEventListener("pointermove", (e) => {
+    const r = scene.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    scene.style.transform = `perspective(900px) rotateY(${(x * 9).toFixed(2)}deg) rotateX(${(-y * 7).toFixed(2)}deg)`;
+  });
+  scene.addEventListener("pointerleave", () => {
+    scene.style.transform = "";
+  });
+})();

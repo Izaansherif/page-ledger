@@ -465,3 +465,133 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .fields { gap: 8px; }
   .rowcard__top { position: absolute; left: 12px; top: 10px; }
 }
+
+/* ============================================================
+   Story hero + 3D scene (Stage 1 polish)
+   ============================================================ */
+.home { display: flex; flex-direction: column; gap: 26px; }
+
+.hero { display: grid; grid-template-columns: 1fr; gap: 10px; align-items: center; }
+
+.hero-title { font-size: 27px; line-height: 1.22; margin: 6px 0 8px; letter-spacing: -0.01em; }
+.hero-sub { color: var(--ink-soft); margin: 0 0 14px; max-width: 48ch; font-size: 15.5px; }
+
+.chiprow { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+/* the scene wrapper gets pointer tilt; the svg inside gets the idle float,
+   so the two transforms never fight */
+.hero__scene { margin: 4px auto 0; max-width: 560px; width: 100%; }
+.scene {
+  position: relative;
+  transition: transform 0.25s ease;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+.scene svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 18px 22px rgb(28 25 23 / 0.10)); }
+.scene .chip-float { animation: floaty 5.5s ease-in-out infinite alternate; }
+.scene .stack { animation: bob 7s ease-in-out infinite alternate; }
+.scene .flow { animation: dashmove 6s linear infinite; }
+@keyframes floaty { from { transform: translateY(0); } to { transform: translateY(-9px); } }
+@keyframes bob { from { transform: translateY(0) rotate(0.25deg); } to { transform: translateY(-7px) rotate(-0.35deg); } }
+@keyframes dashmove { to { stroke-dashoffset: -36; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .scene .chip-float, .scene .stack, .scene .flow, .loading__ring { animation: none; }
+  .scene { transition: none; }
+}
+
+/* story: 3 steps with connector arrows */
+.story { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.story__card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 16px 14px;
+  position: relative;
+}
+.story__ico {
+  width: 44px; height: 44px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+}
+.story__ico svg { width: 24px; height: 24px; }
+.story__title { margin: 0 0 4px; font-size: 16px; }
+.story__body { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
+.story__arrow { display: none; }
+
+/* raw original-line toggle inside review rows */
+.raw-toggle {
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 4px 6px;
+  cursor: pointer;
+  text-decoration: underline dotted;
+}
+.raw-toggle:hover { color: var(--accent); }
+.raw-toggle[aria-expanded="true"] { color: var(--accent); }
+.rawline {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px dashed var(--line-strong);
+  border-left: 3px solid var(--amber);
+  border-radius: 6px;
+  padding: 7px 10px;
+  overflow-wrap: anywhere;
+}
+.rawline code { white-space: pre-wrap; }
+
+/* loading: fixed sub height so phase text doesn't shift layout */
+.loading__sub { min-height: 2.6em; }
+
+/* summary line: story tone */
+.review-sub { font-variant-numeric: tabular-nums; }
+
+@media (min-width: 700px) {
+  .hero { grid-template-columns: 1.05fr 0.95fr; gap: 26px; }
+  .hero-title { font-size: 31px; }
+  .hero__scene { margin: 0; }
+  .story { grid-template-columns: 1fr 26px 1fr 26px 1fr; align-items: stretch; }
+  .story__arrow {
+    display: block;
+    align-self: center;
+    height: 14px;
+    position: relative;
+  }
+  .story__arrow::before {
+    content: "";
+    position: absolute; inset: 6px 0 auto;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--accent) 0 5px, transparent 5px 10px);
+  }
+  .story__arrow::after {
+    content: "";
+    position: absolute;
+    right: 1px; top: 2px;
+    border-left: 7px solid var(--accent);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+}
+
