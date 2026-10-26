@@ -1,13 +1,14 @@
 // netlify/functions/extract.js
 // ---------------------------------------------------------------------------
-// /.netlify/functions/extract  (Stage 1)
+// /.netlify/functions/extract  (Stage 1, Stage 2 auth gate)
 // Receives { imageBase64, mime, baseDate? } and returns the structured,
 // validated extraction of one notebook page. ALL AI work lives in _lib/ai.js
 // (rule 3) - this file is only the HTTP shell: input checks, retry semantics
 // (extractPage already retries once), usage/cost reporting, friendly errors.
 //
-// NOTE (Stage 2): once auth exists, this must reject requests without a
-// signed-in user (hard requirement: AI functions require a signed-in user).
+// Stage 2: when SUPABASE_URL is configured, every request must carry a valid
+// Supabase session token (Authorization: Bearer ...) - verified against the
+// auth server. Unconfigured (Stage-1 demo) keeps working without sign-in.
 // ---------------------------------------------------------------------------
 import { extractPage, AI_CONFIG, estimateCostUSD } from "./_lib/ai.js";
 
@@ -22,10 +23,40 @@ function json(statusCode, obj) {
   };
 }
 
+// Returns the user id when the bearer token is a valid Supabase session,
+// null when Supabase is not configured (Stage-1 mode), "invalid" when
+// configured but the token is missing/bad.
+async function verifySession(event) {
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  if (!supabaseUrl.startsWith("https://")) return null; // not configured
+
+  const auth = event?.headers?.authorization || event?.headers?.Authorization || "";
+  const token = String(auth).replace(/^Bearer\s+/i, "").trim();
+  if (!token) return "invalid";
+  try {
+    const res = await fetch(`${supabaseUrl.replace(/\/+$/, "")}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: process.env.SUPABASE_PUBLISHABLE || "",
+      },
+    });
+    if (!res.ok) return "invalid";
+    const user = await res.json();
+    return user?.id || "invalid";
+  } catch {
+    return "invalid";
+  }
+}
+
 export async function handler(event) {
   const method = (event?.httpMethod || event?.requestContext?.http?.method || "GET").toUpperCase();
   if (method !== "POST") {
     return json(405, { ok: false, error: "Send a POST request with the image, e.g. from the Page Ledger app." });
+  }
+
+  const userId = await verifySession(event);
+  if (userId === "invalid") {
+    return json(401, { ok: false, error: "Please sign in to Page Ledger first - your pages belong only to you." });
   }
 
   let req;

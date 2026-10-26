@@ -7,12 +7,18 @@
 // ===========================================================================
 import { resizeImageToJpeg } from "./resize.js";
 import { extractPage } from "./api.js";
+import { getConfig } from "./config.js";
+import * as sb from "./supabase.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
 const state = {
   busy: false,
   demoMode: false,
+  sbConfigured: false,
+  saving: false,
+  savedPageId: null,
+  jpegBlob: null,
   thumbSrc: null,
   lastRequest: null, // { imageBase64, mime, baseDate, mockFixture }
   extraction: null,
@@ -45,7 +51,7 @@ const FLAG_LABELS = {
 };
 
 function showView(name) {
-  for (const v of ["view-upload", "view-loading", "view-error", "view-review"]) {
+  for (const v of ["view-upload", "view-loading", "view-error", "view-review", "view-auth"]) {
     $(`#${v}`).hidden = v !== name;
   }
 }
@@ -64,6 +70,9 @@ function resetToUpload() {
   state.busy = false;
   state.demoMode = false;
   state.thumbSrc = null;
+  state.jpegBlob = null;
+  state.savedPageId = null;
+  state.saving = false;
   state.lastRequest = null;
   state.extraction = null;
   state.rows = [];
@@ -73,7 +82,8 @@ function resetToUpload() {
   state.latencyMs = null;
   state.retries = null;
   setBadge();
-  showView("view-upload");
+  resetSaveUi();
+  showSignedInHome();
   window.scrollTo(0, 0);
 }
 
@@ -316,6 +326,8 @@ function renderReview() {
   renderRows();
   renderWarnings(state.extraction);
   updateTotals();
+  resetSaveUi();
+  setStageNotes();
   showView("view-review");
   window.scrollTo(0, 0);
 }
@@ -341,6 +353,12 @@ function startPhases() {
 let stopPhases = null;
 
 async function runExtraction(request) {
+  // Stage 2 gate: with Supabase configured, reading requires a signed-in user
+  // (matching the server, which rejects unauthenticated reads).
+  if (state.sbConfigured && !sb.getSession()) {
+    showAuth();
+    return;
+  }
   state.busy = true;
   state.lastRequest = request;
   state.demoMode = !!request.mockFixture;
@@ -351,7 +369,7 @@ async function runExtraction(request) {
 
   const t0 = performance.now();
   try {
-    const res = await extractPage(request);
+    const res = await extractPage(request, sb.getSession()?.access || null);
     const elapsed = performance.now() - t0;
     const wait = Math.max(0, 1200 - elapsed); // a deliberate beat, so the demo doesn't look fake-fast
     if (wait) await new Promise((r) => setTimeout(r, wait));
@@ -396,8 +414,11 @@ async function runExtraction(request) {
 async function handleSelectedFile(fileLike, opts = {}) {
   if (state.busy) return;
   try {
-    const { base64, mime, width, height, kb } = await resizeImageToJpeg(fileLike);
+    const { blob, base64, mime, width, height, kb } = await resizeImageToJpeg(fileLike);
+    state.jpegBlob = blob;
     state.thumbSrc = `data:image/jpeg;base64,${base64}`;
+    state.savedPageId = null;
+    state.saving = false;
     $("#thumb-img").src = state.thumbSrc;
     console.log(`[upload] resized to ${width}x${height}, ${kb} KB, mime=${mime}`);
     await runExtraction({
@@ -410,6 +431,196 @@ async function handleSelectedFile(fileLike, opts = {}) {
     $("#error-msg").textContent = e.message || "That file could not be used.";
     $("#error-detail").hidden = true;
     showView("view-error");
+  }
+}
+
+/* ============================================================ Stage 2 === */
+function signedInNow() {
+  return !!sb.getSession();
+}
+
+function setStageNotes() {
+  const signedIn = state.sbConfigured && signedInNow();
+  $("#home-note").innerHTML = signedIn
+    ? "Signed in. Pages you save stay in your private account."
+    : "Stage&nbsp;1 preview: pages are read and checked, nothing is saved yet.";
+  $("#review-note").textContent = signedIn
+    ? "Saving is real: this page + photo land in your account, protected by database rules."
+    : "Stage\u00A01 preview: nothing is saved yet - saving arrives with your project keys.";
+}
+
+async function showSignedInHome() {
+  const signedIn = state.sbConfigured && signedInNow();
+  $("#recent").hidden = !signedIn;
+  $("#account").hidden = !state.sbConfigured;
+  $("#account-email").textContent = signedIn ? sb.getSession()?.user?.email || "" : "";
+  setStageNotes();
+  showView("view-upload");
+  if (signedIn) await loadRecent();
+}
+
+function showAuth() {
+  $("#account").hidden = true;
+  $("#btn-save").hidden = true;
+  $("#review-note").textContent = "Sign in to save pages - your account, your data, protected by rules.";
+  showView("view-auth");
+  window.scrollTo(0, 0);
+}
+
+let authMode = "signin";
+function setAuthMode(mode) {
+  authMode = mode;
+  $("#btn-auth-submit").textContent = mode === "signin" ? "Sign in" : "Create account";
+  $("#btn-auth-toggle").textContent = mode === "signin" ? "New here? Create an account" : "Have an account? Sign in";
+  $("#auth-password").setAttribute("autocomplete", mode === "signin" ? "current-password" : "new-password");
+  $("#auth-error").hidden = true;
+}
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const btn = $("#btn-auth-submit");
+  const err = $("#auth-error");
+  err.hidden = true;
+  btn.disabled = true;
+  const saveLabel = btn.textContent;
+  btn.textContent = authMode === "signin" ? "Signing in…" : "Creating account…";
+  try {
+    const email = $("#auth-email").value.trim();
+    const password = $("#auth-password").value;
+    if (authMode === "signin") {
+      await sb.signIn(email, password);
+    } else {
+      const r = await sb.signUp(email, password);
+      if (r.needsConfirm) {
+        btn.disabled = false;
+        btn.textContent = "Sign in";
+        setAuthMode("signin");
+        err.hidden = false;
+        err.textContent = "Account created! Check your inbox and confirm your email, then sign in.";
+        return;
+      }
+    }
+    await afterAuthSuccess();
+  } catch (e2) {
+    err.hidden = false;
+    err.textContent = e2.message || "Could not sign in. Try again.";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = saveLabel;
+  }
+}
+
+async function afterAuthSuccess() {
+  await enterSignedIn();
+}
+
+async function enterSignedIn() {
+  $("#auth-error").hidden = true;
+  await showSignedInHome();
+}
+
+async function loadRecent() {
+  if (!state.sbConfigured || !sb.getSession()) return;
+  const list = $("#recent-list");
+  try {
+    const pages = await sb.listRecentPages();
+    if (!pages.length) {
+      list.innerHTML = `<p class="recent__empty">No pages yet - your first photo will appear here.</p>`;
+      return;
+    }
+    list.innerHTML = pages
+      .map((p) => {
+        const rows = (p.page_rows ?? []).filter((r) => r.included !== false);
+        const people = new Set(rows.map((r) => (r.name || "").trim().toLowerCase()).filter(Boolean)).size;
+        const due = rows.reduce((s, r) => s + (Number(r.amount_due) || 0), 0);
+        const day = (p.taken_on || String(p.created_at).slice(0, 10)) + "";
+        return `<div class="recent__row">
+          <span class="recent__when">${escapeAttr(day)}</span>
+          <span class="recent__stats">${people} ${people === 1 ? "person" : "people"} · ${rows.length} lines · due ₹${fmtMoney(due)}</span>
+        </div>`;
+      })
+      .join("");
+  } catch {
+    list.innerHTML = `<p class="recent__empty">Could not load recent pages (offline?).</p>`;
+  }
+}
+
+/* ------------------------------------------------------------- saving */
+function resetSaveUi() {
+  const btn = $("#btn-save");
+  const st = $("#save-status");
+  st.hidden = true;
+  st.classList.remove("save-error");
+  st.textContent = "";
+  btn.hidden = !(state.sbConfigured && sb.getSession() && !state.savedPageId);
+  btn.disabled = false;
+  btn.innerHTML = "Save this page";
+}
+
+async function handleSave() {
+  if (state.saving || !state.extraction) return;
+  const user = sb.getSession()?.user;
+  if (!user) {
+    showAuth();
+    return;
+  }
+  const btn = $("#btn-save");
+  const st = $("#save-status");
+  state.saving = true;
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+  st.hidden = false;
+  st.classList.remove("save-error");
+  st.textContent = "Uploading the photo, then your rows…";
+
+  try {
+    const pageId = crypto.randomUUID();
+    const userId = user.id;
+    let photoPath = "no-photo.jpg";
+    if (state.jpegBlob) {
+      const up = await sb.uploadPagePhoto(pageId, state.jpegBlob);
+      photoPath = up.path;
+    }
+    const rowsPayload = state.rows.map((r, i) => ({
+      rowIndex: i,
+      name: r.fields.name.value ?? "",
+      phone: r.fields.phone.value || null,
+      note: r.fields.note?.value ?? null,
+      amountPaid: r.fields.amountPaid.value,
+      amountDue: r.fields.amountDue.value,
+      followUpText: r.follow.text,
+      followUpDate: r.follow.date,
+      followUpConfirmed: r.follow.confirmed,
+      struckOut: r.struckOut,
+      included: r.included,
+      raw: r.raw,
+      confidence: {
+        name: r.fields.name.conf, phone: r.fields.phone.conf,
+        amount_paid: r.fields.amountPaid.conf, amount_due: r.fields.amountDue.conf,
+        follow_up_date: r.follow.conf,
+      },
+      flags: r.flags,
+    }));
+
+    const res = await sb.savePage({
+      photoPath,
+      takenOn: state.lastRequest?.baseDate || null,
+      pageTotalWritten: state.extraction.page_total_written ?? null,
+      pageWarnings: state.extraction.page_warnings ?? [],
+      rows: rowsPayload,
+      userId,
+    });
+    state.savedPageId = res.pageId;
+    st.textContent = `Saved - ${res.savedRows} lines and the photo are in your account.`;
+    btn.textContent = "Saved ✓";
+    await loadRecent();
+  } catch (e2) {
+    st.classList.add("save-error");
+    st.textContent = e2.message || "Could not save. Try again.";
+    btn.disabled = false;
+    btn.textContent = "Save this page";
+  } finally {
+    state.saving = false;
   }
 }
 
@@ -462,7 +673,7 @@ function wire() {
 
   $("#btn-retry").onclick = () => {
     if (state.lastRequest) runExtraction(state.lastRequest);
-    else showView("view-upload");
+    else showSignedInHome();
   };
   $("#btn-error-back").onclick = resetToUpload;
   $("#btn-back").onclick = resetToUpload;
@@ -554,10 +765,37 @@ function wire() {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeZoom();
   });
+
+  // --- Stage 2: auth + saving
+  $("#auth-form").addEventListener("submit", handleAuthSubmit);
+  $("#btn-auth-toggle").onclick = () => setAuthMode(authMode === "signin" ? "signup" : "signin");
+  $("#btn-signout").onclick = async () => {
+    await sb.signOut();
+    resetToUpload();
+    showAuth();
+  };
+  $("#btn-save").onclick = handleSave;
 }
 
 wire();
-showView("view-upload");
+setAuthMode("signin");
+
+(async function boot() {
+  let cfg = null;
+  try {
+    cfg = await getConfig();
+  } catch {}
+  state.sbConfigured = !!cfg?.configured;
+  if (!state.sbConfigured) {
+    // Stage-1 mode: no keys yet -> review-only, nothing saved, no auth wall
+    showView("view-upload");
+    setStageNotes();
+    return;
+  }
+  const session = await sb.restoreSession().catch(() => null);
+  if (session) await showSignedInHome();
+  else showAuth();
+})();
 
 /* hero 3D tilt - pointer-driven, desktop pointers with reduced-motion respected */
 (() => {

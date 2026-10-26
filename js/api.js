@@ -1,14 +1,18 @@
 // js/api.js
 // Thin client for the (local Netlify-compatible) /.netlify/functions/extract
 // endpoint. Leaves all error message wording to the server but guarantees the
-// UI always gets { ok, error } shape on failure.
+// UI always gets { ok, error } shape on failure. Stage 2: attaches the
+// Supabase session token when the user is signed in.
 
-export async function extractPage({ imageBase64, mime, baseDate, mockFixture }) {
+export async function extractPage({ imageBase64, mime, baseDate, mockFixture }, token = null) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
   let res;
   try {
     res = await fetch("/.netlify/functions/extract", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ imageBase64, mime, baseDate, mockFixture }),
     });
   } catch (e) {

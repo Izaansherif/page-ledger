@@ -37,14 +37,14 @@ const MIME = {
   ".md": "text/plain; charset=utf-8",
 };
 
-async function callExtractFunction(body) {
-  const url = new URL("./netlify/functions/extract.js", `file://${ROOT.replace(/\\/g, "/")}/`);
+async function callFunction(name, body, reqHeaders = {}) {
+  const url = new URL(`./netlify/functions/${name}.js`, `file://${ROOT.replace(/\\/g, "/")}/`);
   const mod = await import(url.href);
   const event = {
     httpMethod: "POST",
-    headers: { "content-type": "application/json" },
-    rawUrl: "http://localhost/.netlify/functions/extract",
-    path: "/.netlify/functions/extract",
+    headers: { "content-type": "application/json", ...reqHeaders },
+    rawUrl: `http://localhost/.netlify/functions/${name}`,
+    path: `/.netlify/functions/${name}`,
     body,
     isBase64Encoded: false,
   };
@@ -82,6 +82,8 @@ function serveStatic(req, res, pathname) {
   });
 }
 
+const FUNCTIONS = new Set(["extract", "config"]);
+
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, `http://localhost:${PORT}`);
   let pathname;
@@ -98,13 +100,17 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { "Content-Type": "application/json" }, JSON.stringify({ ok: true, aiMode: ai.AI_CONFIG.mode }));
   }
 
-  if (pathname === "/.netlify/functions/extract") {
+  // Generic Netlify-function routing (extract, config, ...) for POST JSON.
+  const fnMatch = pathname.match(/^\/\.netlify\/functions\/([a-zA-Z0-9_-]+)$/);
+  if (fnMatch) {
+    const name = fnMatch[1];
+    if (!FUNCTIONS.has(name)) return send(res, 404, { "Content-Type": "application/json" }, '{"ok":false,"error":"No such function"}');
     if (req.method !== "POST") return send(res, 405, { "Content-Type": "application/json" }, '{"ok":false,"error":"Use POST"}');
     let raw = "";
     req.on("data", (c) => (raw += c.length > 12e6 ? "OVERFLOW" : String(c)));
     req.on("end", async () => {
       try {
-        const out = await callExtractFunction(raw);
+        const out = await callFunction(name, raw === "OVERFLOW" ? "" : raw, req.headers);
         send(res, out.statusCode, out.headers, out.body);
       } catch (err) {
         console.error("[dev-server] function error:", err);
