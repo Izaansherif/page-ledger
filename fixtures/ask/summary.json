@@ -1,0 +1,4 @@
+{
+  "answer": "In the sample demo data you are owed about \u20b92,430 across 2 people, and about \u20b9600 has come in. Alexander Biles has a follow-up waiting for today, so that is the person to chase first.",
+  "based_on": ["totals.due \u20b92,430", "totals.paid \u20b9600", "todayCall:Alexander Biles", "totals.people 2"]
+}

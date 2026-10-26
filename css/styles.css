@@ -1300,3 +1300,40 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .recent__del:disabled { opacity: 0.4; cursor: default; }
 
 .btn--danger:hover { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, transparent); }
+
+/* ============================================================
+   Stage 6 - ask about your own figures (People view)
+   ============================================================ */
+.ask { margin: 16px 0 4px; }
+.ask__label {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--ink-faint); margin: 0 2px 9px;
+}
+.ask__q { display: flex; flex-wrap: wrap; gap: 8px; }
+.ask__pill { cursor: pointer; }
+.ask__a {
+  margin-top: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 13px 15px;
+}
+.ask__a--busy { color: var(--ink-faint); font-size: 14px; }
+.ask__text { margin: 0; font-size: 15px; line-height: 1.5; }
+.ask__text--err { color: var(--red); font-size: 14px; }
+.ask__based {
+  margin: 9px 0 0;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center;
+}
+.ask__based span {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ask__demo { margin: 8px 0 0; color: var(--amber); font-size: 12.5px; }

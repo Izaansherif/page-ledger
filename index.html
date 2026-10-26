@@ -298,6 +298,17 @@
 
       <div class="people-summary" id="people-summary"></div>
 
+      <!-- Stage 6: ask about your own figures (answers come only from your data) -->
+      <div id="ask-block" class="ask" hidden>
+        <p class="ask__label">Ask about your money</p>
+        <div class="ask__q">
+          <button class="pill ask__pill" data-q="owe" type="button">Who owes me the most?</button>
+          <button class="pill ask__pill" data-q="week" type="button">How was this week?</button>
+          <button class="pill ask__pill" data-q="today" type="button">Who should I chase today?</button>
+        </div>
+        <div id="ask-answer" class="ask__a" hidden></div>
+      </div>
+
       <div id="people-empty" class="card card--empty" hidden>
         <h2 class="card__title">No one here yet</h2>
         <p class="card__body">Save a page and its people appear here with money in, money owed and who to call. Nothing is shared - this ledger is yours.</p>

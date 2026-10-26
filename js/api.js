@@ -37,8 +37,7 @@ export async function extractPage({ imageBase64, mime, baseDate, mockFixture }, 
 }
 
 // Stage 4: voice follow-up notes. { wavBase64 } -> { transcribed, ... }.
-export async function transcribeAudio({ wavBase64, token = null }) {
-  const headers = { "Content-Type": "application/json" };
+export async function transcribeAudio({ wavBase64, token = null }) {  const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let res;
@@ -61,6 +60,39 @@ export async function transcribeAudio({ wavBase64, token = null }) {
   }
   if (!res.ok || !body?.ok) {
     const err = new Error(body?.error || `Transcribing failed (HTTP ${res.status}).`);
+    err.detail = body?.detail;
+    err.status = res.status;
+    throw err;
+  }
+  return body;
+}
+
+// Stage 6: ask about figures already in the owner's ledger.
+// { question, brief } -> { ok, answer, basedOn, demoMode, ... }.
+export async function askLedger({ question, brief, token = null }) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch("/.netlify/functions/ask", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ question, brief }),
+    });
+  } catch (e) {
+    const err = new Error("Could not reach the answer service. Check your internet connection and try again.");
+    err.network = true;
+    throw err;
+  }
+  let body;
+  try {
+    body = await res.json();
+  } catch {
+    body = { ok: false, error: "The answer service sent back data the app could not parse." };
+  }
+  if (!res.ok || !body?.ok) {
+    const err = new Error(body?.error || `Asking failed (HTTP ${res.status}).`);
     err.detail = body?.detail;
     err.status = res.status;
     throw err;

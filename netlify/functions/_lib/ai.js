@@ -31,6 +31,8 @@ export const AI_CONFIG = {
   models: {
     // reads photos of notebook pages (image understanding on Muse Spark)
     vision: process.env.META_VISION_MODEL || "muse-spark-1.3",
+    // text answers for the owner's "Ask my ledger" (Stage 6) - same Spark
+    chat: process.env.META_CHAT_MODEL || "muse-spark-1.3",
     // speech to text, used in Stage 6B (file endpoint POST /v1/asr/transcribe)
     transcribe: process.env.META_TRANSCRIBE_MODEL || "muse-voice-transcribe-1.0",
     // boxes/masks for the Stage 5 stretch (may not be needed: Muse Spark
@@ -312,6 +314,95 @@ export async function transcribeAudio({ wavBase64, fixture = "voice/note" }) {
     usage: data.audioDurationMs ? { audioSeconds: Math.floor(data.audioDurationMs / 1000) } : null,
     latencyMs: Date.now() - t0,
     model: AI_CONFIG.models.transcribe,
+    retries,
+  };
+}
+
+// ---------------------------------------------------------------- askLedger
+/**
+ * Stage 6 - the OWNER'S question about figures already in their ledger.
+ * Facts in use (all previously verified from /docs, unchanged endpoints):
+ *   - POST /v1/chat/completions is OpenAI-compatible, has chat model names,
+ *     and supports structured output via response_format json_schema.
+ * Mock mode: a fixture answer. Live mode: one grounded chat call, answers
+ * validated against ASK_JSON_SCHEMA; on invalid JSON retry ONCE (rule 4).
+ * Rule 6 holds by construction: the model may reference names/figures, and
+ * the UI only displays the answer - it never auto-sends anything to anyone.
+ * Returns { answer, basedOn, usage, estCostUSD, latencyMs, model, retries }.
+ */
+export async function askLedger({ question, brief, fixture = "ask/summary" }) {
+  const { ASK_JSON_SCHEMA, ASK_SCHEMA_NAME, buildAskSystemPrompt } = await import("./prompts.js");
+  const t0 = Date.now();
+
+  const validShape = (parsed) =>
+    parsed &&
+    typeof parsed.answer === "string" &&
+    parsed.answer.trim().length > 0 &&
+    parsed.answer.length <= 700 &&
+    Array.isArray(parsed.based_on ?? []);
+
+  if (AI_CONFIG.mode === "mock") {
+    const file = path.join(REPO_ROOT, "fixtures", `${fixture}.json`);
+    let parsed;
+    try {
+      parsed = JSON.parse(fs.readFileSync(file, "utf8"));
+    } catch (e) {
+      throw new Error(`Mock fixture "${fixture}" could not be read (${file}): ${e.message}`);
+    }
+    if (!validShape(parsed)) throw new Error(`Mock fixture "${fixture}" has no usable answer.`);
+    return {
+      answer: parsed.answer,
+      basedOn: parsed.based_on ?? [],
+      usage: null,
+      estCostUSD: null,
+      latencyMs: Date.now() - t0,
+      model: "mock-fixture",
+      retries: 0,
+    };
+  }
+
+  if (!AI_CONFIG.apiKey) {
+    throw new Error(
+      "META_API_KEY is missing. Put it in .env (gitignored) or Netlify env vars, with AI_MODE=live.",
+    );
+  }
+
+  const userText =
+    `Owner's question: ${question}\n\n` +
+    `Ledger figures (JSON, computed from the owner's saved pages):\n` +
+    JSON.stringify(brief);
+
+  const attempt = () =>
+    callModel({
+      model: AI_CONFIG.models.chat,
+      system: buildAskSystemPrompt(),
+      userText,
+      jsonSchema: ASK_JSON_SCHEMA,
+      schemaName: ASK_SCHEMA_NAME,
+      temperature: 0,
+      maxTokens: 700,
+    });
+
+  let res = await attempt();
+  let retries = 0;
+  let ok = validShape(res.json);
+  if (!ok) {
+    retries = 1; // rule 4: retry once
+    res = await attempt();
+    ok = validShape(res.json);
+  }
+  if (!ok) {
+    const err = new Error("The answer failed validation after one retry.");
+    err.code = "ANSWER_INVALID";
+    throw err;
+  }
+  return {
+    answer: res.json.answer,
+    basedOn: res.json.based_on ?? [],
+    usage: res.usage,
+    estCostUSD: estimateCostUSD(res.usage),
+    latencyMs: Date.now() - t0,
+    model: res.model,
     retries,
   };
 }

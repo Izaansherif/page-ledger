@@ -6,7 +6,7 @@
 // Stage 1 saves nothing: this screen's job is a trustworthy read + review.
 // ===========================================================================
 import { resizeImageToJpeg } from "./resize.js";
-import { extractPage, transcribeAudio } from "./api.js";
+import { extractPage, transcribeAudio, askLedger } from "./api.js";
 import { getConfig } from "./config.js";
 import * as sb from "./supabase.js";
 import * as demo from "./demo-store.js";
@@ -698,7 +698,11 @@ async function loadRecent() {
   const list = $("#recent-list");
   try {
     const pages = await auth().listRecentPages();
-    if (pages.length) applyPeopleData(ppl.buildPeople(pages));
+    peopleCache.pagesCount = pages.length;
+    if (pages.length) {
+      const data = ppl.buildPeople(pages);
+      applyPeopleData(data);
+    }
     if (!pages.length) {
       list.innerHTML = `<p class="recent__empty">No pages yet - your first photo will appear here.</p>`;
       return;
@@ -759,14 +763,66 @@ async function loadPeople() {
     pages = await auth().listRecentPages();
   } catch {
     $("#people-empty").hidden = false;
-    $("#people-empty").querySelector(".card__body").textContent = "Could not load your people (offline?). Try again in a moment.";
+    $("#people-empty").querySelector(".card__body").textContent =
+      "Could not load your people (offline?). Try again in a moment.";
     return;
   }
   const data = ppl.buildPeople(pages);
   applyPeopleData(data);
+  peopleCache.pagesCount = pages.length;
   renderPeople(data, pages.length);
   showView("view-people");
   window.scrollTo(0, 0);
+}
+
+/* --------------------------------------------------------- ask (Stage 6) */
+const ASK_QS = {
+  owe: "Who owes me the most?",
+  week: "How was this week in my ledger?",
+  today: "Who should I chase today?",
+};
+
+// The figures brief the server model is allowed to see - computed HERE from
+// the owner's own data, capped small, never customer message text.
+function buildAskBrief() {
+  const d = peopleCache.data ?? { totals: { due: 0, paid: 0, people: 0, toCall: 0 }, all: [], toCall: [] };
+  const t = d.totals;
+  const today = ppl.localToday();
+  const topDue = [...(d.all ?? [])]
+    .filter((p) => p.due > 0)
+    .sort((a, b) => b.due - a.due)
+    .slice(0, 6)
+    .map((p) => ({ name: p.nameMissing ? "(name missing)" : p.name, due: p.due }));
+  const todayCall = (d.toCall ?? []).slice(0, 8).map((p) => ({
+    name: p.nameMissing ? "(name missing)" : p.name,
+    when: p.followUp?.date === today ? "today" : `overdue, was ${p.followUp?.date ?? "unknown"}`,
+  }));
+  return {
+    todayDate: today,
+    pages: peopleCache.pagesCount ?? 0,
+    totals: { due: t.due, paid: t.paid, people: t.people, toCall: t.toCall },
+    topDue,
+    todayCall,
+  };
+}
+
+async function handleAsk(kind) {
+  const el = $("#ask-answer");
+  el.hidden = false;
+  el.classList.add("ask__a--busy");
+  el.textContent = "Working it out from your figures…";
+  try {
+    const token = auth().getSession()?.access || null;
+    const res = await askLedger({ question: ASK_QS[kind] ?? kind, brief: buildAskBrief(), token });
+    el.classList.remove("ask__a--busy");
+    el.innerHTML = `
+      <p class="ask__text">${escapeHTML(res.answer)}</p>
+      ${res.basedOn?.length ? `<p class="ask__based">From your figures: ${res.basedOn.map((b) => `<span>${escapeHTML(b)}</span>`).join(" · ")}</p>` : ""}
+      ${res.demoMode ? `<p class="ask__demo">Demo answer - the sample data, not your pages (a key switches this live)</p>` : ""}`;
+  } catch (e) {
+    el.classList.remove("ask__a--busy");
+    el.innerHTML = `<p class="ask__text ask__text--err">${escapeHTML(e?.message || "The answer did not come through. Try again in a moment.")}</p>`;
+  }
 }
 
 function summaryChips(data) {
@@ -825,6 +881,7 @@ function personCard(p, todayList) {
 function renderPeople(data, pagesCount) {
   const hasPeople = data.all.length > 0;
   const emptyEl = $("#people-empty");
+  $("#ask-block").hidden = !hasPeople;
   if (!hasPeople) {
     emptyEl.hidden = false;
     emptyEl.querySelector(".card__body").textContent = pagesCount
@@ -1251,6 +1308,11 @@ function wire() {
     demo.resetDemoData();
     location.reload();
   };
+
+  /* ---------------- Stage 6: ask about your own figures ---------------- */
+  [...document.querySelectorAll(".ask__pill")].forEach((pill) => {
+    pill.onclick = () => handleAsk(pill.dataset.q);
+  });
 }
 
 wire();

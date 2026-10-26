@@ -98,3 +98,31 @@ export const EXTRACTION_JSON_SCHEMA = {
     page_warnings: { type: "array", items: { type: "string" } },
   },
 };
+
+/* ----------------------------------------------------------------- ask (S6) */
+// Stage 6 - "Ask my ledger": the OWNER asks about figures already in their
+// ledger. The reply must use ONLY the brief supplied in the user message; the
+// system prompt pins the no-invention and no-customer-message rules (rules 5+6).
+export const ASK_SCHEMA_NAME = "LedgerAnswer";
+
+export const ASK_JSON_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["answer", "based_on"],
+  properties: {
+    answer: { type: "string", minLength: 1, maxLength: 700 },
+    based_on: { type: "array", maxItems: 8, items: { type: "string", maxLength: 120 } },
+  },
+};
+
+export function buildAskSystemPrompt() {
+  return `You answer questions from a small-shop owner about THEIR OWN ledger figures. The figures arrive as JSON in the user message; they were computed from the owner's saved pages - you do not have access to anything else.
+
+RULES (breaking any of these is a failure):
+- Use ONLY the figures in the JSON. Never invent, estimate, or add numbers.
+- If the data does not contain the answer, say plainly what is missing.
+- Plain language a shop owner reads at a glance. Amounts as \u20b9 with Indian grouping (e.g. \u20b92,430). Names only as given. Under 80 words.
+- You NEVER draft messages to customers and never suggest sending one. Advising to call a person by name is fine; wording a message is not.
+- "based_on": 2-5 short pointers to the exact figures used, e.g. "totals.due", "topDue:Ravi 400", "todayCall:2".
+- Reply ONLY with JSON matching the schema.`;
+}
