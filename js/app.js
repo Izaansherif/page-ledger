@@ -9,12 +9,14 @@ import { resizeImageToJpeg } from "./resize.js";
 import { extractPage } from "./api.js";
 import { getConfig } from "./config.js";
 import * as sb from "./supabase.js";
+import * as demo from "./demo-store.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
 const state = {
   busy: false,
-  demoMode: false,
+  demoMode: false,   // server said the read is a mock fixture
+  demoStore: false,  // no project keys yet -> local demo persistence
   sbConfigured: false,
   saving: false,
   savedPageId: null,
@@ -29,6 +31,10 @@ const state = {
   latencyMs: null,
   retries: null,
 };
+
+// auth facade: same interface whether the store is the real cloud or the
+// on-device demo store. Honest labels come from the UI (demo badges).
+const auth = () => (state.demoStore ? demo : sb);
 
 /* ------------------------------------------------------------- helpers */
 const fmtMoney = (n) =>
@@ -355,7 +361,7 @@ let stopPhases = null;
 async function runExtraction(request) {
   // Stage 2 gate: with Supabase configured, reading requires a signed-in user
   // (matching the server, which rejects unauthenticated reads).
-  if (state.sbConfigured && !sb.getSession()) {
+  if ((state.sbConfigured || state.demoStore) && !auth().getSession()) {
     showAuth();
     return;
   }
@@ -369,7 +375,7 @@ async function runExtraction(request) {
 
   const t0 = performance.now();
   try {
-    const res = await extractPage(request, sb.getSession()?.access || null);
+    const res = await extractPage(request, auth().getSession()?.access || null);
     const elapsed = performance.now() - t0;
     const wait = Math.max(0, 1200 - elapsed); // a deliberate beat, so the demo doesn't look fake-fast
     if (wait) await new Promise((r) => setTimeout(r, wait));
@@ -436,24 +442,29 @@ async function handleSelectedFile(fileLike, opts = {}) {
 
 /* ============================================================ Stage 2 === */
 function signedInNow() {
-  return !!sb.getSession();
+  return !!auth().getSession();
 }
 
 function setStageNotes() {
-  const signedIn = state.sbConfigured && signedInNow();
+  const signedIn = (state.sbConfigured || state.demoStore) && signedInNow();
   $("#home-note").innerHTML = signedIn
-    ? "Signed in. Pages you save stay in your private account."
+    ? (state.demoStore
+        ? "Demo mode: your pages save to <strong>this device only</strong> - connect the project later for cloud backup."
+        : "Signed in. Pages you save stay in your private account.")
     : "Stage&nbsp;1 preview: pages are read and checked, nothing is saved yet.";
   $("#review-note").textContent = signedIn
-    ? "Saving is real: this page + photo land in your account, protected by database rules."
+    ? (state.demoStore
+        ? "Demo mode: this page saves to this device only - nothing leaves the app."
+        : "Saving is real: this page + photo land in your account, protected by database rules.")
     : "Stage\u00A01 preview: nothing is saved yet - saving arrives with your project keys.";
 }
 
 async function showSignedInHome() {
-  const signedIn = state.sbConfigured && signedInNow();
+  const signedIn = (state.sbConfigured || state.demoStore) && signedInNow();
   $("#recent").hidden = !signedIn;
-  $("#account").hidden = !state.sbConfigured;
-  $("#account-email").textContent = signedIn ? sb.getSession()?.user?.email || "" : "";
+  $("#account").hidden = !(state.sbConfigured || state.demoStore);
+  const sess = auth().getSession();
+  $("#account-email").textContent = signedIn ? `${sess?.user?.email || ""}${state.demoStore ? " · demo" : ""}` : "";
   setStageNotes();
   showView("view-upload");
   if (signedIn) await loadRecent();
@@ -462,7 +473,13 @@ async function showSignedInHome() {
 function showAuth() {
   $("#account").hidden = true;
   $("#btn-save").hidden = true;
-  $("#review-note").textContent = "Sign in to save pages - your account, your data, protected by rules.";
+  $("#review-note").textContent = state.demoStore
+    ? "Sign in to save pages on this device (demo mode)."
+    : "Sign in to save pages - your account, your data, protected by rules.";
+  $("#auth-demo-note").hidden = !state.demoStore;
+  $("#auth-note").textContent = state.demoStore
+    ? "Demo mode: nothing leaves this device - no cloud yet. Pages save only in this browser."
+    : "Your data is protected by database rules: no one else can read it, not even other accounts.";
   showView("view-auth");
   window.scrollTo(0, 0);
 }
@@ -488,9 +505,9 @@ async function handleAuthSubmit(e) {
     const email = $("#auth-email").value.trim();
     const password = $("#auth-password").value;
     if (authMode === "signin") {
-      await sb.signIn(email, password);
+      await auth().signIn(email, password);
     } else {
-      const r = await sb.signUp(email, password);
+      const r = await auth().signUp(email, password);
       if (r.needsConfirm) {
         btn.disabled = false;
         btn.textContent = "Sign in";
@@ -520,10 +537,10 @@ async function enterSignedIn() {
 }
 
 async function loadRecent() {
-  if (!state.sbConfigured || !sb.getSession()) return;
+  if (!(state.sbConfigured || state.demoStore) || !auth().getSession()) return;
   const list = $("#recent-list");
   try {
-    const pages = await sb.listRecentPages();
+    const pages = await auth().listRecentPages();
     if (!pages.length) {
       list.innerHTML = `<p class="recent__empty">No pages yet - your first photo will appear here.</p>`;
       return;
@@ -546,20 +563,47 @@ async function loadRecent() {
 }
 
 /* ------------------------------------------------------------- saving */
+// Demo pages keep a small readable thumbnail (device storage is limited).
+async function shrinkForDemo(blob) {
+  if (!blob) return null;
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("could not shrink"));
+      el.src = objectUrl;
+    });
+    const scale = Math.min(1, 720 / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    c.getContext("2d").drawImage(img, 0, 0, w, h);
+    return c.toDataURL("image/jpeg", 0.62);
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function resetSaveUi() {
   const btn = $("#btn-save");
   const st = $("#save-status");
   st.hidden = true;
   st.classList.remove("save-error");
   st.textContent = "";
-  btn.hidden = !(state.sbConfigured && sb.getSession() && !state.savedPageId);
+  btn.hidden = !((state.sbConfigured || state.demoStore) && auth().getSession() && !state.savedPageId);
   btn.disabled = false;
+  btn.classList.remove("is-saved");
   btn.innerHTML = "Save this page";
 }
 
 async function handleSave() {
   if (state.saving || !state.extraction) return;
-  const user = sb.getSession()?.user;
+  const user = auth().getSession()?.user;
   if (!user) {
     showAuth();
     return;
@@ -571,13 +615,15 @@ async function handleSave() {
   btn.textContent = "Saving…";
   st.hidden = false;
   st.classList.remove("save-error");
-  st.textContent = "Uploading the photo, then your rows…";
+  st.textContent = state.demoStore
+    ? "Saving to this device (demo mode)…"
+    : "Uploading the photo, then your rows…";
 
   try {
     const pageId = crypto.randomUUID();
     const userId = user.id;
     let photoPath = "no-photo.jpg";
-    if (state.jpegBlob) {
+    if (!state.demoStore && state.jpegBlob) {
       const up = await sb.uploadPagePhoto(pageId, state.jpegBlob);
       photoPath = up.path;
     }
@@ -602,6 +648,23 @@ async function handleSave() {
       flags: r.flags,
     }));
 
+    if (state.demoStore) {
+      // keep a readable thumbnail with the demo page; full photo stays in-session
+      const res = await demo.savePage({
+        takenOn: state.lastRequest?.baseDate || null,
+        pageTotalWritten: state.extraction.page_total_written ?? null,
+        pageWarnings: state.extraction.page_warnings ?? [],
+        rows: rowsPayload,
+        thumb: await shrinkForDemo(state.jpegBlob),
+      });
+      state.savedPageId = res.pageId;
+      st.textContent = `Saved on this device (demo) - ${res.savedRows} lines kept.`;
+      btn.textContent = "Saved ✓";
+      btn.classList.add("is-saved");
+      await loadRecent();
+      return;
+    }
+
     const res = await sb.savePage({
       photoPath,
       takenOn: state.lastRequest?.baseDate || null,
@@ -612,13 +675,14 @@ async function handleSave() {
     });
     state.savedPageId = res.pageId;
     st.textContent = `Saved - ${res.savedRows} lines and the photo are in your account.`;
-    btn.textContent = "Saved ✓";
+    btn.innerHTML = "Saved ✓";
+    btn.classList.add("is-saved");
     await loadRecent();
   } catch (e2) {
     st.classList.add("save-error");
     st.textContent = e2.message || "Could not save. Try again.";
     btn.disabled = false;
-    btn.textContent = "Save this page";
+    btn.innerHTML = "Save this page";
   } finally {
     state.saving = false;
   }
@@ -770,8 +834,11 @@ function wire() {
   $("#auth-form").addEventListener("submit", handleAuthSubmit);
   $("#btn-auth-toggle").onclick = () => setAuthMode(authMode === "signin" ? "signup" : "signin");
   $("#btn-signout").onclick = async () => {
-    await sb.signOut();
+    await auth().signOut();
     resetToUpload();
+    setAuthMode("signin");
+    $("#auth-email").value = "";
+    $("#auth-password").value = "";
     showAuth();
   };
   $("#btn-save").onclick = handleSave;
@@ -787,9 +854,12 @@ setAuthMode("signin");
   } catch {}
   state.sbConfigured = !!cfg?.configured;
   if (!state.sbConfigured) {
-    // Stage-1 mode: no keys yet -> review-only, nothing saved, no auth wall
-    showView("view-upload");
-    setStageNotes();
+    // No project keys yet: demo mode - accounts and saving work on this
+    // device only (clearly labeled), so the demo is complete without keys.
+    state.demoStore = true;
+    const session = await demo.restoreSession().catch(() => null);
+    if (session) await showSignedInHome();
+    else showAuth();
     return;
   }
   const session = await sb.restoreSession().catch(() => null);

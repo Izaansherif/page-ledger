@@ -10,6 +10,34 @@
   <meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z' fill='%23fff' opacity='.92'/%3E%3Cpath d='M13 12h7M13 16h7M13 20h4' stroke='%230f766e' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <script>
+    /* Opened as a plain file (file://)? Module scripts are blocked there, so
+       the whole app would look broken. Show exact instructions instead. This
+       classic script is the ONLY thing guaranteed to run on that path. */
+    if (location.protocol === "file:") {
+      document.addEventListener("DOMContentLoaded", function () {
+        var main = document.getElementById("view");
+        if (main) {
+          main.innerHTML =
+            '<div class="card card--open-tip">' +
+            '<div class="open-tip__ico" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 20h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>' +
+            "</div>" +
+            '<h1 class="hero-title">One double-click opens it correctly.</h1>' +
+            '<p class="hero-sub">You opened the app as a plain file - browsers block app features on that path.</p>' +
+            '<ol class="open-tip__steps">' +
+            "<li>Find the folder this file is in: <strong>pagebook</strong></li>" +
+            '<li>Double-click <strong>Start Page Ledger.bat</strong> (same folder)</li>' +
+            "<li>A black window stays open + the app opens at <strong>http://localhost:8888</strong></li>" +
+            "</ol>" +
+            '<p class="card__body">Keep the black window open. Everything works from that address: sign-up, reading pages, saving, follow-ups.</p>' +
+            "</div>";
+        }
+        var badge = document.getElementById("mode-badge");
+        if (badge) badge.hidden = true;
+      });
+    }
+  </script>
 </head>
 <body>
   <header class="appbar">
@@ -219,6 +247,7 @@
         </div>
         <h1 class="auth-title" id="auth-title">Your ledger, only yours.</h1>
         <p class="auth-sub">Sign in with email and a password. Every page you save stays private to this account.</p>
+        <p class="auth-demo-note" id="auth-demo-note" hidden>Demo mode: this account lives <strong>only in this browser</strong>. Real accounts with private cloud storage connect when the project is linked.</p>
 
         <form id="auth-form" autocomplete="on">
           <div class="field">
@@ -233,7 +262,7 @@
           <button id="btn-auth-submit" class="btn btn--primary btn--block" type="submit">Sign in</button>
           <button id="btn-auth-toggle" class="auth-toggle" type="button">New here? Create an account</button>
         </form>
-        <p class="auth-note">Your data is protected by database rules: no one else can read it, not even other accounts.</p>
+        <p class="auth-note" id="auth-note">Your data is protected by database rules: no one else can read it, not even other accounts.</p>
       </div>
     </section>
 

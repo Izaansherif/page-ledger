@@ -134,3 +134,13 @@ server.listen(PORT, () => {
   console.log(`AI_MODE: ${aiMode}  (mock = demo fixtures, zero credits; change in .env)`);
   console.log("Stop with Ctrl+C.\n");
 });
+
+server.on("error", (err) => {
+  if (err?.code === "EADDRINUSE") {
+    console.log(`\nPage Ledger is ALREADY RUNNING at http://localhost:${PORT}`);
+    console.log("(Your browser tab was opened there. This extra copy can close.)\n");
+    process.exit(0);
+  }
+  console.error("Server error:", err);
+  process.exit(1);
+});

@@ -13,10 +13,31 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 ## Status
 
 - **Stage 0 done** - AI spike, mock pipeline verified end-to-end
-- **Stage 1 done** - upload screen, extraction function, full review table (nothing saved yet)
-- Demo path needs **no Meta API key**: mock mode serves fixtures (zero credits); live mode is wired and ready for a key
+- **Stage 1 done** - upload screen, extraction function, full review table
+- **Stage 2 done, demo form** - sign-up + saving + recent pages work today via the on-device demo store; the real Supabase project connects at the end with `docs/SUPABASE-STEPS.md`
+- Demo path needs **no Meta API key** and no Supabase project: mock mode serves fixtures (zero credits); live mode is wired and ready for a key
 
-## Run the app (Stage 1)
+## How saving works right now
+
+- **No Supabase project connected?** The app runs in clearly-labeled
+  **demo mode**: sign-up, saving pages and the Recent list all work, but
+  everything is stored **only in this browser** on this device. Ideal for a
+  demo of the full loop.
+- **Connecting the real project:** follow `docs/SUPABASE-STEPS.md` - exact,
+  click-by-click, nothing to install. After that, accounts are real and pages
+  + photos go to the user's private cloud account under database rules.
+
+## Run the app
+
+**Easiest way (anyone):** double-click **`Start Page Ledger.bat`** in this
+folder. A black window opens and the app opens at http://localhost:8888.
+Keep the black window open while using the app. Double-click it again later
+and it politely says "already running" instead of erroring.
+
+*(If you ever open `index.html` directly as a file, the app shows a card
+with these same instructions instead of a broken page.)*
+
+Command-line way (same thing):
 
 ```
 node dev-server.js     #  ->  http://localhost:8888
@@ -27,7 +48,7 @@ Open http://localhost:8888 in a browser (on your phone over the same Wi-Fi, use 
 - **Add a notebook page** opens the camera on a phone (`capture="environment"`); drag-and-drop works on desktop.
 - Images are resized in the browser (long edge 1600px, JPEG q0.8) before upload.
 - **Try a sample page** runs the whole flow on a bundled public-domain ledger scan with matching fixture data (mock mode, zero credits).
-- The review screen shows the photo beside the editable table: amber = "AI was unsure, check this", red = bad phone; crossed-out rows stay excluded until you tick "keep"; follow-up dates must be confirmed by hand. Nothing is saved in Stage 1 - saving arrives with Supabase in Stage 2.
+- The review screen shows the photo beside the editable table: amber = "AI was unsure, check this", red = bad phone; crossed-out rows stay excluded until you tick "keep"; follow-up dates must be confirmed by hand.
 - The console logs latency, retries, token usage and estimated cost for every page read.
 
 ## Run the spike (Stage 0, terminal)
