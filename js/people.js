@@ -85,6 +85,7 @@ export function buildPeople(pages) {
           lastOn: "",
           lastDueOn: "",
           followUps: [],
+          history: [],
         };
         map.set(key, p);
       }
@@ -93,6 +94,9 @@ export function buildPeople(pages) {
       p.pageKeys.add(page.id);
       if (d > p.lastOn) p.lastOn = d;
       if (due > 0 && d > p.lastDueOn) p.lastDueOn = d;
+      if (paid || due || (r.note ?? "").trim()) {
+        p.history.push({ d, note: (r.note ?? "").trim(), paid, due });
+      }
       if (r.follow_up_confirmed && r.follow_up_date && !r.follow_up_done) {
         p.followUps.push({
           date: r.follow_up_date,
@@ -121,6 +125,7 @@ export function buildPeople(pages) {
     keep.nameMissing = keep.nameMissing && drop.nameMissing;
     if (!keep.name && drop.name) keep.name = drop.name;
     if (drop.followUps.length) keep.followUps.push(...drop.followUps);
+    if (drop.history.length) keep.history.push(...drop.history);
   };
   for (const p of list) {
     if (p.nameMissing) { out.push(p); continue; }
@@ -133,6 +138,8 @@ export function buildPeople(pages) {
   const all = out.map((p) => {
     p.pagesCount = p.pageKeys.size;
     delete p.pageKeys;
+    // newest first - the expandable timeline reads like a story
+    p.history.sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : 0));
     // most urgent un-done follow-up: the earliest date
     p.followUps.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
     p.followUp = p.followUps[0] ?? null;

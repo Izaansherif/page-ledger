@@ -415,6 +415,19 @@
 
       <div class="people-summary" id="people-summary"></div>
 
+      <!-- Section 3: find a person fast, or scope the list with one tap -->
+      <div class="people-tools" id="people-tools" hidden>
+        <div class="people-search">
+          <input id="people-search" class="people-search__input" type="search" placeholder="Search a name or phone&hellip;" autocomplete="off" aria-label="Search people by name or phone" />
+        </div>
+        <div class="people-chips" role="group" aria-label="Filter people">
+          <button class="pill people-chip" data-chip="all" type="button" aria-pressed="true">Everyone</button>
+          <button class="pill people-chip" data-chip="owes" type="button" aria-pressed="false">Owes money</button>
+          <button class="pill people-chip" data-chip="today" type="button" aria-pressed="false">Call today</button>
+          <button class="pill people-chip" data-chip="paid" type="button" aria-pressed="false">Paid</button>
+        </div>
+      </div>
+
       <!-- Stage 6: ask about your own figures (answers come only from your data) -->
       <div id="ask-block" class="ask" hidden>
         <p class="ask__label">Ask about your money</p>
@@ -424,6 +437,10 @@
           <button class="pill ask__pill" data-q="week" type="button">How was this week?</button>
           <button class="pill ask__pill" data-q="today" type="button">Who should I chase today?</button>
         </div>
+        <form id="ask-typed" class="ask__typed" autocomplete="off">
+          <input id="ask-typed-q" class="ask__typed-q" type="text" maxlength="140" placeholder="&hellip;or type your own question" aria-label="Type your own question about your figures" />
+          <button class="btn btn--ghost btn--small" type="submit">Ask</button>
+        </form>
         <div id="ask-answer" class="ask__a" hidden></div>
       </div>
 
@@ -441,6 +458,8 @@
         <h2 class="people-sub">Everyone</h2>
         <div id="people-list" class="people-list" role="list"></div>
       </div>
+
+      <p id="people-none" class="people-none" hidden>No one matches this search or filter.</p>
 
       <p class="people-skipped" id="people-skipped" hidden></p>
       <p class="stage-note">Totals come only from lines you kept on saved pages. Follow-ups appear here only after you confirm the date on the page.</p>
@@ -501,14 +520,21 @@
 
       <div class="review-grid">
         <figure class="photo-pane">
-          <button id="btn-zoom" class="photo-thumb" type="button" aria-label="Tap to zoom the original photo">
+          <div id="photo-box" class="photo-thumb" role="group" aria-label="Original page photo. Tap a line to jump to its row in the table.">
             <img id="thumb-img" alt="Original notebook page photo" />
-            <span class="photo-thumb__zoom-tag">Tap to zoom</span>
-          </button>
+            <div id="photo-bbox" class="photo-bbox" hidden></div>
+            <button id="btn-zoom" class="photo-thumb__zoom-tag" type="button" aria-label="Tap to zoom the original photo">Tap to zoom</button>
+          </div>
           <figcaption class="photo-note">Compare any line with the original before keeping it.</figcaption>
         </figure>
 
         <div class="table-pane">
+          <div class="rows-actions">
+            <button id="btn-confirm-clear" class="btn btn--ghost btn--small" type="button" title="Marks every line without a flag as checked - you can undo it">
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 12.5l4.6 4.6L19.5 7.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Confirm all clear lines
+            </button>
+          </div>
           <div class="table-cols table-cols--head" aria-hidden="true">
             <span>Who</span><span>Phone</span><span>Note</span><span>Paid</span><span>Due</span><span>Follow-up</span><span></span>
           </div>
@@ -567,6 +593,15 @@
       </button>
       <button id="btn-sheet-close" class="btn btn--ghost btn--block" type="button">Cancel</button>
     </div>
+  </div>
+
+  <!-- undo toast: every edit, confirm and delete can be taken back (one offer at a time) -->
+  <div id="undo-toast" class="undo-toast" hidden>
+    <span id="undo-text" class="undo-toast__text"></span>
+    <span class="undo-toast__row">
+      <button id="undo-btn" class="undo-toast__btn" type="button">Undo</button>
+      <button id="undo-x" class="undo-toast__x" type="button" aria-label="Dismiss">&times;</button>
+    </span>
   </div>
 
   <!-- first-visit coach (skippable): highlights the REAL UI, three steps -->

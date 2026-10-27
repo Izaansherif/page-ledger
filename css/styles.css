@@ -1740,3 +1740,196 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   .built__chev { transition: none; }
   .sample-card::after { transition: none; }
 }
+
+/* ============================================================ Section 3 */
+/* photo ↔ row locate: thin lines over the photo, one per table row */
+.photo-bbox { position: absolute; inset: 0; }
+.bbox-line {
+  position: absolute;
+  border: 1.5px solid rgb(138 90 43 / 0.55);
+  border-radius: 4px;
+  background: rgb(138 90 43 / 0.12);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.bbox-line:hover, .bbox-line--hot {
+  background: rgb(138 90 43 / 0.22);
+  border-color: var(--accent, #8a5a2b);
+  box-shadow: 0 0 0 3px rgb(138 90 43 / 0.20);
+}
+.photo-thumb.photo-locate { cursor: pointer; }
+.photo-thumb__zoom-tag { border: none; cursor: pointer; }
+.photo-thumb__zoom-tag:hover { background: rgb(28 25 23 / 0.88); }
+
+/* tapping a row nudges it while its line lights up on the photo */
+.row-flash { box-shadow: 0 0 0 3px rgb(138 90 43 / 0.35) !important; }
+
+/* rows appear one by one on the first paint after a read (capped) */
+#rows.revealing .rowcard { animation-delay: var(--d, 0ms); }
+
+/* confidence dot: the read's own honesty, one dot per row */
+.conf-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 1px;
+  background: var(--line-strong, #d6d0c2);
+}
+.conf-dot--hi { background: #15803d; }
+.conf-dot--mid { background: #b45309; }
+.conf-dot--low { background: #b91c1c; }
+#rows.revealing .conf-dot { animation: dot-pulse 0.75s ease-in-out 1 both; }
+#rows.revealing .rowcard:nth-child(2) .conf-dot { animation-delay: 0.09s; }
+#rows.revealing .rowcard:nth-child(3) .conf-dot { animation-delay: 0.18s; }
+@keyframes dot-pulse {
+  0% { transform: scale(0.6); }
+  55% { transform: scale(1.6); }
+  100% { transform: scale(1); }
+}
+
+/* one-tap row confirm */
+.row-ok {
+  flex: none;
+  width: 30px; height: 30px;
+  margin-right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--line, #e5e0d4);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-faint, #78716c);
+  cursor: pointer;
+}
+.row-ok:hover { border-color: var(--accent, #8a5a2b); color: var(--accent, #8a5a2b); }
+.row-ok--on {
+  background: #15803d14;
+  border-color: #15803d;
+  color: #15803d;
+}
+.rowcard.is-ok {
+  border-color: #15803d55;
+  background: linear-gradient(0deg, #15803d08, #15803d08), var(--surface, #fffdf8);
+}
+.rowcard.is-ok .rowcard__num { opacity: 0.75; }
+.rows-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 8px;
+}
+
+/* undo toast: calm, single offer, center-bottom */
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 58;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(430px, calc(100vw - 24px));
+  padding: 9px 10px 9px 14px;
+  border: 1px solid var(--line-strong, #d6d0c2);
+  border-radius: 12px;
+  background: var(--ink, #2c2619);
+  color: #fdf9ee;
+  font-size: 0.86rem;
+  box-shadow: 0 10px 26px rgb(30 22 8 / 0.30);
+}
+@media (max-width: 560px) {
+  .undo-toast { bottom: 78px; } /* above the phone action bar */
+}
+.undo-toast__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.undo-toast__row { display: flex; align-items: center; gap: 2px; flex: none; }
+.undo-toast__btn {
+  border: 1px solid rgba(253, 249, 238, 0.45);
+  background: transparent;
+  color: #fdf9ee;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.undo-toast__btn:hover { background: rgba(253, 249, 238, 0.12); }
+.undo-toast__x {
+  border: none;
+  background: transparent;
+  color: rgba(253, 249, 238, 0.75);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.undo-toast__x:hover { background: rgba(253, 249, 238, 0.10); }
+
+/* people: search + chips + expandable history + call */
+.people-tools { display: grid; gap: 8px; margin: 4px 0 12px; }
+.people-search__input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line, #e5e0d4);
+  border-radius: 12px;
+  background: var(--surface, #fffdf8);
+  color: var(--ink, #2c2619);
+  font-size: 0.95rem;
+}
+.people-search__input:focus { border-color: var(--accent, #8a5a2b); outline: none; }
+.people-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.people-chip[aria-pressed="true"] {
+  background: var(--accent, #8a5a2b);
+  border-color: var(--accent, #8a5a2b);
+  color: #fdf9ee;
+}
+.people-none {
+  text-align: center;
+  color: var(--ink-soft, #6d675c);
+  font-size: 0.9rem;
+  padding: 14px 0;
+}
+.pcard--fold .pcard__line { cursor: pointer; }
+.pcard--fold .pcard__who::after {
+  content: "";
+  display: inline-block;
+  margin-left: 8px;
+  width: 7px; height: 7px;
+  border-right: 2px solid var(--ink-faint, #78716c);
+  border-bottom: 2px solid var(--ink-faint, #78716c);
+  transform: rotate(0.4deg);
+  transition: transform 0.2s ease;
+}
+.pcard--open .pcard__who::after { transform: rotate(-133deg); }
+.pcard__history {
+  margin: 4px 0 8px;
+  border-top: 1px dashed var(--line, #e5e0d4);
+  padding-top: 8px;
+}
+.ph { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.ph__row { display: flex; align-items: baseline; gap: 8px; font-size: 0.85rem; }
+.ph__d { flex: none; color: var(--ink-faint, #78716c); min-width: 74px; }
+.ph__note { flex: 1; min-width: 0; color: var(--ink-soft, #6d675c); overflow-wrap: anywhere; }
+.ph__amt { flex: none; }
+.call-btn { text-decoration: none; display: inline-flex; align-items: center; }
+
+/* typed ask */
+.ask__typed { display: flex; gap: 8px; margin: 10px 0 0; }
+.ask__typed-q {
+  flex: 1;
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line, #e5e0d4);
+  border-radius: 12px;
+  background: var(--surface, #fffdf8);
+  color: var(--ink, #2c2619);
+  font-size: 0.95rem;
+}
+.ask__typed-q:focus { border-color: var(--accent, #8a5a2b); outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bbox-line, .row-flash, .conf-dot, .pcard--fold .pcard__who::after { transition: none; animation: none; }
+}

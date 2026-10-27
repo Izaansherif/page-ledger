@@ -60,6 +60,38 @@ const FLAG_LABELS = {
   struck_out: "crossed out",
 };
 
+const FIELD_UNDO_LABELS = {
+  name: "name",
+  phone: "phone",
+  note: "note",
+  amountPaid: "amount paid",
+  amountDue: "amount due",
+  follow: "follow-up date",
+};
+
+/* ------------------------------------------------------------- undo toast */
+// Every edit, confirm and delete offers one calm Undo. One toast at a time;
+// the newest action replaces the old offer (an honest, simple undo stack).
+let undoTimer = null;
+
+function showUndo(label, undoFn) {
+  const toast = $("#undo-toast");
+  if (!toast) return;
+  clearTimeout(undoTimer);
+  $("#undo-text").textContent = label;
+  toast.hidden = false;
+  const clear = () => {
+    toast.hidden = true;
+    clearTimeout(undoTimer);
+  };
+  $("#undo-btn").onclick = () => {
+    clear();
+    undoFn();
+  };
+  $("#undo-x").onclick = clear;
+  undoTimer = setTimeout(clear, 5500);
+}
+
 function showView(name) {
   for (const v of ["view-upload", "view-loading", "view-error", "view-review", "view-auth", "view-people"]) {
     $(`#${v}`).hidden = v !== name;
@@ -129,6 +161,7 @@ function resetToUpload() {
   state.model = null;
   state.latencyMs = null;
   state.retries = null;
+  syncBboxOverlay();
   setBadge();
   resetSaveUi();
   showSignedInHome();
@@ -151,6 +184,10 @@ function makeRow(src = {}) {
       amountPaid: { value: src.amount_paid ?? null, conf: conf.amount_paid ?? null, edited: false },
       amountDue:  { value: src.amount_due ?? null, conf: conf.amount_due ?? null, edited: false },
     },
+    // normalized [x, y, w, h] in 0-1000 page coordinates (tap row -> find the
+    // line on the photo). Absent for pages/rows the model could not locate.
+    bbox: Array.isArray(src.bbox) && src.bbox.length === 4 ? [...src.bbox] : null,
+    ok: !!src.ok, // owner marked this row as checked (one-tap confirm)
     follow: {
       text: src.follow_up_text ?? null,
       date: src.follow_up_date ?? null,
@@ -316,7 +353,12 @@ function inputHTML(row, key, label, type) {
       ? ["field", lowClassForFollow(row)].filter(Boolean).join(" ")
       : fieldClasses(row, key);
   const hint = key === "follow" ? hintForFollow(row) : hintFor(row, key);
-  const extras = isMoney ? 'inputmode="decimal" min="0" step="any"' : "";
+  const extras =
+    isMoney
+      ? 'inputmode="decimal" min="0" step="any"'
+      : key === "phone"
+        ? 'inputmode="numeric" autocomplete="off" maxlength="15"'
+        : "";
   return `<div class="${classes}" data-part="${key}">
     <label>${label}</label>
     <input type="${type}" data-act="edit" data-id="${row.id}" data-key="${key}" value="${escapeAttr(value ?? "")}" ${extras} />
@@ -338,16 +380,30 @@ function rowCardHTML(row, index, noAnim = false) {
     ? `<button class="raw-toggle" type="button" data-act="raw" data-id="${row.id}" aria-expanded="false" title="Show the line as written on the page">see line</button>`
     : "";
 
+  // one-tap "this row is right" + confidence dot (lowest field confidence)
+  const confs = ["name", "phone", "amountPaid", "amountDue", "follow"]
+    .map((k) => (k === "follow" ? row.follow.conf : row.fields[k]?.conf))
+    .filter((c) => typeof c === "number");
+  const minConf = confs.length ? Math.min(...confs) : null;
+  const dotCls = minConf == null ? " conf-dot--na" : minConf >= 0.75 ? " conf-dot--hi" : minConf >= 0.5 ? " conf-dot--mid" : " conf-dot--low";
+  const okBtn = `<button class="row-ok${row.ok ? " row-ok--on" : ""}" type="button" data-act="rowok" data-id="${row.id}" ${
+    row.ok ? "" : 'title="Mark this line as checked"'
+  } aria-pressed="${row.ok}" aria-label="Confirm this row"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 12.5l4.6 4.6L19.5 7.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+
   const rawLine = row.raw
     ? `<p class="rawline" data-rawid="${row.id}" hidden><code>${escapeAttr(row.raw)}</code></p>`
     : "";
 
+  // reveal: first paint after a read staggers lines one by one (capped);
+  // every later repaint is instant
+  const delayVar = state.reveal ? `;--d:${Math.min(index * 90, 1050)}ms` : "";
+
   return `
-  <div class="rowcard${row.struckOut ? " struck" : ""}${noAnim ? " no-anim" : ""}" role="listitem"${noAnim ? "" : ` style="--i:${index}"`} data-id="${row.id}">
+  <div class="rowcard${row.struckOut ? " struck" : ""}${row.ok ? " is-ok" : ""}${noAnim ? " no-anim" : ""}" role="listitem"${noAnim ? "" : ` style="--i:${index}${delayVar}"`} data-id="${row.id}">
     <div class="rowcard__top">
-      <span class="rowcard__num">${index + 1}</span>
+      <span class="rowcard__num"><i class="conf-dot${dotCls}" title="How sure the read is" aria-hidden="true"></i>${index + 1}</span>
       <div class="rowcard__flags">${flagsHTML}</div>
-      <div class="rowcard__tools">${struckToggle}${rawBtn}
+      <div class="rowcard__tools">${okBtn}${struckToggle}${rawBtn}
         <button class="row-del" type="button" data-act="del" data-id="${row.id}" title="Remove this row" aria-label="Remove this row">&#10005;</button>
       </div>
     </div>
@@ -459,9 +515,17 @@ function renderRows() {
   const container = $("#rows");
   if (!state.rows.length) {
     container.innerHTML = $("#tpl-empty").innerHTML;
+    container.classList.remove("revealing");
+    syncBboxOverlay();
     return;
   }
+  container.classList.toggle("revealing", !!state.reveal);
   container.innerHTML = state.rows.map((r, i) => rowCardHTML(r, i)).join("");
+  if (state.reveal) {
+    state.reveal = false; // this paint only
+    setTimeout(() => container.classList.remove("revealing"), 1400);
+  }
+  syncBboxOverlay();
 }
 
 function renderWarnings(extraction) {
@@ -482,8 +546,107 @@ function renderWarnings(extraction) {
   }
 }
 
+/* ---------------------------------------------- photo ↔ row locate (bbox) */
+// Rows can carry a normalized [x,y,w,h] (0-1000) position on the photo.
+// A tap on a row highlights that line ON the photo; a tap on a highlighted
+// photo area scrolls to its row. Everything degrades silently when the
+// boxes are missing (older pages) - the zoom flow still works.
+
+function photoBoxMapping() {
+  const img = $("#thumb-img");
+  const box = $("#photo-box");
+  if (!img || !box || !img.naturalWidth) return null;
+  const bw = box.clientWidth;
+  const bh = box.clientHeight;
+  const nw = img.naturalWidth;
+  const nh = img.naturalHeight;
+  // .photo-thumb img uses object-fit: cover with object-position: top:
+  // one scale, horizontal center-crop, anchored to the top edge
+  const scale = Math.max(bw / nw, bh / nh);
+  const offX = (bw - nw * scale) / 2;
+  const offY = 0;
+  return { bw, bh, scale, offX, offY };
+}
+
+function bboxToClientRect(bbox) {
+  const m = photoBoxMapping();
+  if (!m) return null;
+  const nw = $("#thumb-img").naturalWidth;
+  const nh = $("#thumb-img").naturalHeight;
+  const x = Math.round((bbox[0] / 1000) * nw * m.scale - m.offX);
+  const y = Math.round((bbox[1] / 1000) * nh * m.scale - m.offY);
+  const w = Math.round((bbox[2] / 1000) * nw * m.scale);
+  const h = Math.round((bbox[3] / 1000) * nh * m.scale);
+  // outside the visible crop -> not highlightable right now
+  if (x + w <= 0 || y + h <= 0 || x >= m.bw || y >= m.bh) return null;
+  return { x, y, w, h };
+}
+
+function syncBboxOverlay() {
+  const wrap = $("#photo-bbox");
+  if (!wrap) return;
+  const layout = state.rows
+    .map((r) => ({ id: r.id, rect: r.bbox ? bboxToClientRect(r.bbox) : null }))
+    .filter((e) => e.rect);
+  const box = $("#photo-box");
+  if (!layout.length || !box?.clientWidth) {
+    wrap.hidden = true;
+    wrap.innerHTML = "";
+    box?.classList.remove("photo-locate");
+    return;
+  }
+  wrap.hidden = false;
+  box.classList.add("photo-locate");
+  wrap.innerHTML = layout
+    .map(({ id, rect }) => {
+      const idAttr = escapeAttr(id);
+      return `<span class="bbox-line" data-row="${idAttr}" style="left:${rect.x}px;top:${rect.y}px;width:${rect.w}px;height:${rect.h}px" title="This row in the table"></span>`;
+    })
+    .join("");
+}
+
+function highlightRowOnPhoto(rowId, { scroll = false } = {}) {
+  const span = document.querySelector(`.bbox-line[data-row="${CSS.escape(rowId)}"]`);
+  if (!span) return false;
+  document.querySelectorAll(".bbox-line--hot").forEach((s) => s.classList.remove("bbox-line--hot"));
+  span.classList.add("bbox-line--hot");
+  if (scroll) span.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  return true;
+}
+
+function rowOnPhotoHighlight(rowId) {
+  // tap a ROW -> the photo shows where that line is
+  if (!highlightRowOnPhoto(rowId)) return;
+  const card = $(`#rows .rowcard[data-id="${rowId}"]`);
+  card?.classList.add("row-flash");
+  setTimeout(() => card?.classList.remove("row-flash"), 900);
+}
+
+function photoRowAt(clientX, clientY) {
+  // tap the photo -> the row whose line is nearest the tap point
+  const box = $("#photo-box").getBoundingClientRect();
+  let best = null;
+  let bestD = Infinity;
+  for (const r of state.rows) {
+    if (!r.bbox) continue;
+    const rect = bboxToClientRect(r.bbox);
+    if (!rect) continue;
+    const cx = box.left + rect.x + rect.w / 2;
+    const cy = box.top + rect.y + rect.h / 2;
+    const dx = Math.max(0, Math.abs(clientX - cx) - rect.w / 2);
+    const dy = Math.max(0, Math.abs(clientY - cy) - rect.h / 2);
+    const d = Math.hypot(dx, dy);
+    if (d < bestD) { bestD = d; best = r; }
+  }
+  return best;
+}
+
 function renderReview() {
   setBadge();
+  // the view must be visible BEFORE painting rows: the reveal animation and
+  // the photo-line overlay both measure real layout
+  showView("view-review");
+  state.reveal = true; // first paint: lines appear one by one (renderRows clears it)
   renderRows();
   renderWarnings(state.extraction);
   updateReadbox();
@@ -501,7 +664,6 @@ function renderReview() {
     banner.hidden = true;
   }
   setStageNotes();
-  showView("view-review");
   window.scrollTo(0, 0);
   coach.reach("review");
 }
@@ -660,6 +822,7 @@ async function handleSelectedFile(fileLike, opts = {}) {
     state.savedPageId = null;
     state.saving = false;
     $("#thumb-img").src = state.thumbSrc;
+    $("#thumb-img").onload = () => syncBboxOverlay(); // boxes can render once the photo has dimensions
     console.log(`[upload] resized to ${width}x${height}, ${kb} KB, mime=${mime}`);
     await runExtraction({
       imageBase64: base64,
@@ -989,8 +1152,29 @@ function personCard(p, todayList) {
       </div>`;
   }
 
-  return `<article class="pcard${p.toCall ? " pcard--due" : ""}" role="listitem">
-    <div class="pcard__line">
+  // expandable history (Section 3): every kept line with money, newest first
+  const historyRows = (p.history ?? [])
+    .map((h) => {
+      const amt = h.paid
+        ? `<span class="ph__amt money money--in">₹${ppl.fmtRupees(h.paid)} in</span>`
+        : h.due
+          ? `<span class="ph__amt money money--due">₹${ppl.fmtRupees(h.due)} due</span>`
+          : "";
+      return `<li class="ph__row"><span class="ph__d">${escapeHTML(niceDay(h.d))}</span><span class="ph__note">${escapeHTML(h.note || "")}</span>${amt}</li>`;
+    })
+    .join("");
+  const history = historyRows
+    ? `<div class="pcard__history" hidden><ul class="ph">${historyRows}</ul></div>`
+    : "";
+
+  // Call is the phone's own dialer (os-level, nothing automated); the message
+  // sheet stays pre-written templates the owner sends themselves (rule 6).
+  const callBtn = p.waOk
+    ? `<a class="btn btn--ghost btn--small call-btn" href="tel:+${escapeAttr(p.digits)}" aria-label="Call ${escapeAttr(p.name)}">Call</a>`
+    : "";
+
+  return `<article class="pcard${p.toCall ? " pcard--due" : ""}${historyRows ? " pcard--fold" : ""}" role="listitem" data-key="${escapeAttr(p.key)}">
+    <div class="pcard__line"${historyRows ? ' title="Tap this person to see their history"' : ""}>
       <div class="pcard__who">
         <h3 class="pcard__name">${p.nameMissing ? `Name missing <span class="chip chip--amber">check the page</span>` : escapeHTML(p.name)}</h3>
         <p class="pcard__meta">${contact}${seen ? ` · ${escapeHTML(seen)}` : ""}</p>
@@ -998,7 +1182,9 @@ function personCard(p, todayList) {
       <div class="pcard__money">${money}</div>
     </div>
     ${follow}
+    ${history}
     <div class="pcard__actions">
+      ${callBtn}
       <button class="btn btn--primary btn--small msg-btn" data-key="${escapeAttr(p.key)}" type="button" ${p.waOk ? "" : "disabled"}>
         ${p.waOk ? "WhatsApp message" : "Phone missing - add it later"}
       </button>
@@ -1006,10 +1192,34 @@ function personCard(p, todayList) {
   </article>`;
 }
 
-function renderPeople(data, pagesCount) {
+/* ------------------------------------------------ people search + filters */
+// Chips scope the list; the summary chips above always show the WHOLE truth.
+const peopleFilter = { chip: "all", q: "" };
+
+function filterPeople(data) {
+  const q = peopleFilter.q.trim().toLowerCase();
+  const pass = (p) => {
+    if (peopleFilter.chip === "owes" && !(p.due > 0)) return false;
+    if (peopleFilter.chip === "today" && !p.toCall) return false;
+    if (peopleFilter.chip === "paid" && !(p.paid > 0)) return false;
+    if (q) {
+      const hay = `${p.name ?? ""} ${p.digits ?? ""} ${p.phone ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  };
+  return {
+    toCall: data.toCall.filter(pass),
+    rest: data.rest.filter(pass),
+    any: data.all.some(pass),
+  };
+}
+
+function renderPeople(data, pagesCount, fromFilter = false) {
   const hasPeople = data.all.length > 0;
   const emptyEl = $("#people-empty");
   $("#ask-block").hidden = !hasPeople;
+  $("#people-tools").hidden = !hasPeople;
   if (!hasPeople) {
     emptyEl.hidden = false;
     emptyEl.querySelector(".card__body").textContent = pagesCount
@@ -1018,12 +1228,15 @@ function renderPeople(data, pagesCount) {
   } else {
     emptyEl.hidden = true;
   }
-  $("#today-block").hidden = data.toCall.length === 0;
-  $("#today-list").innerHTML = data.toCall.map((p) => personCard(p, true)).join("");
-  $("#all-block").hidden = data.rest.length === 0;
-  $("#people-list").innerHTML = data.rest.map((p) => personCard(p, false)).join("");
+
+  const view = filterPeople(data);
+  $("#today-block").hidden = view.toCall.length === 0;
+  $("#today-list").innerHTML = view.toCall.map((p) => personCard(p, true)).join("");
+  $("#all-block").hidden = view.rest.length === 0;
+  $("#people-list").innerHTML = view.rest.map((p) => personCard(p, false)).join("");
+  $("#people-none").hidden = view.any || !hasPeople;
   $("#people-summary").innerHTML = hasPeople ? summaryChips(data) : "";
-  if (hasPeople) animateCounts($("#people-summary"));
+  if (hasPeople && !fromFilter) animateCounts($("#people-summary"));
   const sk = $("#people-skipped");
   if (data.skipped) {
     sk.hidden = false;
@@ -1087,6 +1300,18 @@ async function handleFollowDone(pageId, rowId) {
 }
 
 function onPeopleAction(e) {
+  // tap the person line -> fold open their history (Section 3)
+  const lineEl = e.target.closest(".pcard__line");
+  if (lineEl) {
+    const card = lineEl.closest(".pcard");
+    const hist = card?.querySelector(".pcard__history");
+    if (hist) {
+      const open = card.classList.toggle("pcard--open");
+      hist.hidden = !open;
+      lineEl.setAttribute("aria-expanded", String(open));
+    }
+    return;
+  }
   const done = e.target.closest(".pcard__done");
   if (done) {
     done.disabled = true;
@@ -1176,6 +1401,7 @@ async function handleSave() {
       followUpConfirmed: r.follow.confirmed,
       struckOut: r.struckOut,
       included: r.included,
+      markedOk: !!r.ok, // one-tap row confirmation for this session
       raw: r.raw,
       confidence: {
         name: r.fields.name.conf, phone: r.fields.phone.conf,
@@ -1351,6 +1577,75 @@ function wire() {
     refreshRow(t.dataset.id, key);
   });
 
+  // undo snapshots for plain edits: taken at FIRST focus of an edit session
+  // (a Map keyed by row+field - refreshRow replaces the focused node, firing
+  // focusout→focusin, and the snapshot must survive that), offered on blur.
+  const editSnaps = new Map();
+  const snapKey = (id, key) => `${id}:${key}`;
+  rowsEl.addEventListener("focusin", (e) => {
+    const t = e.target;
+    if (!t.matches("input[data-act='edit'], input[data-act]")) return;
+    const row = state.rows.find((r) => r.id === t.dataset?.id);
+    if (!row) return;
+    const k = snapKey(t.dataset.id, t.dataset.key);
+    if (editSnaps.has(k)) return; // the edit session already has its "before"
+    const isFollow = t.dataset.key === "follow";
+    const prev = isFollow ? row.follow.date : (row.fields[t.dataset.key]?.value ?? "");
+    editSnaps.set(k, { id: t.dataset.id, key: t.dataset.key, prev: String(prev ?? ""), kind: isFollow ? "follow" : "field" });
+  });
+  rowsEl.addEventListener("focusout", (e) => {
+    const t = e.target;
+    if (!t.matches?.("input[data-act='edit'], input[data-act]")) return;
+    const k = snapKey(t.dataset?.id ?? "", t.dataset?.key ?? "");
+    const snap = editSnaps.get(k);
+    editSnaps.delete(k);
+    if (!snap) return;
+    const row = state.rows.find((r) => r.id === snap.id);
+    if (!row) return;
+    const now = snap.kind === "follow" ? String(row.follow.date ?? "") : String(row.fields[snap.key]?.value ?? "");
+    if (now === snap.prev) return;
+    const label = FIELD_UNDO_LABELS[snap.key] ?? "edit";
+    showUndo(`Changed ${label} (${snap.prev} → ${now})`, () => {
+      if (snap.kind === "follow") row.follow.date = snap.prev || null;
+      else if (row.fields[snap.key]) {
+        row.fields[snap.key].value = snap.key === "amountPaid" || snap.key === "amountDue"
+          ? (snap.prev === "" ? null : Number(snap.prev))
+          : snap.prev;
+      }
+      refreshRow(snap.id, null);
+    });
+  });
+
+  // Enter = confirm the row; ↓ / ↑ walk the same field across rows
+  rowsEl.addEventListener("keydown", (e) => {
+    const t = e.target;
+    if (!t.matches?.("input[data-act='edit']")) return;
+    const row = state.rows.find((r) => r.id === t.dataset?.id);
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!row) return;
+      editSnaps.delete(snapKey(row.id, t.dataset.key)); // commit: no edit-undo dwarfs the confirm toast
+      if (!row.ok) {
+        row.ok = true; // the owner says: this line is right
+        refreshRow(row.id, null);
+        showUndo(`Marked "${row.fields.name.value || "row"}" as checked`, () => {
+          row.ok = false;
+          refreshRow(row.id, null);
+        });
+        t.blur();
+      }
+      return;
+    }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      const idx = state.rows.findIndex((r) => r.id === row?.id);
+      const next = state.rows[idx + (e.key === "ArrowDown" ? 1 : -1)];
+      if (!next) return;
+      e.preventDefault();
+      const el = $(`#rows .rowcard[data-id="${next.id}"] input[data-key="${t.dataset.key}"]`);
+      el?.focus();
+    }
+  });
+
   rowsEl.addEventListener("change", (e) => {
     const t = e.target;
     const row = state.rows.find((r) => r.id === t.dataset?.id);
@@ -1381,16 +1676,75 @@ function wire() {
       }
       return;
     }
+    // one-tap owner confirmation of one row (undoable)
+    const okBtn = e.target.closest("button[data-act='rowok']");
+    if (okBtn) {
+      const row = state.rows.find((r) => r.id === okBtn.dataset.id);
+      if (!row) return;
+      row.ok = !row.ok;
+      refreshRow(row.id, null);
+      showUndo(row.ok ? `Marked row as checked` : `Row back to unchecked`, () => {
+        row.ok = !row.ok;
+        refreshRow(row.id, null);
+      });
+      return;
+    }
+    // tapping the row (not on a control/input) -> show that line on the photo
+    const card = e.target.closest(".rowcard[data-id]");
+    const onControl = e.target.closest("button, input, label, .rawline");
+    if (card && !onControl) {
+      rowOnPhotoHighlight(card.dataset.id);
+      return;
+    }
     const t = e.target.closest("button[data-act='del']");
     if (!t) return;
     const row = state.rows.find((r) => r.id === t.dataset.id);
     if (!row) return;
     const label = row.fields.name.value || "this row";
     if (confirm(`Remove ${label}? (The notebook page stays untouched.)`)) {
-      state.rows = state.rows.filter((r) => r.id !== row.id);
+      const idx = state.rows.indexOf(row);
+      state.rows.splice(idx, 1);
       renderRows();
       updateTotals();
+      showUndo(`Removed ${label}`, () => {
+        state.rows.splice(Math.min(idx, state.rows.length), 0, row);
+        renderRows();
+        updateTotals();
+      });
     }
+  });
+
+  // one tap marks every clean line checked (undo restores the previous marks)
+  $("#btn-confirm-clear").onclick = () => {
+    const before = new Map(state.rows.map((r) => [r.id, r.ok]));
+    let changed = 0;
+    for (const r of state.rows) {
+      const clean = !r.struckOut && r.included && (r.flags ?? []).length === 0;
+      if (clean && !r.ok) { r.ok = true; changed++; }
+    }
+    if (!changed) return;
+    renderRows();
+    updateTotals();
+    showUndo(`Marked ${changed} line${changed === 1 ? "" : "s"} checked`, () => {
+      for (const r of state.rows) r.ok = before.get(r.id) ?? false;
+      renderRows();
+      updateTotals();
+    });
+  };
+
+  // photo tap -> scroll to the nearest row (only when row boxes exist; the
+  // zoom tag keeps its own open-zoom job)
+  $("#photo-box").addEventListener("click", (e) => {
+    if (e.target.closest("#btn-zoom")) return;
+    if ($("#photo-bbox")?.hidden) return;
+    const row = photoRowAt(e.clientX, e.clientY);
+    if (!row) return;
+    highlightRowOnPhoto(row.id);
+    const card = $(`#rows .rowcard[data-id="${row.id}"]`);
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.add("row-flash");
+    setTimeout(() => card.classList.remove("row-flash"), 1200);
   });
 
   // zoom overlay
@@ -1408,6 +1762,8 @@ function wire() {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeZoom();
   });
+  // row positions on the photo depend on the displayed crop -> recompute
+  window.addEventListener("resize", () => syncBboxOverlay());
 
   // --- Stage 2: auth + saving
   $("#auth-form").addEventListener("submit", handleAuthSubmit);
@@ -1431,6 +1787,31 @@ function wire() {
     hidePeopleNudge();
   };
   $("#btn-people-back").onclick = () => showView("view-upload");
+
+  /* ------------- Section 3: people search + filter chips + history ------- */
+  $("#people-search").addEventListener("input", (e) => {
+    peopleFilter.q = e.target.value;
+    renderPeople(peopleCache.data, peopleCache.pagesCount ?? 0, true);
+  });
+  [...document.querySelectorAll(".people-chip")].forEach((chipBtn) => {
+    chipBtn.onclick = () => {
+      peopleFilter.chip = chipBtn.dataset.chip;
+      [...document.querySelectorAll(".people-chip")].forEach((x) =>
+        x.setAttribute("aria-pressed", String(x === chipBtn)),
+      );
+      renderPeople(peopleCache.data, peopleCache.pagesCount ?? 0, true);
+    };
+  });
+
+  /* ------------- Section 3: ask with your own words ---------------------- */
+  $("#ask-typed").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const q = $("#ask-typed-q").value.trim();
+    if (!q) return;
+    handleAsk(q); // free-form question, same grounded brief + demo labels
+    $("#ask-typed-q").value = "";
+  });
+
   $("#today-list").addEventListener("click", onPeopleAction);
   $("#people-list").addEventListener("click", onPeopleAction);
   $("#btn-sheet-close").onclick = closeMsgSheet;
