@@ -51,8 +51,42 @@ function persist(store) {
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
 /* ------------------------------------------------------------------ session */
-export function getSession() {
+// No sign-up wall in demo: the browser IS the account. The first visit gets a
+// device owner automatically; stores from earlier versions (email sign-up era)
+// adopt their existing user so saved pages keep showing.
+const DEVICE_OWNER = "owner@this-device";
+
+function ensureSession() {
+  if (session) return session;
+  const store = read();
+  let email = store.users[DEVICE_OWNER] ? DEVICE_OWNER : null;
+  if (!email) {
+    const have = Object.keys(store.users);
+    if (!have.length) email = DEVICE_OWNER;
+    else {
+      // continuity: adopt the user who owns the most saved pages (old
+      // sign-up-era stores keep their data); tie -> first key
+      email = have[0];
+      let best = 0;
+      for (const e of have) {
+        const n = store.pages.filter((p) => p?.owner === store.users[e]?.email).length;
+        if (n > best) {
+          best = n;
+          email = e;
+        }
+      }
+    }
+    if (!store.users[email]) {
+      store.users[email] = { email, createdAt: Date.now() };
+      write(store);
+    }
+  }
+  saveSession(store.users[email]);
   return session;
+}
+
+export function getSession() {
+  return ensureSession();
 }
 
 export function currentUserId() {

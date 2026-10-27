@@ -204,13 +204,29 @@
 
         <div class="rule"><span>or</span></div>
 
-        <button id="btn-sample" class="btn btn--ghost btn--block" type="button">
-          Try a sample page
-          <span class="btn__hint">no credits used</span>
-        </button>
+        <div class="samples" id="samples">
+          <p class="samples__label">No photo handy? Read a sample page:</p>
+          <div class="samples__grid">
+            <button class="sample-card" data-n="1" type="button">
+              <img class="sample-card__img" src="/fixtures/demo-pages/page1-thumb.jpg" width="340" height="539" alt="Sample notebook page 1" loading="lazy" />
+              <span class="sample-card__t">Sample 1</span>
+              <span class="sample-card__d">two customers, one payment</span>
+            </button>
+            <button class="sample-card" data-n="2" type="button">
+              <img class="sample-card__img" src="/fixtures/demo-pages/page2-thumb.jpg" width="340" height="539" alt="Sample notebook page 2" loading="lazy" />
+              <span class="sample-card__t">Sample 2</span>
+              <span class="sample-card__d">fading ink, a struck line</span>
+            </button>
+            <button class="sample-card" data-n="3" type="button">
+              <img class="sample-card__img" src="/fixtures/demo-pages/page3-thumb.jpg" width="340" height="539" alt="Sample notebook page 3" loading="lazy" />
+              <span class="sample-card__t">Sample 3</span>
+              <span class="sample-card__d">smudges, paid in work</span>
+            </button>
+          </div>
+        </div>
 
         <p class="dropzone__hint" id="drop-hint">
-          On a computer you can also drag a photo here.
+          On a computer you can also drag a photo into this card.
         </p>
       </div>
 
@@ -373,6 +389,8 @@
 
       <div id="warnings" class="warnings" hidden></div>
 
+      <p id="demo-banner" class="demo-banner" hidden></p>
+
       <!-- Stage 5: grounded read details - what the AI did and did not see -->
       <details id="readbox" class="readbox" hidden>
         <summary>How this page was read</summary>
@@ -400,6 +418,7 @@
       <div class="review-actions">
         <button id="btn-save" class="btn btn--primary" type="button" hidden>Save this page</button>
         <p class="save-status" id="save-status" hidden></p>
+        <button id="btn-gotop" class="btn btn--primary" type="button" hidden>See your people &amp; money &rarr;</button>
         <button id="btn-back" class="btn btn--ghost" type="button">Read another page</button>
         <p class="stage-note" id="review-note">Stage&nbsp;1 preview: nothing is saved yet - saving arrives with your project keys.</p>
       </div>

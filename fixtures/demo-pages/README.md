@@ -25,8 +25,13 @@ North Carolina, USA):
   a payment line `Cr. By Cash`, one crossed-out line and faded patches).
   The mock extraction fixture `fixtures/spike/page1.json` is written to match
   this page so the review table makes sense next to it.
-- `page2.jpg`, `page3.jpg` — extra handwriting pages for later stages
-  (demo mode / weekly digest).
+- `page2.jpg`, `page3.jpg` — extra handwriting pages, now each wired to its
+  own invented fixture (`fixtures/spike/page2.json`, `page3.json`): page 2
+  shows a struck line + an unreadable margin line + a payment line; page 3
+  shows a smudged amount left blank, a payment settled by work, and a
+  follow-up token (`{{TODAY+5}}`).
+- `page1-thumb.jpg` / `page2-thumb.jpg` / `page3-thumb.jpg` — small (340 px)
+  home-screen thumbnails for the sample cards; 18–24 KB each.
 
 ## Why historical pages?
 

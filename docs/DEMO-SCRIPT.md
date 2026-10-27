@@ -3,9 +3,9 @@
 Target: the hackathon judging video (required, primary artifact).
 Recording: laptop browser at 1280×720 minimum (phone layout can be shown at
 the end in a side-by-side or a second window). Quiet room — one segment uses
-the real microphone. Reset the demo BEFORE recording: sign in as the demo
-account, press **Erase demo pages** in the top bar, sign up fresh
-`demo.test@pageledger.app` / any password so the video starts clean but ends
+the real microphone. Reset the demo BEFORE recording: press **Erase demo
+pages** in the top bar (no sign-in exists in demo — the device *is* the
+account), then save the sample page once so the video starts clean but ends
 with data on screen.
 
 Every label on screen says what is real: demo mode is announced by a badge
@@ -85,8 +85,8 @@ End card: repo URL + live URL (fill in after deploy).
 
 ### Recording checklist
 
-- [ ] Fresh demo state: erase demo pages → sign up → save the sample ONCE so
-      the recent strip shows ≥1 page before the recording continues.
+- [ ] Fresh demo state: Erase demo pages (top bar) → reload → save the sample
+      ONCE so the recent strip shows ≥1 page before the recording continues.
 - [ ] Mic tested once before take (the browser will ask permission — allow and
       keep it allowed, so no dialog appears mid-take).
 - [ ] Do not show any real person's data: fixture/exported sample pages only.

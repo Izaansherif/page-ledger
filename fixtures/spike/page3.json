@@ -1,0 +1,195 @@
+{
+  "columns_detected": [
+    "date",
+    "goods / charge",
+    "amount"
+  ],
+  "rows": [
+    {
+      "row_index": 0,
+      "raw_text": "Wilbur Oats (1861) - account heading, hand changes mid-page",
+      "name": "Wilbur Oats",
+      "phone": "+91 95390 00057",
+      "note": "account heading - demo phone, not from the page",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["demo phone added"],
+      "confidence": {
+        "name": 0.68,
+        "phone": 0.6,
+        "amount_paid": null,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 1,
+      "raw_text": "Jan 22: 1 gt Rum 46, 3 Dr Wormwod 9 - 55",
+      "name": "Wilbur Oats",
+      "phone": null,
+      "note": "Jan 22 - rum + bitters",
+      "amount_paid": null,
+      "amount_due": 55,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.85,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.68,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 2,
+      "raw_text": "Febr 8: [smudged] 1 qt Spirit",
+      "name": "Wilbur Oats",
+      "phone": null,
+      "note": "Feb 8 - spirits; amount smudged, left blank",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["amount unreadable"],
+      "confidence": {
+        "name": 0.78,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 3,
+      "raw_text": "Febr 20: Cr by threshing - 60",
+      "name": "Wilbur Oats",
+      "phone": null,
+      "note": "payment line, work instead of money",
+      "amount_paid": 60,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.8,
+        "phone": null,
+        "amount_paid": 0.72,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 4,
+      "raw_text": "March 9: 2 Dr Cherry 10, baling cord 8 - 18",
+      "name": "Wilbur Oats",
+      "phone": null,
+      "note": "March 9 - cherry bitters + cord",
+      "amount_paid": null,
+      "amount_due": 18,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.84,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.64,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 5,
+      "raw_text": "[bottom patch water-stained] ...day promised to pay in weeks end",
+      "name": null,
+      "phone": null,
+      "note": "water stain - name unreadable",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": "promised to pay at week's end",
+      "follow_up_date": "{{TODAY}}",
+      "struck_out": false,
+      "flags": ["name unreadable"],
+      "confidence": {
+        "name": null,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": null,
+        "follow_up_date": 0.42
+      }
+    },
+    {
+      "row_index": 6,
+      "raw_text": "A. Ainsworth (1863, later hand) - heading",
+      "name": "A. Ainsworth",
+      "phone": "+91 94470 00068",
+      "note": "a later account by a different hand - demo phone, not from the page",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["different ink", "demo phone added"],
+      "confidence": {
+        "name": 0.62,
+        "phone": 0.6,
+        "amount_paid": null,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 7,
+      "raw_text": "April 14: 1 qt Whiskey 40, 2 Dr Cordial 12 - 52",
+      "name": "A. Ainsworth",
+      "phone": null,
+      "note": "April 14 - whiskey + cordial",
+      "amount_paid": null,
+      "amount_due": 52,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.82,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.7,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 8,
+      "raw_text": "April 20: 1 gt N E Rum 44",
+      "name": "A. Ainsworth",
+      "phone": null,
+      "note": "April 20 - rum",
+      "amount_paid": null,
+      "amount_due": 44,
+      "follow_up_text": "nephew will pay for both lines on his next round",
+      "follow_up_date": "{{TODAY+5}}",
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.81,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.67,
+        "follow_up_date": 0.55
+      }
+    }
+  ],
+  "page_total_written": null,
+  "page_warnings": [
+    "The page mixes two hands and two inks - accounts kept apart",
+    "A water stain hides one day-line and one bottom line",
+    "One payment was settled by work (threshing), not money"
+  ]
+}

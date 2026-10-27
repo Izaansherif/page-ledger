@@ -71,7 +71,7 @@ function setBadge() {
     return;
   }
   badge.hidden = false;
-  badge.textContent = state.lastRequest?.mockFixture ? "Sample reading · demo" : "Demo data · mock";
+  badge.textContent = state.lastRequest?.mockFixture ? "Sample page · demo" : "Demo reading · your photo kept";
 }
 
 function resetToUpload() {
@@ -454,6 +454,16 @@ function renderReview() {
   state.animateTotalsNext = true;
   updateTotals();
   resetSaveUi();
+  // What am I looking at: a bundled sample, or my own photo in demo mode?
+  const banner = $("#demo-banner");
+  if (state.demoMode) {
+    banner.hidden = false;
+    banner.textContent = state.lastRequest?.mockFixture
+      ? "Sample page - the demo AI read a bundled example so you can try everything without a real photo or key."
+      : "Demo reading - your photo stays in the app, but the rows below come from the sample. Real photo reading switches on when the project key is connected.";
+  } else {
+    banner.hidden = true;
+  }
   setStageNotes();
   showView("view-review");
   window.scrollTo(0, 0);
@@ -516,7 +526,9 @@ function updateReadbox() {
     <p class="readbox__tech">${escapeHTML(tech)}</p>
     <p class="readbox__honest">${
       state.demoMode
-        ? "Demo read: a saved sample page stands in for your photo so no credits are spent - its rows are stand-in data, clearly re-labeled, never invented live."
+        ? (state.lastRequest?.mockFixture
+            ? "Demo read: this sample page is read by fixture, so nothing is charged - the rows are stand-in data, clearly re-labeled, never invented live."
+            : "Demo read: no key yet, so these rows are stand-in sample data - your own photo is kept and the same photo reads for real once the project key is connected.")
         : "Nothing is invented: a field stays empty unless the page really shows it, and every line waits for your check before saving."
     }</p>
   `;
@@ -649,25 +661,34 @@ async function showSignedInHome() {
   $("#recent").hidden = !signedIn;
   $("#account").hidden = !(state.sbConfigured || state.demoStore);
   setPeopleVisible();
-  const sess = auth().getSession();
-  $("#account-email").textContent = signedIn ? `${sess?.user?.email || ""}${state.demoStore ? " · demo" : ""}` : "";
-  $("#btn-reset-demo").hidden = !state.demoStore;
+  if (state.demoStore) {
+    // no sign-out: this browser IS the account; the erase button covers resets
+    $("#account-email").textContent = "Saved on this device · demo";
+    $("#btn-signout").hidden = true;
+    $("#btn-reset-demo").hidden = false;
+  } else {
+    $("#account-email").textContent = auth().getSession()?.user?.email || "";
+    $("#btn-signout").hidden = false;
+    $("#btn-reset-demo").hidden = true;
+  }
   setStageNotes();
   showView("view-upload");
   if (signedIn) await loadRecent();
 }
 
 function showAuth() {
+  // Demo mode has no sign-in wall: this browser IS the account (demo-store
+  // keeps a constant device owner), so an auth detour would only confuse.
+  if (state.demoStore) {
+    showSignedInHome();
+    return;
+  }
   $("#account").hidden = true;
   $("#btn-save").hidden = true;
   setPeopleVisible();
-  $("#review-note").textContent = state.demoStore
-    ? "Sign in to save pages on this device (demo mode)."
-    : "Sign in to save pages - your account, your data, protected by rules.";
-  $("#auth-demo-note").hidden = !state.demoStore;
-  $("#auth-note").textContent = state.demoStore
-    ? "Demo mode: nothing leaves this device - no cloud yet. Pages save only in this browser."
-    : "Your data is protected by database rules: no one else can read it, not even other accounts.";
+  $("#review-note").textContent = "Sign in to save pages - your account, your data, protected by rules.";
+  $("#auth-demo-note").hidden = true;
+  $("#auth-note").textContent = "Your data is protected by database rules: no one else can read it, not even other accounts.";
   showView("view-auth");
   window.scrollTo(0, 0);
 }
@@ -1054,6 +1075,7 @@ function resetSaveUi() {
   st.hidden = true;
   st.classList.remove("save-error");
   st.textContent = "";
+  $("#btn-gotop").hidden = true;
   btn.hidden = !((state.sbConfigured || state.demoStore) && auth().getSession() && !state.savedPageId);
   btn.disabled = false;
   btn.classList.remove("is-saved");
@@ -1121,6 +1143,7 @@ async function handleSave() {
       btn.textContent = "Saved ✓";
       btn.classList.add("is-saved");
       await loadRecent();
+      $("#btn-gotop").hidden = false; // the CRM hand-off: who to call, money, both
       return;
     }
 
@@ -1137,6 +1160,7 @@ async function handleSave() {
     btn.innerHTML = "Saved ✓";
     btn.classList.add("is-saved");
     await loadRecent();
+    $("#btn-gotop").hidden = false;
   } catch (e2) {
     st.classList.add("save-error");
     st.textContent = e2.message || "Could not save. Try again.";
@@ -1179,20 +1203,24 @@ function wire() {
   window.addEventListener("dragover", stop);
   window.addEventListener("drop", stop);
 
-  // sample page from bundled fixtures (mock, zero credits)
-  $("#btn-sample").onclick = async () => {
-    if (state.busy) return;
-    try {
-      const res = await fetch("/fixtures/demo-pages/page1.jpg");
-      if (!res.ok) throw new Error("The sample page photo could not be loaded.");
-      const blob = await res.blob();
-      await handleSelectedFile(blob, { mockFixture: "spike/page1" });
-    } catch (e) {
-      $("#error-msg").textContent = e.message || "The sample page could not be loaded.";
-      $("#error-detail").hidden = true;
-      showView("view-error");
-    }
-  };
+  // Sample pages from bundled fixtures (mock, zero credits). Each card reads
+  // its OWN fixture, so the review table matches what the card promises.
+  [...document.querySelectorAll(".sample-card")].forEach((card) => {
+    card.onclick = async () => {
+      if (state.busy) return;
+      const n = card.dataset.n;
+      try {
+        const res = await fetch(`/fixtures/demo-pages/page${n}.jpg`);
+        if (!res.ok) throw new Error("The sample page photo could not be loaded.");
+        const blob = await res.blob();
+        await handleSelectedFile(blob, { mockFixture: `spike/page${n}` });
+      } catch (e) {
+        $("#error-msg").textContent = e.message || "The sample page could not be loaded.";
+        $("#error-detail").hidden = true;
+        showView("view-error");
+      }
+    };
+  });
 
   $("#btn-retry").onclick = () => {
     if (state.lastRequest) runExtraction(state.lastRequest);
@@ -1345,6 +1373,8 @@ function wire() {
     closeMsgSheet();
   };
 
+  $("#btn-gotop").onclick = () => loadPeople();
+
   /* ---------------- Stage 5: honesty panel + page removal + demo reset ---------------- */
   $("#recent-list").addEventListener("click", async (e) => {
     const del = e.target.closest("button[data-del-page]");
@@ -1368,7 +1398,7 @@ function wire() {
   $("#btn-reset-demo").onclick = () => {
     if (
       !confirm(
-        "Erase every demo page AND the demo account from this browser? Nothing on any real project is touched, and this cannot be undone.",
+        "Erase every demo page from this browser? Nothing on any real project is touched, and this cannot be undone.",
       )
     ) {
       return;
@@ -1393,12 +1423,11 @@ setAuthMode("signin");
   } catch {}
   state.sbConfigured = !!cfg?.configured;
   if (!state.sbConfigured) {
-    // No project keys yet: demo mode - accounts and saving work on this
-    // device only (clearly labeled), so the demo is complete without keys.
+    // No project keys yet: demo mode. There is no sign-in wall - the device
+    // owner session is constant (demo-store keeps it), so the app opens ready.
     state.demoStore = true;
-    const session = await demo.restoreSession().catch(() => null);
-    if (session) await showSignedInHome();
-    else showAuth();
+    await demo.restoreSession().catch(() => null);
+    await showSignedInHome();
     return;
   }
   const session = await sb.restoreSession().catch(() => null);

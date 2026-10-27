@@ -1387,3 +1387,78 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   .ask__a:not(.ask__a--busy) { animation: none; }
   .pill:active, .pcard__done { transform: none !important; }
 }
+
+/* ============================================================
+   No-sign-in demo + sample pages row + honest demo banner
+   ============================================================ */
+
+/* sample pages: tappable photo cards (home, after the "or" rule) */
+.samples { margin-top: 4px; }
+.samples__label {
+  font-size: 0.86rem;
+  color: var(--ink-soft, #6d675c);
+  margin: 2px 2px 10px;
+}
+.samples__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.sample-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px 8px 10px;
+  border: 1.5px solid var(--line, #e5e0d4);
+  border-radius: var(--r-md, 14px);
+  background: var(--surface, #fffdf8);
+  cursor: pointer;
+  text-align: left;
+  min-height: 44px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  animation: item-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.sample-card:nth-child(2) { animation-delay: 0.06s; }
+.sample-card:nth-child(3) { animation-delay: 0.12s; }
+.sample-card:hover { transform: translateY(-2px); border-color: var(--accent, #8a5a2b); box-shadow: 0 6px 16px rgba(60, 42, 10, 0.10); }
+.sample-card:active { transform: scale(0.97); }
+.sample-card__img {
+  width: 100%;
+  aspect-ratio: 340 / 539;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid var(--line, #e5e0d4);
+  background: var(--accent-soft, #f4ead9);
+}
+.sample-card__t { font-weight: 700; font-size: 0.92rem; color: var(--ink, #2c2619); }
+.sample-card__d { font-size: 0.74rem; color: var(--ink-soft, #6d675c); line-height: 1.3; }
+
+/* demo banner on the review view: plain, honest, never shouty */
+.demo-banner {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  border: 1.5px dashed var(--accent, #8a5a2b);
+  border-radius: 10px;
+  background: var(--accent-soft, #f4ead9);
+  color: var(--ink, #2c2619);
+  font-size: 0.87rem;
+  line-height: 1.45;
+  animation: item-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* after a save: the "your people" hand-off appears */
+.review-actions .btn--primary#btn-gotop { margin-top: 8px; animation: item-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* narrow screens: sample cards still comfortably tappable */
+@media (max-width: 560px) {
+  .samples__grid { grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .sample-card__d { display: none; }
+  .sample-card { padding: 6px 6px 8px; }
+  .sample-card__t { font-size: 0.82rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sample-card { animation: none; transition: none; }
+  .demo-banner, .review-actions .btn--primary#btn-gotop { animation: none; }
+}

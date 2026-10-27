@@ -14,7 +14,10 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 
 - **Stage 0 done** - AI spike, mock pipeline verified end-to-end
 - **Stage 1 done** - upload screen, extraction function, full review table
-- **Stage 2 done, demo form** - sign-up + saving + recent pages work today via the on-device demo store; the real Supabase project connects at the end with `docs/SUPABASE-STEPS.md`
+- **Stage 2 done, demo form** - saving + recent pages work today via the
+  on-device demo store; **no sign-in wall in demo** (this browser is the
+  account); the real Supabase project connects at the end with
+  `docs/SUPABASE-STEPS.md`
 - **Stage 3 done** - People view: who to call today, WhatsApp pre-written templates the owner sends themselves
 - **Stage 4 done** - voice follow-up notes: tap the mic, it becomes editable text (Muse Voice Transcribe; mock fixture until a key exists)
 - **Stage 5 done** - trust panel ("How this page was read": kept/struck lines, blank fields, read confidence, cost receipt), remove a saved page, one-tap demo reset
@@ -24,9 +27,10 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 ## How saving works right now
 
 - **No Supabase project connected?** The app runs in clearly-labeled
-  **demo mode**: sign-up, saving pages and the Recent list all work, but
-  everything is stored **only in this browser** on this device. Ideal for a
-  demo of the full loop.
+  **demo mode**: pages save and the People view fills up, but
+  everything is stored **only in this browser** on this device — and there
+  is **no sign-in wall**: the first visit quietly makes a "this device"
+  owner. Ideal for a demo of the full loop.
 - **Connecting the real project:** follow `docs/SUPABASE-STEPS.md` - exact,
   click-by-click, nothing to install. After that, accounts are real and pages
   + photos go to the user's private cloud account under database rules.

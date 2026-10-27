@@ -1,0 +1,195 @@
+{
+  "columns_detected": [
+    "date",
+    "goods / charge",
+    "amount"
+  ],
+  "rows": [
+    {
+      "row_index": 0,
+      "raw_text": "Sandra Dorman (1862) - account heading",
+      "name": "Sandra Dorman",
+      "phone": "+91 98470 00032",
+      "note": "account heading, year 1862 - demo phone, not from the page",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["demo phone added"],
+      "confidence": {
+        "name": 0.74,
+        "phone": 0.6,
+        "amount_paid": null,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 1,
+      "raw_text": "Jan 4: 2 qt Ale 12, 1 lb Tobo 30 - 42",
+      "name": "Sandra Dorman",
+      "phone": null,
+      "note": "Jan 4 - ale + tobacco",
+      "amount_paid": null,
+      "amount_due": 42,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.86,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.7,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 2,
+      "raw_text": "Feb 19: 1 gt Whiskey 38 (ink lighter here)",
+      "name": "Sandra Dorman",
+      "phone": null,
+      "note": "Feb 19 - whiskey",
+      "amount_paid": null,
+      "amount_due": 38,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["faded ink"],
+      "confidence": {
+        "name": 0.8,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.55,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 3,
+      "raw_text": "March 2: Cr. By Cash - 80",
+      "name": "Sandra Dorman",
+      "phone": null,
+      "note": "payment line, crossed entry of Rs 200 kept separately",
+      "amount_paid": 80,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.82,
+        "phone": null,
+        "amount_paid": 0.75,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 4,
+      "raw_text": "[margin, cut off] ...rest of line unreadable",
+      "name": null,
+      "phone": null,
+      "note": null,
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["unreadable"],
+      "confidence": {
+        "name": null,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 5,
+      "raw_text": "Kit Moran (1862) - account heading",
+      "name": "Kit Moran",
+      "phone": "+91 94960 00044",
+      "note": "account heading - demo phone, not from the page",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["demo phone added"],
+      "confidence": {
+        "name": 0.71,
+        "phone": 0.6,
+        "amount_paid": null,
+        "amount_due": null,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 6,
+      "raw_text": "Feb 27: 4 Dr Gin 60, 1 qt Brandy 45 - 105",
+      "name": "Kit Moran",
+      "phone": null,
+      "note": "Feb 27 - gin and brandy",
+      "amount_paid": null,
+      "amount_due": 105,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.84,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.66,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 7,
+      "raw_text": "March 5: |1 pt Shrub 18| struck through twice",
+      "name": "Kit Moran",
+      "phone": null,
+      "note": null,
+      "amount_paid": null,
+      "amount_due": 18,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": true,
+      "flags": ["struck through"],
+      "confidence": {
+        "name": 0.83,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.6,
+        "follow_up_date": null
+      }
+    },
+    {
+      "row_index": 8,
+      "raw_text": "April 1: crack'd jug + mending 25 - follows by boat day",
+      "name": "Kit Moran",
+      "phone": null,
+      "note": "April 1 - jug repair; promised to settle by boat day",
+      "amount_paid": null,
+      "amount_due": 25,
+      "follow_up_text": "said the balance settles by boat day",
+      "follow_up_date": "{{TODAY+3}}",
+      "struck_out": false,
+      "flags": [],
+      "confidence": {
+        "name": 0.79,
+        "phone": null,
+        "amount_paid": null,
+        "amount_due": 0.63,
+        "follow_up_date": 0.5
+      }
+    }
+  ],
+  "page_total_written": null,
+  "page_warnings": [
+    "Two customer accounts share this page; the divider is faint",
+    "One margin line runs off the page edge and stays unreadable",
+    "A payment line (Cr. By Cash) is written in lighter ink"
+  ]
+}
