@@ -800,6 +800,11 @@ async function runExtraction(request) {
     if (err.detail) {
       d.hidden = false;
       d.textContent = `Detail: ${String(err.detail).slice(0, 280)}`;
+    } else if (err.sampleOnly) {
+      // Live-budget cap (Section 5): end on the sample fallback, never a dead end.
+      d.hidden = false;
+      d.textContent =
+        "The saved sample pages are not affected by the budget - go back and tap one of the sample pages.";
     } else {
       d.hidden = true;
       d.textContent = "";

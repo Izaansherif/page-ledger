@@ -76,9 +76,19 @@ export async function handler(event) {
       ? req.baseDate
       : new Date().toISOString().slice(0, 10);
 
+  // A mockFixture turns the read into a baked sample serve (free in any mode).
+  // Validate the slug hard: it becomes a file path inside /fixtures, so path
+  // tricks like "../" must never reach it.
+  const fixture =
+    typeof req.mockFixture === "string" &&
+    /^[\w][\w-]*(?:\/[\w][\w-]*)*$/.test(req.mockFixture) &&
+    !req.mockFixture.includes("..")
+      ? req.mockFixture
+      : null;
+
   if (!imageBase64) {
-    if (AI_CONFIG.mode === "mock") {
-      // The sample-page flow may skip the image entirely in mock mode.
+    if (AI_CONFIG.mode === "mock" || fixture) {
+      // Sample/demo flow: the reading IS the saved fixture - image optional.
     } else {
       return json(400, { ok: false, error: "No image was sent. Please pick a photo of a notebook page and try again." });
     }
@@ -91,7 +101,7 @@ export async function handler(event) {
   }
 
   try {
-    const result = await extractPage({ imageBase64, mime, baseDate, fixture: req.mockFixture || "spike/page1" });
+    const result = await extractPage({ imageBase64, mime, baseDate, fixture });
     const costUSD = estimateCostUSD(result.usage);
     console.log(
       `[extract] model=${result.model} latency=${result.latencyMs}ms retries=${result.retries} ` +
@@ -107,10 +117,23 @@ export async function handler(event) {
       latencyMs: result.latencyMs,
       retries: result.retries,
       baseDate,
-      demoMode: AI_CONFIG.mode === "mock",
+      // A fixture-served sample read is demo content even in live mode - the
+      // badge on screen must not claim it was a live model call.
+      demoMode: AI_CONFIG.mode === "mock" || fixture != null,
     });
   } catch (err) {
     console.error("[extract] failed:", err.message);
+    if (err.code === "LIVE_BUDGET_CAPPED") {
+      // The friendly fallback (Section 5): the demo never dead-ends on the
+      // budget - the saved sample pages keep working and cost nothing.
+      return json(429, {
+        ok: false,
+        code: "live_budget_capped",
+        sampleOnly: true,
+        error:
+          "This demo's live reading budget is used up for right now. The bundled sample pages still read perfectly - go back and tap a sample page.",
+      });
+    }
     if (err.code === "EXTRACTION_INVALID") {
       return json(502, {
         ok: false,

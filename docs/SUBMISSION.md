@@ -2,15 +2,18 @@
 
 **Track:** Indie Developer (solo participant)
 **Repo:** https://github.com/Izaansherif/page-ledger  (public — required by rules)
-**Live URL:** TBD — Netlify deploy in Stage 7
-**Demo video:** script ready — docs/DEMO-SCRIPT.md (record after Stage 7 deploy)
+**Live URL:** TBD — owner created the Netlify account & connected the repo; paste the site URL here before submitting
+**Demo video:** script ready — docs/DEMO-SCRIPT.md (record against the live Netlify URL)
 **Submission deadline:** Wed Nov 4, 9:00 PM ET via CV platform (Meta Global AI Developer Hackathon – Cerebral Valley)
 **Problem statement:** Build for Your World — brings Meta's models into a domain I know firsthand (small-shop paper ledgers in India), frees up time, and makes something possible that wasn't before (photo-to-CRM in one tap).
 
-## Build status (as of Oct 26)
+## Build status (as of Oct 27)
 
-- Stages 0–6 **done and pushed**: extraction pipeline, upload/review, demo-mode accounts + saving, People view + call-today + WhatsApp templates, voice follow-up notes, grounded trust panel, "Ask my ledger".
-- Remaining: Stage 7 only — Netlify deploy (needs the user's Netlify account + keys), video recording, CV submission.
+- **Deployed**: the owner created the Netlify account and connected this repo - the site builds automatically on every push to `main`. Public URL: TBD (paste the site URL here and into the submission form before submitting).
+- **Stages 0–7 done and pushed**: extraction pipeline, upload/review, demo-mode accounts + saving, People view + call-today + WhatsApp templates, voice follow-up notes, grounded trust panel, "Ask my ledger".
+- **Stage-2 refinement done** (owner's polish round): the story section removed from the home; hero rebuilt as a true 3D scene (photographed page → real extraction JSON → mini-CRM phone); sample pages re-rendered to look photographed, not drawn (desk edges, pen bleed, handwritten Devanagari/Malayalam).
+- **Stage-7 hardening done**: live-mode budget caps (`LIVE_CALLS_PER_MINUTE=8`, `LIVE_CALLS_PER_DAY=150`, env-tunable) so runaway traffic can't burn the key - capped reads/questions/voice fall back with a friendly message pointing at the sample pages; sample-page reads are always served from saved fixtures in any mode and never spend credits.
+- Remaining (owner, not AI): paste the Netlify URL here, record the video with `docs/DEMO-SCRIPT.md`, fill the CV submission form. (Optional: real Supabase keys, then optional `AI_MODE=live` + `META_API_KEY` env vars on Netlify.)
 
 ## What was built during the hackathon (new work only)
 
@@ -28,7 +31,7 @@ No code, data, or assets are used that we don't have rights to; all demo data an
 | Weekly digest | folded into "Ask my ledger" preset questions (`muse-spark-1.3`) | Same grounded answer path; app computes numbers, model only words them |
 | (Stretch) Row highlight on photo | `muse-spark-1.3` perception grounding (normalized 0–1000 boxes) — cheaper than SAM 3.1; SAM 3.1 available as fallback | Highlight where each row came from on the original photo |
 
-Auth: Bearer token `MODEL_API_KEY` at `https://api.meta.ai/v1`; all AI calls go through `netlify/functions/_lib/ai.js` with `AI_MODE=live|mock`. Demo runs in mock mode (fixtures) so no credits are burned; live mode verified end-to-end in mock and ready for a key.
+Auth: Bearer token `MODEL_API_KEY` at `https://api.meta.ai/v1`; all AI calls go through `netlify/functions/_lib/ai.js` with `AI_MODE=live|mock`. Demo runs in mock mode (fixtures) so no credits are burned; live mode verified end-to-end in mock and ready for a key. Live mode carries hard budget caps (`LIVE_CALLS_PER_MINUTE`, `LIVE_CALLS_PER_DAY`) with a friendly fallback to the sample flow — a public demo can never run the key dry.
 
 ## Data model (Supabase Postgres, RLS on every table)
 

@@ -124,6 +124,16 @@ export async function handler(event) {
     });
   } catch (err) {
     console.error("[ask] failed:", err.message);
+    if (err.code === "LIVE_BUDGET_CAPPED") {
+      // Section 5 fallback: no invented answers - the sample demo keeps working.
+      return json(429, {
+        ok: false,
+        code: "live_budget_capped",
+        sampleOnly: true,
+        error:
+          "Answering questions is part of this demo's live AI budget, which is used up for right now. The saved sample demo below still shows exactly how the answers are grounded.",
+      });
+    }
     return json(500, {
       ok: false,
       error: "The answer service did not respond. Try once more in a moment.",

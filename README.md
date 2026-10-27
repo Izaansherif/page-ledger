@@ -22,7 +22,8 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 - **Stage 4 done** - voice follow-up notes: tap the mic, it becomes editable text (Muse Voice Transcribe; mock fixture until a key exists)
 - **Stage 5 done** - trust panel ("How this page was read": kept/struck lines, blank fields, read confidence, cost receipt), remove a saved page, one-tap demo reset
 - **Stage 6 done** - "Ask my ledger": grounded owner Q&A that cites exactly which figures it used (mock answer labeled demo until a key exists)
-- **Demo sections 1-4 done** - sample-first home + coach; realistic sample pages; interactive rows (photo locate, one-tap confirm, undo), people search/history, typed ask; the real build story from `git log` (`node scripts/make-timeline.js`, captions from the owner in `js/story-notes.js`, see `docs/STORY-NOTES.md`)
+- **Demo sections 1-4 done** - sample-first home + coach; believable photographed sample pages; interactive rows (photo locate, one-tap confirm, undo), people search/history, typed ask; a true 3D hero scene (the page, the JSON it produced, the mini-CRM phone)
+- **Stage 7 hardening done** - live-mode budget caps (`LIVE_CALLS_PER_MINUTE`/`LIVE_CALLS_PER_DAY`) so runaway traffic can never burn the key, each answered with a friendly note pointing at the sample pages; bundled sample pages are always served from saved fixtures in any mode and never spend credits
 - Demo path needs **no Meta API key** and no Supabase project: mock mode serves fixtures (zero credits); live mode is wired and ready for a key
 
 ## How saving works right now
@@ -56,7 +57,7 @@ Open http://localhost:8888 in a browser (on your phone over the same Wi-Fi, use 
 
 - **Add a notebook page** opens the camera on a phone (`capture="environment"`); drag-and-drop works on desktop.
 - Images are resized in the browser (long edge 1600px, JPEG q0.8) before upload.
-- **Try a sample page** runs the whole flow on a bundled public-domain ledger scan with matching fixture data (mock mode, zero credits).
+- **Try a sample page** runs the whole flow on a made-for-demo ledger page (drawn by `scripts/render-samples.html`, with matching fixture data - mock or sample mode, zero credits).
 - The review screen shows the photo beside the editable table: amber = "AI was unsure, check this", red = bad phone; crossed-out rows stay excluded until you tick "keep"; follow-up dates must be confirmed by hand.
 - The console logs latency, retries, token usage and estimated cost for every page read.
 

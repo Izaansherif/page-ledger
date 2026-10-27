@@ -31,6 +31,8 @@ export async function extractPage({ imageBase64, mime, baseDate, mockFixture }, 
     const err = new Error(body?.error || `Reading failed (HTTP ${res.status}).`);
     err.detail = body?.detail;
     err.status = res.status;
+    err.code = body?.code ?? null;
+    err.sampleOnly = body?.sampleOnly === true;
     throw err;
   }
   return body;
@@ -62,6 +64,8 @@ export async function transcribeAudio({ wavBase64, token = null }) {  const head
     const err = new Error(body?.error || `Transcribing failed (HTTP ${res.status}).`);
     err.detail = body?.detail;
     err.status = res.status;
+    err.code = body?.code ?? null;
+    err.sampleOnly = body?.sampleOnly === true;
     throw err;
   }
   return body;
@@ -95,6 +99,8 @@ export async function askLedger({ question, brief, token = null }) {
     const err = new Error(body?.error || `Asking failed (HTTP ${res.status}).`);
     err.detail = body?.detail;
     err.status = res.status;
+    err.code = body?.code ?? null;
+    err.sampleOnly = body?.sampleOnly === true;
     throw err;
   }
   return body;

@@ -50,6 +50,58 @@ export function getAiMode() {
   return AI_CONFIG.mode;
 }
 
+// ----------------------------------------------------- live budget guard
+// Section 5 hardening: when AI_MODE=live every call burns real credits, so a
+// runaway loop must not be able to torch the key. Two caps, env-tunable, and
+// enforced at this one door. Honest limitation: Netlify spawns many
+// short-lived function instances, so each instance enforces its own slice -
+// this blunts loops and abuse and keeps the default caps far below
+// "damage a real key" levels. Sample pages are read from saved fixtures in
+// ANY mode (see callModel) and therefore never consume this budget.
+const LIVE_BUDGET = {
+  perMinute: Math.max(1, Number(process.env.LIVE_CALLS_PER_MINUTE || 8)),
+  perDay: Math.max(1, Number(process.env.LIVE_CALLS_PER_DAY || 150)),
+};
+const budget = { dayStamp: "", dayCount: 0, minuteStamp: "", minuteCount: 0 };
+
+export function assertLiveBudget(kind = "call") {
+  const now = new Date().toISOString();
+  const day = now.slice(0, 10);
+  const minute = `${day} ${now.slice(11, 16)}`;
+  if (budget.dayStamp !== day) {
+    budget.dayStamp = day;
+    budget.dayCount = 0;
+    budget.minuteStamp = "";
+    budget.minuteCount = 0;
+  }
+  if (budget.minuteStamp !== minute) {
+    budget.minuteStamp = minute;
+    budget.minuteCount = 0;
+  }
+  const overDay = budget.dayCount >= LIVE_BUDGET.perDay;
+  const overMinute = budget.minuteCount >= LIVE_BUDGET.perMinute;
+  if (overDay || overMinute) {
+    const err = new Error(
+      `Live AI budget reached for this ${overDay ? "day" : "minute"} (${kind}): ` +
+        `cap is ${LIVE_BUDGET.perMinute}/minute and ${LIVE_BUDGET.perDay}/day. ` +
+        "The demo keeps working on its saved sample pages, which cost nothing.",
+    );
+    err.code = "LIVE_BUDGET_CAPPED";
+    throw err;
+  }
+  budget.dayCount += 1;
+  budget.minuteCount += 1;
+}
+
+export function liveBudgetSnapshot() {
+  return {
+    mode: AI_CONFIG.mode,
+    caps: LIVE_BUDGET,
+    usedToday: budget.dayCount,
+    usedThisMinute: budget.minuteCount,
+  };
+}
+
 // muse-voice-transcribe-1.0: USD 0.18 per hour of processed audio
 // (docs/speech-to-text, read 2026-10-26).
 const TRANSCRIBE_USD_PER_HOUR = 0.18;
@@ -64,6 +116,9 @@ export function estimateTranscribeCostUSD(audioDurationMs) {
  * One door to the model.
  *  - mode "mock": serve a saved fixture from /fixtures (mockFixture required), no network.
  *  - mode "live": POST /v1/chat/completions on Meta Model API.
+ *  - mockFixture given in ANY mode: the baked sample flow. The extraction JSON
+ *    for a bundled sample page is a saved artifact, so it is served without
+ *    touching the API - sample reads never spend credits or live budget.
  * Returns { json, content, usage, latencyMs, model }. usage is null in mock mode.
  */
 export async function callModel({
@@ -79,7 +134,7 @@ export async function callModel({
   mockFixture = null,
   baseDate = null, // {{TODAY±n}} resolution in mock mode
 }) {
-  if (AI_CONFIG.mode === "mock") {
+  if (AI_CONFIG.mode === "mock" || mockFixture) {
     if (!mockFixture) {
       throw new Error(
         "AI_MODE=mock but no mockFixture was passed. Pass one (e.g. 'spike/page1') " +
@@ -252,6 +307,7 @@ export async function transcribeAudio({ wavBase64, fixture = "voice/note" }) {
       "META_API_KEY is missing. Put it in .env (gitignored) or Netlify env vars, with AI_MODE=live.",
     );
   }
+  assertLiveBudget("voice note");
   let wav = null;
   if (wavBase64) {
     try {
@@ -366,6 +422,7 @@ export async function askLedger({ question, brief, fixture = "ask/summary" }) {
       "META_API_KEY is missing. Put it in .env (gitignored) or Netlify env vars, with AI_MODE=live.",
     );
   }
+  assertLiveBudget("question");
 
   const userText =
     `Owner's question: ${question}\n\n` +
@@ -414,7 +471,7 @@ export async function askLedger({ question, brief, fixture = "ask/summary" }) {
  * Validates, and on invalid JSON retries ONCE (rule 4), then fails loudly.
  * Returns { extraction, usage, latencyMs, model, retries }.
  */
-export async function extractPage({ imageBase64, mime = "image/jpeg", baseDate, fixture = "spike/page1" }) {
+export async function extractPage({ imageBase64, mime = "image/jpeg", baseDate, fixture = null }) {
   const { buildExtractionSystemPrompt } = await import("./prompts.js");
   const { validateExtraction } = await import("./validate.js");
   const { EXTRACTION_JSON_SCHEMA, EXTRACTION_SCHEMA_NAME } = await import("./prompts.js");
@@ -433,7 +490,19 @@ export async function extractPage({ imageBase64, mime = "image/jpeg", baseDate, 
       baseDate,
     });
 
-  let res = await attempt();
+  let res;
+  if (fixture) {
+    // A bundled sample page: its JSON is a saved artifact, served in ANY mode,
+    // never touching the API and never consuming the live budget.
+    res = await attempt();
+  } else if (AI_CONFIG.mode === "mock") {
+    // Real photo, no key configured: callModel explains what to do. No budget.
+    res = await attempt();
+  } else {
+    // Real photo, live mode: this is the burn. Capped per minute and per day.
+    assertLiveBudget("page read");
+    res = await attempt();
+  }
   let retries = 0;
   let v = validateExtraction(res.json);
   if (!v.ok) {

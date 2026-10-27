@@ -93,3 +93,9 @@ End card: repo URL + live URL (fill in after deploy).
 - [ ] If the mock transcript doesn't match what you said — perfect, that's the
       demo honesty moment: "this is the fixture text in demo mode."
 - [ ] 3:00 hard cap. Practise segment 1:50–2:20 — it is the densest.
+- [ ] Credits are safe by construction: sample-page reads are always served
+      from saved fixtures in any mode (they never touch the API), and live
+      own-photo reads are capped by `LIVE_CALLS_PER_MINUTE`/`LIVE_CALLS_PER_DAY`
+      (default 8/min, 150/day) with a friendly fallback message. Say it in one
+      line in the 2:20 honesty segment: "and a public demo can never run the
+      key dry — the reads are capped, and the samples are free."

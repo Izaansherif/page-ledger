@@ -105,6 +105,16 @@ export async function handler(event) {
     });
   } catch (err) {
     console.error("[transcribe] failed:", err.message);
+    if (err.code === "LIVE_BUDGET_CAPPED") {
+      // Section 5 fallback: transcription pause, typed notes always available.
+      return json(429, {
+        ok: false,
+        code: "live_budget_capped",
+        sampleOnly: true,
+        error:
+          "Voice-to-text is part of this demo's live AI budget, which is used up for right now. You can type the note by hand - everything else keeps working.",
+      });
+    }
     const status = err.status ?? 500;
     const friendly =
       status === 401
