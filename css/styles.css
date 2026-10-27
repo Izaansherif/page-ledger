@@ -2101,3 +2101,37 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   color: var(--ink-soft, #6d675c);
 }
 .shield-foot strong { color: var(--ink, #2c2619); font-weight: 700; }
+
+/* ============================================================
+   Overdue banner - confirmed promises, dated before today, that
+   nobody marked Done. One red tappable strip: the first thing
+   you read, one tap to switch to the Call today list.
+   ============================================================ */
+.overdue-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  margin: 12px 0 2px;
+  padding: 11px 14px;
+  border: 1px solid var(--red, #b3261e);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--red, #b3261e) 9%, var(--surface, #fff8ef));
+  color: var(--red, #b3261e);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.overdue-banner svg { flex: none; }
+.overdue-banner__txt { flex: 1; line-height: 1.4; }
+.overdue-banner__cta {
+  flex: none;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--red, #b3261e);
+  color: #fff;
+}

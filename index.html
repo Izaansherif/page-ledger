@@ -281,6 +281,13 @@
 
       <div class="people-summary" id="people-summary"></div>
 
+      <!-- overdue: confirmed promises nobody marked Done, dated before today -->
+      <button id="overdue-banner" class="overdue-banner" type="button" hidden>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.4v4.8l3 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span id="overdue-text" class="overdue-banner__txt"></span>
+        <span class="overdue-banner__cta">Show them</span>
+      </button>
+
       <!-- Section 3: find a person fast, or scope the list with one tap -->
       <div class="people-tools" id="people-tools" hidden>
         <div class="people-search">

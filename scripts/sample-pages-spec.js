@@ -10,8 +10,10 @@
 // All names/phones are made up for the demo (rule 7). Phones use the clearly
 // fictional block 98765 000xx / 95610 00xxx (10 digits, drawn without the +91
 // prefix the way Indian notebooks usually write them). Dates use {{TODAY+n}}
-// tokens that ai.js resolves against the request base date in mock mode; the
-// live recording run (scripts/record-fixtures.js) replaces fixtures with the
+// tokens that ai.js resolves against the request base date in mock mode (n may
+// be negative: a promise the model read as a weekday that has already passed -
+// sample day 0 then still has one overdue regular, like any real week-old
+// page); the live recording run (scripts/record-fixtures.js) replaces fixtures with the
 // real model output, computed against that run's BASE_DATE.
 //
 // Row kinds:
@@ -39,7 +41,7 @@ export const MADE_PAGES = [
       { kind: "paid", n: "Cr. By Cash", work: { en: "counter sale" }, amt: "₹500", conf: { amount_paid: 0.92 } },
       { kind: "struck", n: "Sanju G.", work: { en: "wax strips" }, amt: "₹100", conf: { name: 0.8, amount_due: 0.75 } },
       { kind: "smudged", n: "Manu R.", work: { en: "retainer set" }, amt: null, conf: { name: 0.86, amount_due: null } },
-      { kind: "promise", n: "Aishu P.", work: { en: "collection", hi: "वसूली" }, amt: "₹400", note: { en: "promise:" }, say: { hi: "शुक्रवार को आएँगे" }, followText: "aayenge Thursday", followDays: 3, conf: { name: 0.89, amount_due: 0.8, follow_up_date: 0.55 } },
+      { kind: "promise", n: "Aishu P.", work: { en: "collection", hi: "वसूली" }, amt: "₹400", note: { en: "promise:" }, say: { hi: "शुक्रवार को आएँगे" }, followText: "aayenge Thursday", followDays: -1, conf: { name: 0.89, amount_due: 0.8, follow_up_date: 0.55 } },
     ],
   },
   {
@@ -75,7 +77,7 @@ export const MADE_PAGES = [
       { kind: "paid", n: "Cr. By Cash", work: { en: "Meera paid" }, amt: "₹200", conf: { amount_paid: 0.91 } },
       { kind: "struck", n: "Unni", work: { en: "bread", ml: "ബിസ്കറ്റ്" }, amt: "₹30", conf: { name: 0.76, amount_due: 0.72 } },
       { kind: "smudged", n: "Shibu", work: { ml: "സോപ്പ്, ഓയിൽ" }, amt: null, conf: { name: 0.77, amount_due: null } },
-      { kind: "promise", n: "Anandettan", work: { ml: "ബാക്കി ₹350" }, note: { en: "says:" }, say: { ml: "വെള്ളിയാഴ്ച വരും" }, followText: "varum Friday", followDays: 2, conf: { name: 0.84, amount_due: 0.79, follow_up_date: 0.5 } },
+      { kind: "promise", n: "Anandettan", work: { ml: "ബാക്കി ₹350" }, note: { en: "says:" }, say: { ml: "വെള്ളിയാഴ്ച വരും" }, followText: "varum Friday", followDays: -1, conf: { name: 0.84, amount_due: 0.79, follow_up_date: 0.5 } },
     ],
   },
   {

@@ -144,6 +144,8 @@ export function buildPeople(pages) {
     p.followUps.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
     p.followUp = p.followUps[0] ?? null;
     p.toCall = !!(p.followUp && p.followUp.date <= today);
+    // overdue: a confirmed follow-up nobody marked Done, dated before today
+    p.overdue = !!(p.followUp && p.followUp.date < today);
     // WhatsApp quality: number present and plausible, or nothing to tap
     p.waOk = !!p.digits;
     delete p.followUps;
@@ -151,6 +153,7 @@ export function buildPeople(pages) {
   });
 
   const toCall = all.filter((p) => p.toCall).sort((a, b) => (a.followUp.date < b.followUp.date ? -1 : 1));
+  const overdue = all.filter((p) => p.overdue).sort((a, b) => (a.followUp.date < b.followUp.date ? -1 : 1));
   const rest = all
     .filter((p) => !p.toCall)
     .sort((a, b) => (a.lastOn > b.lastOn ? -1 : a.lastOn < b.lastOn ? 1 : 0));
@@ -160,8 +163,9 @@ export function buildPeople(pages) {
     paid: all.reduce((s, p) => s + p.paid, 0),
     toCall: toCall.length,
     people: all.length,
+    overdue: overdue.length,
   };
-  return { toCall, rest, all, totals, skipped: skipped.count ? skipped : null };
+  return { toCall, overdue, rest, all, totals, skipped: skipped.count ? skipped : null };
 }
 
 /* ------------------------------------------------------------- templates */

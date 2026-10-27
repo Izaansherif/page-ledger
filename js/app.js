@@ -1276,6 +1276,16 @@ function renderPeople(data, pagesCount, fromFilter = false) {
   }
 
   const view = filterPeople(data);
+  const ov = $("#overdue-banner");
+  if (hasPeople && data.totals.overdue > 0) {
+    $("#overdue-text").textContent =
+      data.totals.overdue === 1
+        ? "1 promise was due before today - call first"
+        : `${data.totals.overdue} promises were due before today - call first`;
+    ov.hidden = false;
+  } else {
+    ov.hidden = true;
+  }
   $("#today-block").hidden = view.toCall.length === 0;
   $("#today-list").innerHTML = view.toCall.map((p) => personCard(p, true)).join("");
   $("#all-block").hidden = view.rest.length === 0;
@@ -1449,6 +1459,11 @@ async function handleSave() {
     ? "Saving to this device (demo mode)…"
     : "Uploading the photo, then your rows…";
 
+  // a short, honest confirmation buzz on Android; no-op elsewhere
+  const celebrateTap = () => {
+    try { navigator.vibrate?.(24); } catch {} // haptics are best-effort
+  };
+
   try {
     const pageId = crypto.randomUUID();
     const userId = user.id;
@@ -1492,6 +1507,7 @@ async function handleSave() {
       st.textContent = `Saved on this device (demo) - ${res.savedRows} lines kept.`;
       btn.textContent = "Saved ✓";
       btn.classList.add("is-saved");
+      celebrateTap();
       await loadRecent();
       $("#btn-gotop").hidden = false; // the CRM hand-off: who to call, money, both
       // After a SAMPLE save, land straight on People with the plain-language
@@ -1517,6 +1533,7 @@ async function handleSave() {
     st.textContent = `Saved - ${res.savedRows} lines and the photo are in your account.`;
     btn.innerHTML = "Saved ✓";
     btn.classList.add("is-saved");
+    celebrateTap();
     await loadRecent();
     $("#btn-gotop").hidden = false;
   } catch (e2) {
@@ -1892,6 +1909,9 @@ function wire() {
   $("#btn-shield").onclick = openShield;
   $("#btn-shield-close").onclick = closeShield;
   $("#shield-backdrop").onclick = closeShield;
+  // overdue banner: one tap switches to the Call today list
+  $("#overdue-banner").onclick = () =>
+    document.querySelector('.people-chip[data-chip="today"]')?.click();
   [...document.querySelectorAll(".sheet__pills .pill")].forEach((pill) => {
     pill.onclick = () => {
       [...document.querySelectorAll(".sheet__pills .pill")].forEach((x) => x.classList.remove("pill--on"));

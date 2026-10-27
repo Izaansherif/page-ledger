@@ -100,7 +100,7 @@
       "amount_paid": null,
       "amount_due": 400,
       "follow_up_text": "promise: शुक्रवार को आएँगे (aayenge Thursday)",
-      "follow_up_date": "{{TODAY+3}}",
+      "follow_up_date": "{{TODAY-1}}",
       "struck_out": false,
       "flags": [],
       "confidence": { "name": 0.89, "phone": null, "amount_paid": null, "amount_due": 0.8, "follow_up_date": 0.55 },

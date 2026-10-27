@@ -37,7 +37,7 @@ Every label on screen says what is real: demo mode is announced by a badge
 ## 0:50 – 1:20 · Voice note + save
 
 1. On a follow-up row, tap the **mic** and actually speak:
-   *"Alexander said he will come this week to settle the remaining due."*
+   *"Aishu said she will bring the four hundred this evening."*
 2. The transcript fills the note field. Say:
 > "Your own voice becomes text you can edit — never an AI-written message.
 > This runs on Muse Voice Transcribe through our own serverless function."
@@ -47,10 +47,15 @@ Every label on screen says what is real: demo mode is announced by a badge
 
 ## 1:20 – 1:50 · People view + WhatsApp (the money moment)
 
-1. Open **People**. Show: totals chips, "Call today" list (Alexander, today),
-   merged customer across pages, money due/paid.
-2. Tap **Done** on a follow-up: badge count decrements.
-3. Tap **WhatsApp message** on a debtor: the sheet opens with a pre-written
+1. The red **overdue strip** is sitting above the list if a promise is past due
+   (Aishu P., "Thursday" read as the Thursday that just passed — flagged amber
+   in review, confirmed at save). Tap it: "Show them" → the **Call today** list
+   with the overdue regular first. Say:
+> "Promises nobody marked done don't get lost — overdue sits on top, one tap."
+2. Show: totals chips, the Call today list, the merged customer across pages
+   (Anandettan's sugar line + promise line are one person), money due/paid.
+3. Tap **Done** on a follow-up: the overdue strip clears with it.
+4. Tap **WhatsApp message** on a debtor: the sheet opens with a pre-written
    reminder containing the real figure. Say:
 > "We never message anyone. The owner reviews the words in this sheet and
 > presses Send in WhatsApp themselves. Templates — not chatbots."

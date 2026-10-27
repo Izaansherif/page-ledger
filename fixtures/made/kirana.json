@@ -85,7 +85,7 @@
       "amount_paid": null,
       "amount_due": 350,
       "follow_up_text": "says: വെള്ളിയാഴ്ച വരും (varum Friday)",
-      "follow_up_date": "{{TODAY+2}}",
+      "follow_up_date": "{{TODAY-1}}",
       "struck_out": false,
       "flags": [],
       "confidence": { "name": 0.84, "phone": null, "amount_paid": null, "amount_due": 0.79, "follow_up_date": 0.5 },
