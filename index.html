@@ -81,116 +81,56 @@
           </div>
         </div>
 
-        <!-- 3D scene: paper page (stacked, lifted) -> phone with mini ledger -->
+      <!-- 3D scene: a photographed page -> the JSON the reader produced ->
+           the mini-CRM on a phone. Three real 3D planes (perspective +
+           preserve-3d); the page shown is one of the actual bundled samples. -->
         <div class="hero__scene">
           <div class="scene" id="hero-scene" aria-hidden="true">
-            <svg viewBox="0 0 560 380" role="img" aria-label="A notebook page turning into a phone running Page Ledger">
-              <defs>
-                <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f3efe7"/>
-                </linearGradient>
-                <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eef6f4"/>
-                </linearGradient>
-                <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
-                  <feGaussianBlur stdDeviation="10"/>
-                </filter>
-              </defs>
+            <div class="s3d__world">
+              <div class="s3d s3d--page">
+                <img src="/fixtures/made/dental-thumb.jpg" width="300" height="424" alt="" loading="lazy" />
+                <span class="s3d__tag">an actual sample page</span>
+              </div>
 
-              <!-- shadows -->
-              <ellipse cx="215" cy="330" rx="150" ry="20" fill="#1c1917" opacity="0.10" filter="url(#soft)"/>
-              <ellipse cx="440" cy="345" rx="78" ry="14" fill="#1c1917" opacity="0.12" filter="url(#soft)"/>
+              <div class="s3d s3d--json">
+                <div class="s3d__bar"><i></i><i></i><i></i><em>what the reader produced</em></div>
+<pre class="s3d__code"><span class="jp">{</span>
+  <span class="jk">"rows"</span><span class="jp">: [</span>
+    <span class="jp">{</span> <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"Ravi K."</span>,
+      <span class="jk">"phone"</span><span class="jp">:</span> <span class="js">"9876500021"</span>,
+      <span class="jk">"amount_due"</span><span class="jp">:</span> <span class="jn">300</span> <span class="jp">},</span>
+    <span class="jp">{</span> <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"Sanju G."</span>,
+      <span class="jk">"flags"</span><span class="jp">: [</span> <span class="jf">"struck_out"</span> <span class="jp">] },</span>
+    <span class="jp">{</span> <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"Manu R."</span>,
+      <span class="jk">"amount_due"</span><span class="jp">:</span> <span class="jn">null</span> <span class="jp">},</span>
+  <span class="jp">],</span>
+  <span class="jk">"page_total_written"</span><span class="jp">:</span> <span class="jn">null</span>
+<span class="jp">}</span></pre>
+              </div>
 
-              <!-- page stack (3 sheets, lifted at angle) -->
-              <g class="stack">
-                <polygon points="95,60 320,38 352,318 112,342" fill="#efe9dd"/>
-                <polygon points="100,58 325,36 349,320 109,344" fill="#f4efe6"/>
-                <g>
-                  <!-- the top sheet -->
-                  <polygon points="105,58 330,34 348,318 108,342" fill="url(#pg)" stroke="#e2ddd2" stroke-width="1"/>
-                  <!-- ruling -->
-                  <g stroke="#dce6e8" stroke-width="1">
-                    <line x1="120" y1="92" x2="338" y2="70"/><line x1="121" y1="112" x2="339" y2="90"/>
-                    <line x1="123" y1="132" x2="341" y2="110"/><line x1="125" y1="152" x2="343" y2="130"/>
-                    <line x1="126" y1="172" x2="344" y2="150"/><line x1="128" y1="192" x2="346" y2="170"/>
-                    <line x1="129" y1="212" x2="347" y2="190"/><line x1="131" y1="232" x2="349" y2="210"/>
-                  </g>
-                  <line x1="185" y1="76" x2="177" y2="292" stroke="#d99c94" stroke-width="1.4"/>
-                  <!-- handwriting scratches -->
-                  <g fill="none" stroke="#2f2a26" stroke-width="2.6" stroke-linecap="round">
-                    <path d="M138 86 q10 -6 20 0 q10 6 22 -2 q10 -6 18 0"/>
-                    <path d="M138 106 q12 -5 24 -1 q12 4 26 -2"/>
-                    <path d="M138 126 q9 -6 19 -1 q8 4 16 -2"/>
-                    <path d="M138 146 q14 -5 26 -2 q10 3 20 -1"/>
-                    <path d="M138 166 q10 -6 20 -1 q10 5 22 -1"/>
-                    <path d="M138 186 q12 -4 22 -1 q9 3 18 -1"/>
-                  </g>
-                  <!-- amount dashes, right column -->
-                  <g fill="none" stroke="#1c1917" stroke-width="2.2" stroke-linecap="round">
-                    <path d="M298 98 q8 -2 16 0"/>
-                    <path d="M297 118 q10 -2 18 1"/>
-                    <path d="M296 138 q8 -3 16 -1"/>
-                    <path d="M295 158 q9 -2 17 0"/>
-                    <path d="M293 178 q8 -3 15 0"/>
-                    <path d="M292 198 q9 -2 16 0"/>
-                  </g>
-                  <!-- highlighted amount (the amber "check this" story) -->
-                  <rect x="282" y="204" width="46" height="16" rx="6" fill="var(--amber-bg)" opacity="0.9"/>
-                  <path d="M290 212 q8 -3 24 -1" fill="none" stroke="var(--amber)" stroke-width="2.4" stroke-linecap="round"/>
-                  <!-- struck line -->
-                  <path d="M136 216 q12 -4 24 -1 q12 3 22 -2" fill="none" stroke="#8b857e" stroke-width="2.4" stroke-linecap="round"/>
-                  <line x1="132" y1="218" x2="184" y2="206" stroke="#a8a29e" stroke-width="1.8"/>
-                </g>
-              </g>
+              <div class="s3d s3d--phone">
+                <div class="s3d-phone">
+                  <div class="s3d-phone__notch"></div>
+                  <div class="s3d-phone__head">
+                    <strong>Smile Care Clinic</strong>
+                    <span>ortho notes &middot; today</span>
+                  </div>
+                  <div class="s3d-phone__rows">
+                    <span class="s3d-phone__row"><i>Ravi K.</i><b class="due">due &#8377;300</b></span>
+                    <span class="s3d-phone__row"><i>Priya S.</i><b class="due">due &#8377;150</b></span>
+                    <span class="s3d-phone__row is-struck"><i>Sanju G.</i><b>struck out</b></span>
+                  </div>
+                  <div class="s3d-phone__bottom">
+                    <span class="s3d-phone__call"><i></i>Call today &middot; Aishu</span>
+                    <span class="s3d-phone__wa">templates only &middot; you send</span>
+                  </div>
+                </div>
+              </div>
 
-              <!-- floating chip: what the reader found -->
-              <g class="chip-float">
-                <rect x="300" y="0" width="118" height="34" rx="17" fill="#ffffff" stroke="var(--accent)" stroke-width="1.5"/>
-                <circle cx="318" cy="17" r="7" fill="var(--accent)"/>
-                <path d="M315 17 l2.5 2.6 4.4 -5" stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <text x="332" y="21.5" font-size="12.5" font-weight="700" fill="var(--accent)" font-family="system-ui, sans-serif">12 lines</text>
-              </g>
+              <span class="s3d-chip">you check every line</span>
+            </div>
+          </div>
 
-              <!-- dashed connection, arrow, sparkle -->
-              <g class="flow">
-                <path d="M368 150 C 398 130, 402 96, 416 84" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-dasharray="2 7" stroke-linecap="round"/>
-                <path d="M410 88 l8 -5 -1 9" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M398 194 l0 -12 M392 188 l12 0" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
-              </g>
-
-              <!-- phone with mini ledger -->
-              <g class="phone">
-                <rect x="384" y="72" width="126" height="258" rx="22" fill="#1c1917"/>
-                <rect x="390" y="80" width="114" height="242" rx="17" fill="url(#screen)" stroke="#d7d2c8" stroke-width="1"/>
-                <circle cx="447" cy="88" r="2.6" fill="#44403c"/>
-                <!-- mini app header -->
-                <rect x="398" y="98" width="60" height="9" rx="4.5" fill="var(--accent)" opacity="0.85"/>
-                <rect x="398" y="116" width="98" height="1.6" fill="#e3ded4"/>
-                <!-- mini rows -->
-                <g>
-                  <rect x="400" y="128" width="34" height="5.4" rx="2.7" fill="#44403c" opacity="0.75"/>
-                  <rect x="466" y="126" width="22" height="8" rx="4" fill="var(--amber-bg)"/>
-                  <line x1="398" y1="142" x2="498" y2="142" stroke="#eae6dc" stroke-width="1"/>
-                  <rect x="400" y="150" width="46" height="5.4" rx="2.7" fill="#44403c" opacity="0.6"/>
-                  <rect x="466" y="148" width="22" height="8" rx="4" fill="var(--amber-bg)"/>
-                  <line x1="398" y1="164" x2="498" y2="164" stroke="#eae6dc" stroke-width="1"/>
-                  <rect x="400" y="172" width="30" height="5.4" rx="2.7" fill="#44403c" opacity="0.6"/>
-                  <rect x="466" y="170" width="22" height="8" rx="4" fill="#e6f2f0"/>
-                  <line x1="398" y1="186" x2="498" y2="186" stroke="#eae6dc" stroke-width="1"/>
-                </g>
-                <!-- money strip -->
-                <rect x="398" y="196" width="98" height="34" rx="9" fill="var(--accent-soft)"/>
-                <rect x="406" y="204" width="40" height="6" rx="3" fill="var(--accent)" opacity="0.35"/>
-                <rect x="406" y="216" width="26" height="6" rx="3" fill="var(--accent)" opacity="0.6"/>
-                <!-- big due badge -->
-                <rect x="406" y="240" width="84" height="22" rx="11" fill="var(--accent)"/>
-                <rect x="418" y="248" width="58" height="6" rx="3" fill="#ffffff" opacity="0.9"/>
-                <!-- whatsapp-ish pill -->
-                <rect x="406" y="272" width="60" height="16" rx="8" fill="#166534" opacity="0.9"/>
-                <rect x="415" y="277" width="42" height="5.4" rx="2.7" fill="#ffffff" opacity="0.85"/>
-                <circle cx="418" cy="280" r="3.2" fill="#ffffff"/>
-              </g>
-            </svg>
           </div>
         </div>
       </div>
