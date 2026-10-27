@@ -6,7 +6,8 @@
   "description": "Page Ledger - a photo of a paper shop notebook becomes a working mini-CRM (Meta Global AI Developer Hackathon)",
   "scripts": {
     "spike": "node scripts/spike-extract.js",
-    "dev": "node dev-server.js"
+    "dev": "node dev-server.js",
+    "timeline": "node scripts/make-timeline.js"
   },
   "engines": {
     "node": ">=18"

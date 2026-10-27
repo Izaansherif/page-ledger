@@ -22,6 +22,7 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 - **Stage 4 done** - voice follow-up notes: tap the mic, it becomes editable text (Muse Voice Transcribe; mock fixture until a key exists)
 - **Stage 5 done** - trust panel ("How this page was read": kept/struck lines, blank fields, read confidence, cost receipt), remove a saved page, one-tap demo reset
 - **Stage 6 done** - "Ask my ledger": grounded owner Q&A that cites exactly which figures it used (mock answer labeled demo until a key exists)
+- **Demo sections 1-4 done** - sample-first home + coach; realistic sample pages; interactive rows (photo locate, one-tap confirm, undo), people search/history, typed ask; the real build story from `git log` (`node scripts/make-timeline.js`, captions from the owner in `js/story-notes.js`, see `docs/STORY-NOTES.md`)
 - Demo path needs **no Meta API key** and no Supabase project: mock mode serves fixtures (zero credits); live mode is wired and ready for a key
 
 ## How saving works right now

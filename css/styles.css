@@ -1933,3 +1933,77 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 @media (prefers-reduced-motion: reduce) {
   .bbox-line, .row-flash, .conf-dot, .pcard--fold .pcard__who::after { transition: none; animation: none; }
 }
+
+/* ============================================================ Section 4 */
+/* real build story: the record is git, captions are the owner's own words */
+.built__count {
+  font-weight: 600;
+  font-size: 0.76rem;
+  color: var(--ink-soft, #6d675c);
+  white-space: nowrap;
+}
+.built__caption {
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent, #8a5a2b);
+  font-weight: 600;
+  color: var(--ink, #2c2619);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.built__commits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+/* reset the day-item look these inherit from .built__timeline li */
+.built__commits li {
+  position: static;
+  padding: 7px 10px;
+  animation: none;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-soft, #6d675c);
+  background: var(--accent-soft, #f4ead9);
+  border: 1px solid var(--line, #e5e0d4);
+  border-radius: 9px;
+  overflow-wrap: anywhere;
+}
+.built__commits li::before { display: none; }
+.built__note {
+  margin: 6px 0 10px;
+  font-size: 0.85rem;
+  color: var(--ink-soft, #6d675c);
+}
+.built__boxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 2px 0 14px;
+}
+@media (max-width: 640px) {
+  .built__boxes { grid-template-columns: 1fr; }
+}
+.built__box {
+  border: 1.5px solid var(--line-strong, #d6d0c2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--surface, #fffdf8);
+}
+.built__box-h {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent, #8a5a2b);
+}
+.built__box-p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--ink, #2c2619);
+  overflow-wrap: anywhere;
+}
