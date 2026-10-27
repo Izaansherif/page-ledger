@@ -129,6 +129,131 @@ body {
 }
 .btn--ghost:hover { background: var(--accent-soft); }
 .btn--block { width: 100%; }
+
+/* Section 1: the primary first action is unmissable and thumb-sized */
+.btn--xl {
+  font-size: 1.06rem;
+  padding: 15px 18px;
+  min-height: 58px;
+  line-height: 1.25;
+}
+.card--cta #btn-camera { margin-top: 10px; }
+
+/* after a sample save lands on People: one plain-language nudge */
+.people-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0 10px;
+  padding: 10px 12px;
+  border: 1.5px dashed var(--accent, #8a5a2b);
+  border-radius: 10px;
+  background: var(--accent-soft, #f4ead9);
+  color: var(--ink, #2c2619);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  animation: item-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.people-nudge__x {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft, #6d675c);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.people-nudge__x:hover { background: rgba(0, 0, 0, 0.05); }
+
+/* first-visit coach: a soft ring around the REAL control + a plain tip.
+   The overlay never blocks taps (pointer-events off, except the tip row). */
+#coach { position: absolute; inset: 0; z-index: 55; pointer-events: none; }
+#coach[hidden] { display: none; }
+.coach__ring {
+  position: absolute;
+  border: 2.5px solid var(--accent, #8a5a2b);
+  border-radius: 14px;
+  box-shadow: 0 0 0 4px rgba(138, 90, 43, 0.14);
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.coach__tip {
+  position: absolute;
+  max-width: min(340px, calc(100vw - 28px));
+  background: var(--ink, #2c2619);
+  color: #fdf9ee;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  box-shadow: 0 10px 24px rgba(30, 22, 8, 0.28);
+}
+.coach__text { margin: 0 0 8px; }
+.coach__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.coach__step { font-size: 0.7rem; opacity: 0.72; }
+.coach__skip {
+  border: 1px solid rgba(253, 249, 238, 0.4);
+  background: transparent;
+  color: #fdf9ee;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.coach__skip:hover { background: rgba(253, 249, 238, 0.12); }
+.coach__tip--pulse { animation: coach-pulse 2.2s ease-in-out infinite; }
+@keyframes coach-pulse {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* phone bottom action bar (Section 1): the two actions that matter */
+#bottombar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: none;
+  gap: 8px;
+  padding: 9px 10px calc(9px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--surface, #fffdf8) 92%, transparent);
+  backdrop-filter: blur(7px);
+  border-top: 1.5px solid var(--line, #e5e0d4);
+}
+#bottombar[hidden] { display: none; }
+.bar__btn {
+  flex: 1;
+  min-height: 50px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line, #e5e0d4);
+  background: var(--surface, #fffdf8);
+  color: var(--ink, #2c2619);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.bar__btn--primary {
+  flex: 2;
+  background: var(--accent, #8a5a2b);
+  border-color: var(--accent, #8a5a2b);
+  color: #fdf9ee;
+}
+.bar__btn:active { transform: scale(0.98); }
+
+@media (max-width: 560px) {
+  #bottombar { display: flex; }
+  #view-people, #view-upload { padding-bottom: 84px; } /* keep content clear of the bar */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .people-nudge, .coach__ring, .coach__tip { animation: none; transition: none; }
+  .coach__tip--pulse { animation: none; }
+}
 .btn--small { min-height: 40px; padding: 6px 12px; font-size: 14px; }
 .btn__hint {
   font-weight: 500;

@@ -13,6 +13,7 @@ import * as demo from "./demo-store.js";
 import * as ppl from "./people.js";
 import { MicSession, recordingSupported } from "./record.js";
 import { RECORDED } from "./recorded-fixtures.js";
+import * as coach from "./coach.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -63,6 +64,40 @@ function showView(name) {
   for (const v of ["view-upload", "view-loading", "view-error", "view-review", "view-auth", "view-people"]) {
     $(`#${v}`).hidden = v !== name;
   }
+  syncBottomBar(name);
+}
+
+/* ------------------------------------------------- phone bottom action bar */
+// One-handed use: on small screens the two actions that matter for the
+// current view live in a fixed bar. The buttons MIRROR the real controls
+// (same handlers, no duplicated logic). Hidden on wide screens by CSS.
+function syncBottomBar(name) {
+  const bar = $("#bottombar");
+  const p = $("#bar-primary");
+  const s = $("#bar-secondary");
+  if (!bar || !p || !s) return;
+  const conf = {
+    "view-upload": { p: ["Try a sample page", () => $("#btn-sample-primary").click()], s: ["Photograph", () => $("#btn-camera").click()] },
+    "view-review": { p: [$("#btn-save")?.textContent?.trim() || "Save", () => $("#btn-save").click()], s: ["Back", () => $("#btn-back").click()] },
+    "view-people": { p: ["New page", () => $("#btn-people-back").click()], s: null },
+  }[name] ?? null;
+  if (!conf || (!conf.p && !conf.s)) {
+    bar.hidden = true;
+    return;
+  }
+  const set = (btn, def) => {
+    if (!def) {
+      btn.hidden = true;
+      return;
+    }
+    btn.hidden = false;
+    btn.textContent = def[0];
+    btn.onclick = def[1];
+  };
+  set(p, conf.p);
+  set(s, conf.s);
+  // tuck the bar away while the coach is pointing (it floats at the bottom)
+  bar.hidden = !document.getElementById("coach")?.hidden;
 }
 
 function setBadge() {
@@ -468,6 +503,7 @@ function renderReview() {
   setStageNotes();
   showView("view-review");
   window.scrollTo(0, 0);
+  coach.reach("review");
 }
 
 /* --------------------------------------------------- grounded read details */
@@ -675,6 +711,7 @@ async function showSignedInHome() {
   setStageNotes();
   showView("view-upload");
   if (signedIn) await loadRecent();
+  coach.step("home"); // first-visit: point at the primary sample button once
 }
 
 function showAuth() {
@@ -843,6 +880,22 @@ async function loadPeople() {
   window.scrollTo(0, 0);
 }
 
+/* ------------------------------------------------- people-landing nudge */
+// One plain-language instruction right after a saved sample lands here:
+// what to DO next. Hidden again the moment the visitor acts on it or taps X.
+let peopleNudgeDismissed = false;
+
+function showPeopleNudge() {
+  if (peopleNudgeDismissed) return;
+  const n = $("#people-nudge");
+  if (n) n.hidden = false;
+}
+
+function hidePeopleNudge() {
+  const n = $("#people-nudge");
+  if (n) n.hidden = true;
+}
+
 /* --------------------------------------------------------- ask (Stage 6) */
 const ASK_QS = {
   owe: "Who owes me the most?",
@@ -993,6 +1046,8 @@ function sheetSetText() {
 
 function openMsgSheet(person, triggerEl = null) {
   if (!person) return;
+  coach.complete(); // the visitor is using the real thing - the coach is done
+  hidePeopleNudge(); // the nudge did its job
   sheetPerson = person;
   sheetKind = "reminder";
   sheetReturnFocus = triggerEl instanceof HTMLElement ? triggerEl : document.activeElement;
@@ -1145,6 +1200,14 @@ async function handleSave() {
       btn.classList.add("is-saved");
       await loadRecent();
       $("#btn-gotop").hidden = false; // the CRM hand-off: who to call, money, both
+      // After a SAMPLE save, land straight on People with the plain-language
+      // nudge (own-photo saves keep the current view + hand-off button).
+      if (state.lastRequest?.mockFixture) {
+        setTimeout(() => {
+          showPeopleNudge();
+          loadPeople().then(() => coach.reach("people"));
+        }, 650);
+      }
       return;
     }
 
@@ -1209,6 +1272,19 @@ function wire() {
   // data-fixture / data-image come from the card markup; the "made for this
   // demo" pages live in fixtures/made/, the credited 1860s scan in
   // fixtures/demo-pages/.
+  const readSamplePage = async (fixture, image) => {
+    if (state.busy) return;
+    try {
+      const res = await fetch(image);
+      if (!res.ok) throw new Error("The sample page photo could not be loaded.");
+      const blob = await res.blob();
+      await handleSelectedFile(blob, { mockFixture: fixture });
+    } catch (e) {
+      $("#error-msg").textContent = e.message || "The sample page could not be loaded.";
+      $("#error-detail").hidden = true;
+      showView("view-error");
+    }
+  };
   [...document.querySelectorAll(".sample-card")].forEach((card) => {
     // When a real recording of this sample exists (scripts/record-fixtures.js),
     // extend the honest label instead of replacing it.
@@ -1217,20 +1293,11 @@ function wire() {
       const tag = card.querySelector(".sample-card__tag");
       if (tag) tag.textContent = `Real reading recorded ${niceDay(rec.date)} · replayed free`;
     }
-    card.onclick = async () => {
-      if (state.busy) return;
-      try {
-        const res = await fetch(card.dataset.image);
-        if (!res.ok) throw new Error("The sample page photo could not be loaded.");
-        const blob = await res.blob();
-        await handleSelectedFile(blob, { mockFixture: card.dataset.fixture });
-      } catch (e) {
-        $("#error-msg").textContent = e.message || "The sample page could not be loaded.";
-        $("#error-detail").hidden = true;
-        showView("view-error");
-      }
-    };
+    card.onclick = () => readSamplePage(card.dataset.fixture, card.dataset.image);
   });
+  // the big primary button starts the DEFAULT sample without a second tap
+  $("#btn-sample-primary").onclick = () =>
+    readSamplePage("made/dental", "/fixtures/made/dental.jpg");
 
   $("#btn-retry").onclick = () => {
     if (state.lastRequest) runExtraction(state.lastRequest);
@@ -1358,6 +1425,11 @@ function wire() {
   /* ---------------- Stage 3: People view + WhatsApp message sheet ---------------- */
   $("#btn-people").onclick = () => loadPeople();
   $("#tile-people").onclick = () => loadPeople();
+
+  $("#people-nudge-x").onclick = () => {
+    peopleNudgeDismissed = true;
+    hidePeopleNudge();
+  };
   $("#btn-people-back").onclick = () => showView("view-upload");
   $("#today-list").addEventListener("click", onPeopleAction);
   $("#people-list").addEventListener("click", onPeopleAction);
@@ -1424,6 +1496,7 @@ function wire() {
 }
 
 wire();
+coach.init();
 setAuthMode("signin");
 
 (async function boot() {

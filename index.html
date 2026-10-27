@@ -196,16 +196,18 @@
       </div>
 
       <div class="card card--cta" id="dropzone">
-        <button id="btn-camera" class="btn btn--primary btn--block" type="button">
+        <button id="btn-sample-primary" class="btn btn--primary btn--block btn--xl" type="button">
+          Try a sample notebook page
+        </button>
+        <button id="btn-camera" class="btn btn--ghost btn--block" type="button">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l.9-1.4A1.5 1.5 0 0 1 9.9 4h4.2a1.5 1.5 0 0 1 1.3.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12.4" r="3.1" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
-          Add a notebook page
+          Photograph your own page
         </button>
         <input id="file-input" type="file" accept="image/*" capture="environment" hidden />
 
-        <div class="rule"><span>or</span></div>
+        <div class="rule"><span>or pick a different sample</span></div>
 
         <div class="samples" id="samples">
-          <p class="samples__label">No photo handy? Tap a sample page &mdash; it reads in about a second, free, no key needed:</p>
           <div class="samples__grid">
             <button class="sample-card" data-fixture="made/dental" data-image="/fixtures/made/dental.jpg" type="button">
               <img class="sample-card__img" src="/fixtures/made/dental-thumb.jpg" width="300" height="424" alt="Sample notebook page: dental clinic follow-ups" loading="lazy" />
@@ -405,6 +407,12 @@
         <h1 class="people-title">Your people</h1>
       </div>
 
+      <!-- shown right after a saved sample lands here: one plain-language nudge -->
+      <div id="people-nudge" class="people-nudge" hidden>
+        <span>Tap a name to send a WhatsApp reminder</span>
+        <button id="people-nudge-x" class="people-nudge__x" type="button" aria-label="Hide this tip">&times;</button>
+      </div>
+
       <div class="people-summary" id="people-summary"></div>
 
       <!-- Stage 6: ask about your own figures (answers come only from your data) -->
@@ -560,6 +568,24 @@
       <button id="btn-sheet-close" class="btn btn--ghost btn--block" type="button">Cancel</button>
     </div>
   </div>
+
+  <!-- first-visit coach (skippable): highlights the REAL UI, three steps -->
+  <div id="coach" hidden>
+    <div class="coach__ring" id="coach-ring" aria-hidden="true"></div>
+    <div class="coach__tip" id="coach-tip" role="dialog" aria-live="polite">
+      <p class="coach__text" id="coach-text"></p>
+      <div class="coach__row">
+        <span class="coach__step" id="coach-step-no"></span>
+        <button id="coach-skip" class="coach__skip" type="button">Skip coach</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- one-handed phone bar: the two actions that matter on each view -->
+  <nav id="bottombar" hidden aria-label="Quick actions">
+    <button id="bar-primary" class="bar__btn bar__btn--primary" type="button"></button>
+    <button id="bar-secondary" class="bar__btn" type="button"></button>
+  </nav>
 
   <script type="module" src="/js/app.js"></script>
 </body>
