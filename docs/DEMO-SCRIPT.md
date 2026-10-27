@@ -79,7 +79,8 @@ for 3 seconds — the verified-facts header.
 > follow-ups, reminders. Built for the Meta Model API, works offline-of-cloud
 > in demo mode, and my father's shop is the first install."
 
-End card: repo URL + live URL (fill in after deploy).
+End card: repo URL (https://github.com/Izaansherif/page-ledger) + live URL
+(https://pageledger.netlify.app/).
 
 ---
 

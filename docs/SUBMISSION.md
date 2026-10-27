@@ -2,8 +2,8 @@
 
 **Track:** Indie Developer (solo participant)
 **Repo:** https://github.com/Izaansherif/page-ledger  (public — required by rules)
-**Live URL:** TBD — owner created the Netlify account & connected the repo; paste the site URL here before submitting
-**Demo video:** script ready — docs/DEMO-SCRIPT.md (record against the live Netlify URL)
+**Live URL:** ✅ https://pageledger.netlify.app/ (Netlify, auto-builds on every push to `main`; functions verified live — sample read, grounded ask, transcript all working)
+**Demo video:** script ready — docs/DEMO-SCRIPT.md (record against the live URL above)
 **Submission deadline:** Wed Nov 4, 9:00 PM ET via CV platform (Meta Global AI Developer Hackathon – Cerebral Valley)
 **Problem statement:** Build for Your World — brings Meta's models into a domain I know firsthand (small-shop paper ledgers in India), frees up time, and makes something possible that wasn't before (photo-to-CRM in one tap).
 
