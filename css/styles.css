@@ -1337,3 +1337,53 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   white-space: nowrap;
 }
 .ask__demo { margin: 8px 0 0; color: var(--amber); font-size: 12.5px; }
+
+/* ============================================================
+   Polish pass - shimmer, badge pop, ask entrance, smooth states
+   ============================================================ */
+
+/* recent strip: skeleton shimmer while pages load (replaced by data) */
+.recent__skeleton { pointer-events: none; }
+.sk {
+  display: inline-block;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  animation: sk-shimmer 1.4s ease-in-out infinite;
+}
+.sk--short { width: 64px; }
+.sk--long { width: min(280px, 55%); }
+@keyframes sk-shimmer {
+  0% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.45; }
+}
+
+/* people badge: pops in when a call-today count appears */
+.appbar-people__badge { animation: badge-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes badge-pop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ask answer card: soft rise when an answer lands */
+.ask__a:not(.ask__a--busy) { animation: item-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* pills and actions: disabled reads as unavailable, instantly */
+.pill:disabled, .ask__pill:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.pill:active { transform: scale(0.97); }
+
+/* people photo-less pin: the delete icon nudges red on hover, calm otherwise */
+.recent__del { transition: color 0.15s ease, border-color 0.15s ease; }
+.pcard__done { transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease; }
+.pcard__done:active { transform: scale(0.94); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sk { animation: none; opacity: 0.6; }
+  .appbar-people__badge { animation: none; }
+  .ask__a:not(.ask__a--busy) { animation: none; }
+  .pill:active, .pcard__done { transform: none !important; }
+}

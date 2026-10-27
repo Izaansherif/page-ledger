@@ -161,6 +161,36 @@ function updateTotals() {
     <span class="stat"><span class="stat__label">People</span><span class="stat__value">${names.size}</span></span>
     <span class="stat"><span class="stat__label">Paid</span><span class="stat__value">&#8377;${fmtMoney(b.paid)}</span></span>
     <span class="stat"><span class="stat__label">Due</span><span class="stat__value">&#8377;${fmtMoney(b.due)}</span></span>`;
+  // Stage-polish: totals count up once per review entry, not on every edit
+  if (state.animateTotalsNext) {
+    state.animateTotalsNext = false;
+    animateCounts($("#review-totals"));
+  }
+}
+
+/* ------------------------------------------------- motion: gentle count-up */
+// Calm ripple of numbers arriving (People chips, review totals). Skipped for
+// reduced-motion users - final values render immediately (honest, no flash).
+function animateCounts(root) {
+  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (reduced || !root) return;
+  for (const el of root.querySelectorAll("strong, .stat__value")) {
+    const m = String(el.textContent).match(/^(₹)?([\d,]+)$/);
+    if (!m) continue;
+    const target = Number(m[2].replace(/,/g, ""));
+    if (!Number.isFinite(target) || target === 0) continue;
+    const prefix = m[1] ?? "";
+    const t0 = performance.now();
+    const DURATION = 550; // one calm beat
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / DURATION);
+      const eased = 1 - Math.pow(1 - k, 3); // ease-out cubic
+      const val = Math.round(target * eased);
+      el.textContent = `${prefix}${val.toLocaleString("en-IN")}`;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
 }
 
 function fieldClasses(row, key) {
@@ -421,6 +451,7 @@ function renderReview() {
   renderRows();
   renderWarnings(state.extraction);
   updateReadbox();
+  state.animateTotalsNext = true;
   updateTotals();
   resetSaveUi();
   setStageNotes();
@@ -696,13 +727,22 @@ async function enterSignedIn() {
 async function loadRecent() {
   if (!(state.sbConfigured || state.demoStore) || !auth().getSession()) return;
   const list = $("#recent-list");
+  // Skeleton while the pages arrive - the strip never "pops" in empty.
+  list.innerHTML = [0, 1, 2]
+    .map(
+      () =>
+        `<div class="recent__row recent__skeleton" aria-hidden="true">
+          <span class="recent__when sk sk--short"></span>
+          <span class="recent__stats sk sk--long"></span>
+        </div>`,
+    )
+    .join("");
   try {
     const pages = await auth().listRecentPages();
     peopleCache.pagesCount = pages.length;
-    if (pages.length) {
-      const data = ppl.buildPeople(pages);
-      applyPeopleData(data);
-    }
+    // always rebuild the people fold - deleting the LAST page must clear the
+    // tile/badge too, not leave yesterday's totals on screen
+    applyPeopleData(ppl.buildPeople(pages));
     if (!pages.length) {
       list.innerHTML = `<p class="recent__empty">No pages yet - your first photo will appear here.</p>`;
       return;
@@ -741,8 +781,14 @@ function setPeopleVisible() {
 function applyPeopleData(data) {
   peopleCache.data = data;
   peopleCache.byKey = new Map((data.all ?? []).map((p) => [p.key, p]));
-  $("#badge-people").hidden = !(data.totals.toCall > 0);
-  $("#badge-people").textContent = data.totals.toCall;
+  const badge = $("#badge-people");
+  const count = data.totals.toCall ?? 0;
+  badge.hidden = !(count > 0);
+  if (count > 0) {
+    badge.textContent = count; // leave "" when hidden: no stray zero anywhere
+  } else {
+    badge.textContent = "";
+  }
   const sub = $("#tile-people-sub");
   if (data.totals.people === 0) {
     sub.textContent = "Save a page to begin";
@@ -807,6 +853,10 @@ function buildAskBrief() {
 }
 
 async function handleAsk(kind) {
+  if (state.asking) return; // one calm answer at a time
+  state.asking = true;
+  const pills = [...document.querySelectorAll(".ask__pill")];
+  pills.forEach((p) => (p.disabled = true));
   const el = $("#ask-answer");
   el.hidden = false;
   el.classList.add("ask__a--busy");
@@ -822,6 +872,9 @@ async function handleAsk(kind) {
   } catch (e) {
     el.classList.remove("ask__a--busy");
     el.innerHTML = `<p class="ask__text ask__text--err">${escapeHTML(e?.message || "The answer did not come through. Try again in a moment.")}</p>`;
+  } finally {
+    state.asking = false;
+    pills.forEach((p) => (p.disabled = false));
   }
 }
 
@@ -895,6 +948,7 @@ function renderPeople(data, pagesCount) {
   $("#all-block").hidden = data.rest.length === 0;
   $("#people-list").innerHTML = data.rest.map((p) => personCard(p, false)).join("");
   $("#people-summary").innerHTML = hasPeople ? summaryChips(data) : "";
+  if (hasPeople) animateCounts($("#people-summary"));
   const sk = $("#people-skipped");
   if (data.skipped) {
     sk.hidden = false;
@@ -908,17 +962,23 @@ function renderPeople(data, pagesCount) {
 let sheetPerson = null;
 let sheetKind = "reminder";
 
+let sheetReturnFocus = null;
+
 function sheetSetText() {
   if (!sheetPerson) return;
   $("#msg-text").value = ppl.fillTemplate(sheetKind, sheetPerson);
 }
 
-function openMsgSheet(person) {
+function openMsgSheet(person, triggerEl = null) {
   if (!person) return;
   sheetPerson = person;
   sheetKind = "reminder";
+  sheetReturnFocus = triggerEl instanceof HTMLElement ? triggerEl : document.activeElement;
   $(".pill[data-kind='reminder']").classList.add("pill--on");
-  $(".pill[data-kind='thanks']").classList.remove("pill--on");
+  // a thanks note makes no sense for someone who never paid - hide it
+  const thanksPill = $(".pill[data-kind='thanks']");
+  thanksPill.hidden = !person.paid;
+  thanksPill.classList.remove("pill--on");
   $("#sheet-name").textContent = person.nameMissing ? "Message this number" : `Message ${person.name}`;
   $("#sheet-sub").textContent = person.waOk ? `to +${person.digits}` : "No usable number on this person";
   const ok = person.waOk;
@@ -927,12 +987,17 @@ function openMsgSheet(person) {
   hint.hidden = ok;
   hint.textContent = "Add a +91 phone number on the page first (review, save, then come back).";
   sheetSetText();
+  const panel = $("#sheet-msg .sheet__panel");
   $("#sheet-msg").hidden = false;
-  $("#msg-text").focus();
+  panel.focus({ preventScroll: true });
 }
 
 function closeMsgSheet() {
   $("#sheet-msg").hidden = true;
+  if (sheetReturnFocus) {
+    sheetReturnFocus.focus?.({ preventScroll: true });
+    sheetReturnFocus = null;
+  }
 }
 
 async function handleFollowDone(pageId, rowId) {
@@ -952,7 +1017,7 @@ function onPeopleAction(e) {
     return;
   }
   const msg = e.target.closest(".msg-btn");
-  if (msg && !msg.disabled) openMsgSheet(peopleCache.byKey.get(msg.dataset.key));
+  if (msg && !msg.disabled) openMsgSheet(peopleCache.byKey.get(msg.dataset.key), msg);
 }
 
 
@@ -1274,7 +1339,10 @@ function wire() {
   $("#btn-wa").onclick = () => {
     if (!sheetPerson?.waOk) return;
     const text = encodeURIComponent($("#msg-text").value);
-    location.href = `https://wa.me/${sheetPerson.digits}?text=${text}`;
+    // New tab keeps the ledger open exactly where the owner left it - the
+    // sheet only hands the words over, WhatsApp does the sending.
+    window.open(`https://wa.me/${sheetPerson.digits}?text=${text}`, "_blank", "noopener");
+    closeMsgSheet();
   };
 
   /* ---------------- Stage 5: honesty panel + page removal + demo reset ---------------- */
