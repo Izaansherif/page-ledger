@@ -5,7 +5,7 @@
 <title>Page Ledger - sample page renderer (dev only)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Caveat:wght@500;600;700&family=Noto+Sans+Malayalam:wght@400;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Caveat:wght@500;600;700&family=Chilanka&family=Noto+Sans+Malayalam:wght@400;600&display=swap" rel="stylesheet" />
 <style>
   body { font-family: system-ui, sans-serif; background: #efece4; margin: 0; padding: 24px; }
   button { font: inherit; padding: 10px 18px; cursor: pointer; }
@@ -34,10 +34,14 @@
 
     const INK = "#332b1e";
     const INK_SOFT = "#4b4534";
+    const INK_BLUE = "#28406e";      // ballpoint blue, some rows switch pens
     const STRUCK_INK = "rgba(51,43,30,0.55)";
     const STRIKE = "rgba(150,60,40,0.85)";
 
     const deg = (d) => (d * Math.PI) / 180;
+    // tiny value noise helper "in the local range" - hand writing never sits
+    // exactly on a grid; every glyph run drifts a pixel or two
+    const wob = (r, m) => (r() * 2 - 1) * m;
 
     // mulberry32 seeded by the page id - grain is stable across re-runs
     function seeded(pageId) {
@@ -59,7 +63,7 @@
         document.fonts.load("600 36px Caveat"),
         document.fonts.load("500 32px Caveat"),
         document.fonts.load("400 30px Kalam"),
-        document.fonts.load('600 30px "Noto Sans Malayalam"'),
+        document.fonts.load("400 30px Chilanka"),
         document.fonts.load('400 30px "Noto Sans Malayalam"'),
       ]);
       await document.fonts.ready;
@@ -69,17 +73,17 @@
       title: "700 46px Caveat",
       subEn: "600 32px Caveat",
       subHi: "400 30px Kalam",
-      subMl: '400 30px "Noto Sans Malayalam"',
+      subMl: "400 30px Chilanka, 'Noto Sans Malayalam'",
       account: "600 26px Caveat",
       date: "600 30px Caveat",
       name: "600 36px Caveat",
       en: "500 32px Caveat",
       hi: "400 30px Kalam",
-      ml: '400 30px "Noto Sans Malayalam"',
+      ml: "400 30px Chilanka, 'Noto Sans Malayalam'",
       amt: "700 44px Caveat",
       subnote: "600 27px Caveat",
       sayHi: "400 28px Kalam",
-      sayMl: '400 28px "Noto Sans Malayalam"',
+      sayMl: "400 28px Chilanka, 'Noto Sans Malayalam'",
     };
 
     const ROT = { dental: -1.3, garage: 1.5, kirana: -0.9, tuition: 1.1 };
@@ -87,21 +91,55 @@
     function drawPaper(c, page, r) {
       c.fillStyle = page.paper;
       c.fillRect(0, 0, W, H);
+
+      // paper fibres: short faint strokes with random direction, plus grain
+      c.save();
+      c.strokeStyle = "rgba(120,95,55,0.05)";
+      c.lineWidth = 1;
+      for (let i = 0; i < 700; i++) {
+        const fx = r() * W, fy = r() * H, a = r() * Math.PI, l = 3 + r() * 9;
+        c.beginPath();
+        c.moveTo(fx, fy);
+        c.lineTo(fx + Math.cos(a) * l, fy + Math.sin(a) * l);
+        c.stroke();
+      }
+      c.restore();
       for (let i = 0; i < 2100; i++) {
         c.fillStyle = `rgba(120,95,55,${(0.03 + r() * 0.05).toFixed(3)})`;
         c.fillRect(r() * W, r() * H, 1 + r() * 1.6, 1 + r() * 1.4);
       }
-      // ruled lines
-      c.strokeStyle = "rgba(80,120,170,0.5)";
+
+      // two soft coffee/handling blotches (per-page seeded, never over rows)
+      for (const [bx, by] of [[W - 120, H - 190], [110, H - 70]]) {
+        const blob = c.createRadialGradient(bx, by, 4, bx, by, 60 + r() * 30);
+        blob.addColorStop(0, "rgba(150,116,60,0.10)");
+        blob.addColorStop(0.75, "rgba(150,116,60,0.05)");
+        blob.addColorStop(1, "rgba(150,116,60,0)");
+        c.fillStyle = blob;
+        c.beginPath();
+        c.ellipse(bx, by, 66 + r() * 26, 50 + r() * 18, r() * 3, 0, Math.PI * 2);
+        c.fill();
+      }
+
+      // ruling: faded blue, hand lines will drift against it
+      c.strokeStyle = "rgba(80,120,170,0.30)";
       c.lineWidth = 1;
       for (let y = 252; y < H - 40; y += 52) {
         c.beginPath(); c.moveTo(52, y); c.lineTo(W - 44, y); c.stroke();
       }
-      // red margin + centre divider
-      c.strokeStyle = "rgba(196,70,70,0.6)"; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(84, 30); c.lineTo(84, H - 30); c.stroke();
-      c.strokeStyle = "rgba(120,110,90,0.25)"; c.lineWidth = 1.4;
-      c.beginPath(); c.moveTo(660, 250); c.lineTo(660, H - 44); c.stroke();
+
+      // red margin + centre divider: thinner and older
+      c.strokeStyle = "rgba(196,70,70,0.42)"; c.lineWidth = 1.6;
+      c.beginPath(); c.moveTo(84, 30); c.lineTo(84 + wob(r, 0.6), H - 30); c.stroke();
+      c.strokeStyle = "rgba(120,110,90,0.20)"; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(660, 250); c.lineTo(660 + wob(r, 0.6), H - 44); c.stroke();
+
+      // binding shadow along the left edge (this page came out of a pad)
+      const bind = c.createLinearGradient(0, 0, 34, 0);
+      bind.addColorStop(0, "rgba(60,45,25,0.22)");
+      bind.addColorStop(1, "rgba(60,45,25,0)");
+      c.fillStyle = bind; c.fillRect(0, 0, 34, H);
+
       // bottom vignette (photo edge shadow)
       const vg = c.createLinearGradient(0, H - 260, 0, H);
       vg.addColorStop(0, "rgba(90,70,40,0)");
@@ -109,13 +147,15 @@
       c.fillStyle = vg; c.fillRect(0, H - 260, W, 260);
     }
 
-    function drawHeading(c, page) {
-      c.fillStyle = INK;
+    function drawHeading(c, page, r) {
       c.font = FONT.title;
-      c.fillText(page.title.en, 108, 108);
+      headingInk(c, page.title.en, 108 + wob(r, 1.5), 108 + wob(r, 1), INK, r);
       const uw = c.measureText(page.title.en).width;
-      c.strokeStyle = "rgba(51,43,30,0.75)"; c.lineWidth = 2.2;
-      c.beginPath(); c.moveTo(108, 124); c.lineTo(108 + uw - 4, 128); c.stroke();
+      c.strokeStyle = "rgba(51,43,30,0.6)"; c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(108, 124);
+      c.bezierCurveTo(108 + uw * 0.4, 128 + wob(r, 2), 108 + uw * 0.7, 121, 108 + uw - 4, 128);
+      c.stroke();
 
       let sx = 110;
       const parts = [
@@ -124,33 +164,59 @@
         ...(page.subtitle.ml ? [{ t: " · " + page.subtitle.ml, f: FONT.subMl }] : []),
       ];
       for (const p of parts) {
-        c.font = p.f; c.fillStyle = INK_SOFT;
-        c.fillText(p.t, sx, 166);
+        c.font = p.f;
+        headingInk(c, p.t, sx, 166, "rgba(70,58,40,0.85)", r);
         sx += c.measureText(p.t).width + 8;
       }
-      c.font = FONT.account; c.fillStyle = "rgba(60,50,35,0.75)";
-      c.fillText(page.account, 110, 206);
-      c.font = FONT.date; c.fillStyle = INK;
-      c.fillText("27/10", W - 156, 96);
+      c.font = FONT.account;
+      headingInk(c, page.account, 110, 206, "rgba(60,50,35,0.7)", r);
+      c.font = FONT.date;
+      headingInk(c, "27/10", W - 156 + wob(r, 2), 96 + wob(r, 1.2), INK, r);
     }
 
-    function drawRows(c, page, out) {
+    // three things every real pen stroke has: a light bleed under the letter,
+    // uneven pressure (alpha), and occasionally a second pass of the pen
+    function headingInk(c, text, x, y, color, r) {
+      c.save();
+      c.globalAlpha = 0.18;
+      c.filter = "blur(0.9px)";
+      c.fillStyle = color;
+      c.fillText(text, x + 0.5, y + 0.6);
+      c.filter = "none";
+      c.globalAlpha = 0.92;
+      c.fillText(text, x, y);
+      if (r() < 0.3) { c.globalAlpha = 0.2; c.fillText(text, x + 0.6, y - 0.7); }
+      c.restore();
+    }
+
+    function drawRows(c, page, out, r) {
       let y = ROW_Y0;
+
       page.lines.forEach((L, idx) => {
-        const rowY = y;
-        let x = NAME_X;
+        let rowY = y;
+        // a page may hold two writers: the owner's dark pen and a cheaper
+        // blue ballpoint - the pen is chosen per row, then kept for the row
+        const rowInk = L.kind === "struck" ? STRUCK_INK : (r() < 0.3 ? INK_BLUE : INK);
+        // each hand line drifts a degree or so against the ruling
+        const rowRot = wob(r, 0.014);
+        c.save();
+        c.translate(NAME_X, rowY);
+        c.rotate(rowRot);
+        let x = 0;
+
         // name (and vehicle in the parentheses where given)
         const name = L.n + (L.veh ? ` (${L.veh})` : "");
         c.font = FONT.name;
-        c.fillStyle = L.kind === "struck" ? STRUCK_INK : INK;
-        c.fillText(name, x, rowY);
+        headingInk(c, name, x, 0, rowInk, r);
         x += c.measureText(name).width + 6;
 
         // phone (small, after the name - fake demo numbers, clearly garbage-safe)
         if (L.ph) {
           c.font = "500 25px Caveat";
-          c.fillStyle = "rgba(70,58,40,0.72)";
-          c.fillText(L.ph, x, rowY);
+          c.globalAlpha = 0.75;
+          c.fillStyle = INK_SOFT;
+          c.fillText(L.ph, x + wob(r, 1), wob(r, 1.4));
+          c.globalAlpha = 1;
           x += c.measureText(L.ph).width + 8;
         }
 
@@ -161,40 +227,58 @@
           const font = key === "ml" ? FONT.ml : key === "hi" ? FONT.hi : FONT.en;
           c.font = font;
           c.fillStyle = L.kind === "struck" ? STRUCK_INK : INK_SOFT;
+          c.globalAlpha = 0.9;
           const t = " · " + ws;
-          c.fillText(t, x, rowY);
+          c.fillText(t, x + wob(r, 0.8), wob(r, 1.4));
+          c.globalAlpha = 1;
           x += c.measureText(t).width + 4;
         }
 
-        // amount, right-aligned in the amount column
+        // amount, right-aligned in the amount column; the shopkeeper's pen
+        // often goes over the figure twice
         if (L.amt) {
           c.font = FONT.amt;
-          c.fillStyle = L.kind === "struck" ? STRUCK_INK : INK;
-          c.fillText(L.amt, AMT_X - c.measureText(L.amt).width, rowY);
+          headingInk(c, L.amt, AMT_X - c.measureText(L.amt).width - NAME_X, wob(r, 0.8), rowInk, r);
         }
 
         if (L.kind === "struck") {
+          // a decided strike-through, drawn like a hand did it: two strokes,
+          // slight curve, red pen, crossing the letters themselves
           c.strokeStyle = STRIKE; c.lineWidth = 4;
           c.beginPath();
-          c.moveTo(NAME_X - 8, rowY - 15);
-          c.lineTo(AMT_X + 2, rowY - 19);
+          c.moveTo(-26, -13);
+          c.bezierCurveTo(220, -9, 480, -21, AMT_X - NAME_X + 6, -11);
+          c.stroke();
+          c.lineWidth = 2.4;
+          c.beginPath();
+          c.moveTo(-20, -5 + wob(r, 2));
+          c.bezierCurveTo(320, 3, 520, -3, AMT_X - NAME_X, 7 + wob(r, 2));
           c.stroke();
         }
         if (L.kind === "paid") {
-          c.strokeStyle = "rgba(51,43,30,0.85)"; c.lineWidth = 2;
-          c.beginPath(); c.moveTo(NAME_X - 6, rowY + 13); c.lineTo(AMT_X - 2, rowY + 13); c.stroke();
+          c.strokeStyle = "rgba(51,43,30,0.75)"; c.lineWidth = 2.2;
+          c.beginPath();
+          c.moveTo(-22, 13 + wob(r, 1.4));
+          c.bezierCurveTo(240, 16 + wob(r, 2), 520, 10, AMT_X - NAME_X - 4, 13);
+          c.stroke();
         }
         if (L.kind === "smudged") {
           // ghost digits under a blurred blotch: clearly unreadable
           c.save();
           c.globalAlpha = 0.3;
           c.font = FONT.amt; c.fillStyle = INK;
-          c.fillText("₹5", AMT_X - 56, rowY);
+          c.fillText("₹5", AMT_X - 56 - NAME_X, 0);
           c.restore();
           c.save();
           c.filter = "blur(5px)";
-          c.fillStyle = "rgba(146,116,74,0.92)";
-          c.beginPath(); c.ellipse(AMT_X - 34, rowY - 16, 62, 27, -0.25, 0, Math.PI * 2); c.fill();
+          c.fillStyle = "rgba(146,116,74,0.95)";
+          c.beginPath(); c.ellipse(AMT_X - 34 - NAME_X, -16, 66, 30, -0.25, 0, Math.PI * 2); c.fill();
+          c.filter = "blur(2.4px)";
+          c.strokeStyle = "rgba(146,116,74,0.55)"; c.lineWidth = 7;
+          c.beginPath();
+          c.moveTo(AMT_X - 92 - NAME_X, -6);
+          c.quadraticCurveTo(AMT_X - 62 - NAME_X, 8, AMT_X - 20 - NAME_X, -4);
+          c.stroke();
           c.filter = "none";
           c.restore();
         }
@@ -202,11 +286,13 @@
         // sub-note (promise / note line, one line lower)
         const hasSub = !!(L.note?.en || L.note?.hi || L.note?.ml || L.say);
         if (hasSub) {
-          let nx = NAME_X + 26;
-          const sy = rowY + 34;
+          let nx = 26;
+          const sy = 34;
           if (L.note?.en) {
             c.font = FONT.subnote; c.fillStyle = INK_SOFT;
-            c.fillText(L.note.en, nx, sy);
+            c.globalAlpha = 0.85;
+            c.fillText(L.note.en, nx + wob(r, 1), sy + wob(r, 1.2));
+            c.globalAlpha = 1;
             nx += c.measureText(L.note.en).width + 8;
           }
           for (const key of ["hi", "ml"]) {
@@ -214,10 +300,13 @@
             if (!t) continue;
             c.font = key === "ml" ? FONT.sayMl : FONT.sayHi;
             c.fillStyle = INK_SOFT;
-            c.fillText(t, nx, sy);
+            c.globalAlpha = 0.85;
+            c.fillText(t, nx + wob(r, 1), sy + wob(r, 1.4));
+            c.globalAlpha = 1;
             nx += c.measureText(t).width + 8;
           }
         }
+        c.restore();
 
         out.rows.push({
           row_index: idx,
@@ -232,36 +321,78 @@
 
     async function bakePage(page) {
       const boxes = { page: page.id, rows: [] };
+      const rand = seeded(page.id);
 
       const content = document.createElement("canvas");
       content.width = W; content.height = H;
       const c = content.getContext("2d");
-      drawPaper(c, page, seeded(page.id));
-      drawHeading(c, page);
-      drawRows(c, page, boxes);
+      drawPaper(c, page, rand);
+      drawHeading(c, page, rand);
+      drawRows(c, page, boxes, rand);
 
-      // rotate + stamp onto a desk background with a photo shadow
+      // rotate + stamp onto a wooden counter with a photo shadow
       const θ = ROT[page.id] ?? 1;
       const final = document.createElement("canvas");
       final.width = W; final.height = H;
       const f = final.getContext("2d");
-      f.fillStyle = "#56514a"; f.fillRect(0, 0, W, H);
+
+      // the counter: warm wood streaks (a real desk is never one flat colour)
+      const deskBase = f.createLinearGradient(0, 0, W, H);
+      deskBase.addColorStop(0, "#6e604c");
+      deskBase.addColorStop(0.5, "#5d5142");
+      deskBase.addColorStop(1, "#4e453a");
+      f.fillStyle = deskBase; f.fillRect(0, 0, W, H);
+      f.globalAlpha = 0.16;
+      f.strokeStyle = "#3c352c"; f.lineWidth = 1 + rand() * 1.4;
+      for (let i = 0; i < 56; i++) {
+        const gy = rand() * H;
+        f.beginPath();
+        f.moveTo(-10, gy);
+        f.bezierCurveTo(W * 0.3, gy + (rand() * 8 - 4), W * 0.7, gy + (rand() * 8 - 4), W + 10, gy + (rand() * 6 - 3));
+        f.stroke();
+      }
+      f.globalAlpha = 1;
+      // soft light pool from the top-left of the counter
+      const pool = f.createRadialGradient(W * 0.24, H * 0.16, 60, W * 0.24, H * 0.16, H * 0.95);
+      pool.addColorStop(0, "rgba(255,246,228,0.16)");
+      pool.addColorStop(0.55, "rgba(255,246,228,0.045)");
+      pool.addColorStop(1, "rgba(40,28,12,0.10)");
+      f.fillStyle = pool; f.fillRect(0, 0, W, H);
+
       f.save();
-      f.shadowColor = "rgba(30,22,8,0.5)";
-      f.shadowBlur = 34; f.shadowOffsetX = 12; f.shadowOffsetY = 16;
+      f.shadowColor = "rgba(25,17,7,0.55)";
+      f.shadowBlur = 36; f.shadowOffsetX = 14; f.shadowOffsetY = 18;
       f.translate(W / 2, H / 2); f.rotate(deg(θ));
+      // the page never fills the photo: a photographed sheet sits a bit
+      // inside the frame, so the counter shows as honest edges
+      f.scale(0.94, 0.94);
       f.drawImage(content, -W / 2, -H / 2);
       f.restore();
 
-      // move recorded boxes into final-image space via the same rotation
+      // the photographed-paper pass: faint falloff towards the corners and
+      // a gentle whole-image grain, like a phone camera in a dim shop
+      const film = f.createRadialGradient(W / 2, H * 0.44, H * 0.28, W / 2, H * 0.5, H * 0.95);
+      film.addColorStop(0, "rgba(255,252,240,0.05)");
+      film.addColorStop(0.7, "rgba(60,42,14,0.05)");
+      film.addColorStop(1, "rgba(35,22,6,0.22)");
+      f.fillStyle = film; f.fillRect(0, 0, W, H);
+      f.globalAlpha = 0.05;
+      for (let i = 0; i < 1500; i++) {
+        f.fillStyle = rand() < 0.5 ? "#fff" : "#28200e";
+        f.fillRect(rand() * W, rand() * H, 1.2, 1.2);
+      }
+      f.globalAlpha = 1;
+
+      // move recorded boxes into final-image space via the same rotate+scale
       const cos = Math.cos(deg(θ)), sin = Math.sin(deg(θ));
+      const S = 0.94;
       boxes.rotation = θ;
       boxes.rows = boxes.rows.map(({ row_index, x0raw, x1raw, y0raw, y1raw }) => {
         const pts = [
           [x0raw, y0raw], [x1raw, y0raw], [x0raw, y1raw], [x1raw, y1raw],
         ].map(([px, py]) => [
-          W / 2 + (px - W / 2) * cos - (py - H / 2) * sin,
-          H / 2 + (px - W / 2) * sin + (py - H / 2) * cos,
+          W / 2 + ((px - W / 2) * cos - (py - H / 2) * sin) * S,
+          H / 2 + ((px - W / 2) * sin + (py - H / 2) * cos) * S,
         ]);
         const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
         const x = Math.min(...xs), y0 = Math.min(...ys);
