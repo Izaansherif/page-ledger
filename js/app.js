@@ -1336,6 +1336,28 @@ function closeMsgSheet() {
   }
 }
 
+/* ---------------- trust shield: a visible answer to "where does all this go?" */
+function shieldStateText() {
+  const signedIn = !!auth().getSession();
+  if (state.demoStore) return "pages you save live in this browser, on this device only";
+  if (state.sbConfigured && signedIn) return "pages go to your own private cloud account";
+  return "read-only preview - nothing is being saved yet";
+}
+function openShield() {
+  const sh = $("#sheet-shield");
+  if (!sh) return;
+  sh.querySelector('[data-slot="state"]').textContent = shieldStateText();
+  sh.hidden = false;
+  $("#btn-shield").setAttribute("aria-expanded", "true");
+  sh.querySelector(".sheet__panel").focus({ preventScroll: true });
+}
+function closeShield() {
+  const sh = $("#sheet-shield");
+  if (!sh) return;
+  sh.hidden = true;
+  $("#btn-shield").setAttribute("aria-expanded", "false");
+}
+
 async function handleFollowDone(pageId, rowId) {
   try {
     await auth().setFollowUpDone(pageId, rowId, true);
@@ -1864,7 +1886,12 @@ function wire() {
   $("#sheet-backdrop").onclick = closeMsgSheet;
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !$("#sheet-msg").hidden) closeMsgSheet();
+    if (e.key === "Escape" && !$("#sheet-shield").hidden) closeShield();
   });
+  // the trust shield: always available, never an interrupt
+  $("#btn-shield").onclick = openShield;
+  $("#btn-shield-close").onclick = closeShield;
+  $("#shield-backdrop").onclick = closeShield;
   [...document.querySelectorAll(".sheet__pills .pill")].forEach((pill) => {
     pill.onclick = () => {
       [...document.querySelectorAll(".sheet__pills .pill")].forEach((x) => x.classList.remove("pill--on"));

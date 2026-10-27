@@ -49,6 +49,10 @@
         Page Ledger
       </a>
       <div class="appbar__right">
+        <button id="btn-shield" class="btn btn--ghost btn--small btn--shield" type="button" aria-expanded="false" aria-controls="sheet-shield" aria-label="Where your pages live - privacy details">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 3.5 5.5 6v5.2c0 4.5 2.9 7.7 6.5 9.3 3.6-1.6 6.5-4.8 6.5-9.3V6L12 3.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9.2 12 1.9 2 3.7-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Private
+        </button>
         <span class="mode-badge" id="mode-badge" hidden>Sample reading</span>
         <button id="btn-people" class="btn btn--ghost btn--small appbar-people" type="button" hidden>
           People
@@ -454,6 +458,25 @@
         Open WhatsApp
       </button>
       <button id="btn-sheet-close" class="btn btn--ghost btn--block" type="button">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Privacy sheet: visible honesty about where everything lives -->
+  <div id="sheet-shield" class="sheet" hidden>
+    <button id="shield-backdrop" class="sheet__backdrop" type="button" aria-label="Close privacy" tabindex="-1"></button>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="shield-title" tabindex="-1">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <h2 class="sheet__title" id="shield-title">Where your pages live</h2>
+      <p class="sheet__sub" id="shield-sub">Right now, everything is on this device and nowhere else.</p>
+      <ul class="shield-list">
+        <li><b>Photos stay on your phone</b> &mdash; resized in your browser, kept on this device.</li>
+        <li><b>Only you can read them</b> &mdash; there is no shared place anyone else can look.</li>
+        <li><b>AI reads, you confirm</b> &mdash; unreadable fields stay blank; nothing is kept until you check it.</li>
+        <li><b>Messages never send themselves</b> &mdash; WhatsApp words are templates you review and send.</li>
+        <li><b>Cloud, when linked</b> &mdash; with your project keys, pages + photos go only into your own private account, guarded by database rules.</li>
+      </ul>
+      <p class="shield-foot">This device right now: <strong data-slot="state"></strong></p>
+      <button id="btn-shield-close" class="btn btn--ghost btn--block" type="button">Close</button>
     </div>
   </div>
 
