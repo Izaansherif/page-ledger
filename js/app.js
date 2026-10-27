@@ -754,6 +754,32 @@ function startPhases() {
 
 let stopPhases = null;
 
+// Same-photo cache: reading the IDENTICAL photo again this session re-serves
+// the first read's exact result instead of running the pipeline twice. Key =
+// sampled digest of the image payload + page date (+ fixture for samples).
+// In memory only - closing the tab forgets it, nothing is stored anywhere.
+const readCache = new Map(); // key -> response body
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i += 997) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) | 0;
+  }
+  return (s.length >>> 0).toString(36) + ":" + (h >>> 0).toString(36) + ":" + s.slice(-48);
+}
+function readKey(request) {
+  return [
+    request.imageBase64 ? hashStr(request.imageBase64) : "noimg",
+    request.mime ?? "",
+    request.mockFixture ?? "",
+    request.baseDate ?? "",
+  ].join("|");
+}
+function cachePut(key, res) {
+  if (readCache.size >= 8) readCache.delete(readCache.keys().next().value);
+  readCache.set(key, res);
+}
+
 async function runExtraction(request) {
   // Stage 2 gate: with Supabase configured, reading requires a signed-in user
   // (matching the server, which rejects unauthenticated reads).
@@ -771,9 +797,24 @@ async function runExtraction(request) {
 
   const t0 = performance.now();
   try {
-    const res = await extractPage(request, auth().getSession()?.access || null);
+    const key = readKey(request);
+    const cached = readCache.get(key);
+    let res;
+    if (cached) {
+      // Second look at the same photo: instant, honest note in the console -
+      // the pipeline is not run twice for what this browser already read.
+      res = cached;
+      console.log(
+        `[read-cache] same photo re-served from this session's earlier read ` +
+          `(${request.baseDate ? "page " + request.baseDate + ", " : ""}` +
+          `${request.mockFixture ? "sample" : "own photo"})`,
+      );
+    } else {
+      res = await extractPage(request, auth().getSession()?.access || null);
+      cachePut(key, res);
+    }
     const elapsed = performance.now() - t0;
-    const wait = Math.max(0, 1200 - elapsed); // a deliberate beat, so the demo doesn't look fake-fast
+    const wait = Math.max(0, (cached ? 260 : 1200) - elapsed); // a deliberate beat, so the demo doesn't look fake-fast
     if (wait) await new Promise((r) => setTimeout(r, wait));
 
     state.extraction = res.extraction;
