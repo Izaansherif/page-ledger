@@ -24,7 +24,16 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 - **Stage 6 done** - "Ask my ledger": grounded owner Q&A that cites exactly which figures it used (mock answer labeled demo until a key exists)
 - **Demo sections 1-4 done** - sample-first home + coach; believable photographed sample pages; interactive rows (photo locate, one-tap confirm, undo), people search/history, typed ask; a true 3D hero scene (the page, the JSON it produced, the mini-CRM phone)
 - **Stage 7 hardening done** - live-mode budget caps (`LIVE_CALLS_PER_MINUTE`/`LIVE_CALLS_PER_DAY`) so runaway traffic can never burn the key, each answered with a friendly note pointing at the sample pages; bundled sample pages are always served from saved fixtures in any mode and never spend credits
+- **Pre-submission polish done** - trust shield in the top bar ("where do my pages live", one tap, any screen); overdue strip on People (red, "N promises were due before today", one tap shows them, Done clears it); same-photo cache (the identical read never runs twice in a session); save haptic; sample fixtures bake day-0 demo state (one overdue regular per fresh demo) so "Call today" is never empty
 - Demo path needs **no Meta API key** and no Supabase project: mock mode serves fixtures (zero credits); live mode is wired and ready for a key
+
+## Next (after the hackathon — not built yet, listed honestly)
+
+The demo judge's redesign wishlist that did not fit the submission window:
+in-app language toggles (pages already mix Hindi/Malayalam/English), capture
+guide overlay + auto-snap, video onboarding, multi-device sync with conflict
+resolution, swipe gestures, and bigger-list pagination. Design principle kept:
+the AI reads, the owner confirms, messages are templates the owner sends.
 
 ## How saving works right now
 

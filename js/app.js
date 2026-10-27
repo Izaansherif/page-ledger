@@ -1276,6 +1276,8 @@ function renderPeople(data, pagesCount, fromFilter = false) {
   }
 
   const view = filterPeople(data);
+  const hint = $("#people-hint");
+  if (hint) hint.hidden = !hasPeople;
   const ov = $("#overdue-banner");
   if (hasPeople && data.totals.overdue > 0) {
     $("#overdue-text").textContent =

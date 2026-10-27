@@ -2135,3 +2135,12 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   background: var(--red, #b3261e);
   color: #fff;
 }
+
+/* the three-tap promise under the People summary */
+.people-hint {
+  margin: 8px 2px 2px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-soft, #6d675c);
+}
+.people-hint b { color: var(--ink, #2c2619); font-weight: 700; }
