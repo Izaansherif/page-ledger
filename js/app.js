@@ -13,7 +13,6 @@ import * as demo from "./demo-store.js";
 import * as ppl from "./people.js";
 import { MicSession, recordingSupported } from "./record.js";
 import { RECORDED } from "./recorded-fixtures.js";
-import { CAPTIONS, STORY_BOXES } from "./story-notes.js";
 import * as coach from "./coach.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -536,7 +535,7 @@ function renderWarnings(extraction) {
   const items = [...w.map((x) => `<li>${escapeAttr(x)}</li>`)];
   if (total != null) {
     items.push(
-      `<li>Written total on the page: <strong>&#8377;${fmtMoney(total)}</strong> - make sure the rows add up to about this (full check arrives in Stage&nbsp;5).</li>`,
+      `<li>Written total on the page: <strong>&#8377;${fmtMoney(total)}</strong> - make sure the rows add up to about this. The check against every kept row lives in &ldquo;How this page was read&rdquo;.</li>`,
     );
   }
   if (items.length) {
@@ -849,12 +848,12 @@ function setStageNotes() {
     ? (state.demoStore
         ? "Demo mode: your pages save to <strong>this device only</strong> - connect the project later for cloud backup."
         : "Signed in. Pages you save stay in your private account.")
-    : "Stage&nbsp;1 preview: pages are read and checked, nothing is saved yet.";
+    : "Everything below runs on your sample pages - your own photos are not saved in this mode.";
   $("#review-note").textContent = signedIn
     ? (state.demoStore
         ? "Demo mode: this page saves to this device only - nothing leaves the app."
         : "Saving is real: this page + photo land in your account, protected by database rules.")
-    : "Stage\u00A01 preview: nothing is saved yet - saving arrives with your project keys.";
+    : "Preview mode: you can check and edit the reading, but on signed-out devices nothing is saved.";
 }
 
 async function showSignedInHome() {
@@ -1877,64 +1876,9 @@ function wire() {
   });
 }
 
-/* ------------------------------------------- real build story (git only) */
-// The home story block is generated from js/timeline.json - scripts/
-// make-timeline.js reads the actual git log and groups commits by day.
-// Captions, when they exist, come from js/story-notes.js: words written by
-// the owner. This code never writes a story of its own - if the fetch fails
-// the section stays closed and honest.
-async function renderStoryTimeline() {
-  const el = $("#built-timeline");
-  const noteEl = $("#built-note");
-  if (!el) return;
-  let t;
-  try {
-    const res = await fetch("js/timeline.json", { cache: "no-store" });
-    if (!res.ok) throw new Error(String(res.status));
-    t = await res.json();
-    if (!Array.isArray(t.days) || t.days.length === 0) throw new Error("empty");
-  } catch {
-    noteEl.hidden = false;
-    noteEl.textContent =
-      "The commit timeline is not available right now (offline?). It lives at js/timeline.json in the repo.";
-    return;
-  }
-
-  // one block per day: the day, the owner's caption (only if written), then
-  // the raw commit subjects - the record judges can check in the repo
-  el.innerHTML = t.days
-    .map(({ date, commits }) => {
-      const caption = CAPTIONS[date];
-      return `<li>
-        <span class="built__day">${escapeHTML(niceDay(date))}</span>
-        <div class="built__text">
-          ${caption ? `<p class="built__caption">${escapeHTML(caption)}</p>` : ""}
-          <ul class="built__commits">
-            ${commits.map((c) => `<li>${escapeHTML(c)}</li>`).join("")}
-          </ul>
-        </div>
-      </li>`;
-    })
-    .join("");
-  el.hidden = false;
-  const count = t.totals?.commits ?? t.days.reduce((n, d) => n + d.commits.length, 0);
-  $("#built-count").textContent = `· ${count} commits over ${t.days.length} day${t.days.length === 1 ? "" : "s"}`;
-
-  // the two-column origin box: shown only once the owner has filled it in
-  const boxes = $("#built-boxes");
-  const before = String(STORY_BOXES.before ?? "").trim();
-  const during = String(STORY_BOXES.during ?? "").trim();
-  if (boxes && (before || during)) {
-    boxes.querySelector('[data-slot="before"]').textContent = before;
-    boxes.querySelector('[data-slot="during"]').textContent = during;
-    boxes.hidden = false;
-  }
-}
-
 wire();
 coach.init();
 setAuthMode("signin");
-renderStoryTimeline();
 
 (async function boot() {
   let cfg = null;
