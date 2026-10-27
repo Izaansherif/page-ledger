@@ -18,10 +18,40 @@
 // ---------------------------------------------------------------------------
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const HERE = path.dirname(fileURLToPath(import.meta.url)); // .../netlify/functions/_lib
-export const REPO_ROOT = path.resolve(HERE, "..", "..", "..");
+// Do NOT resolve files via import.meta.url here. The Netlify function bundler
+// compiles these modules in a mode where import.meta.url is undefined, which
+// crashed every function at load (500/502 with "path argument ... undefined").
+// The resolver below works from the repo (dev-server, spike) AND inside the
+// deployed bundle: walk up from cwd + env override until a fixtures folder
+// shows up next to real demo-voice data.
+let _fixturesRoot = null;
+function resolveFixturesRoot() {
+  if (_fixturesRoot) return _fixturesRoot;
+  const envDir = process.env.FIXTURES_DIR;
+  const cwd = process.cwd();
+  const candidates = [
+    envDir,
+    cwd,
+    path.join(cwd, "netlify", "functions"),
+    path.join(cwd, "netlify", "functions", "_lib"),
+    path.resolve(cwd, ".."),
+    path.resolve(cwd, "..", ".."),
+  ].filter(Boolean);
+  for (const c of candidates) {
+    try {
+      if (fs.statSync(path.join(c, "fixtures")).isDirectory()) {
+        _fixturesRoot = c;
+        return c;
+      }
+    } catch {
+      // keep walking
+    }
+  }
+  _fixturesRoot = cwd; // fixtures truly absent: per-file read errors explain it
+  return _fixturesRoot;
+}
+export const REPO_ROOT = resolveFixturesRoot();
 
 export const AI_CONFIG = {
   baseUrl: process.env.META_API_BASE_URL || "https://api.meta.ai/v1",
