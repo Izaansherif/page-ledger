@@ -100,6 +100,41 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { "Content-Type": "application/json" }, JSON.stringify({ ok: true, aiMode: ai.AI_CONFIG.mode }));
   }
 
+  // DEV-ONLY: the sample-page renderer (scripts/render-samples.html) saves its
+  // generated PNGs + text-position boxes here. Hard-gated by env var, and
+  // Netlify never runs dev-server - on production this route does not exist.
+  if (req.method === "POST" && pathname === "/__save-blob") {
+    if (process.env.FIXTURE_WRITE !== "1") {
+      return send(res, 403, { "Content-Type": "application/json" }, JSON.stringify({ ok: false, error: "Fixture writing is off. Run with FIXTURE_WRITE=1." }));
+    }
+    let raw = "";
+    req.on("data", (c) => (raw += c.length > 24e6 ? "OVERFLOW" : String(c)));
+    req.on("end", () => {
+      if (raw === "OVERFLOW") return send(res, 413, { "Content-Type": "application/json" }, JSON.stringify({ ok: false, error: "Too large" }));
+      try {
+        const { name, dataBase64 } = JSON.parse(raw);
+        // only allow safe sub-paths inside fixtures/ (segments validated one by
+        // one -> separators never appear inside a segment)
+        const segs = String(name || "").replace(/\\/g, "/").split("/").filter((s) => s.length);
+        const dirs = segs.slice(0, -1);
+        const last = segs[segs.length - 1] || "";
+        const badDir = dirs.some((s) => s === ".." || !/^[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?$/.test(s));
+        const badFile = !/^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?\.(jpg|jpeg|png|json)$/.test(last);
+        if (!segs.length || badDir || badFile) {
+          return send(res, 400, { "Content-Type": "application/json" }, JSON.stringify({ ok: false, error: `Bad name: ${name}` }));
+        }
+        const abs = path.join(ROOT, "fixtures", ...segs);
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, Buffer.from(dataBase64, "base64"));
+        console.log(`[dev-server] saved fixture: fixtures/${segs.join("/")}`);
+        send(res, 200, { "Content-Type": "application/json" }, JSON.stringify({ ok: true, name: segs.join("/") }));
+      } catch (err) {
+        send(res, 500, { "Content-Type": "application/json" }, JSON.stringify({ ok: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Generic Netlify-function routing (extract, config, ...) for POST JSON.
   const fnMatch = pathname.match(/^\/\.netlify\/functions\/([a-zA-Z0-9_-]+)$/);
   if (fnMatch) {

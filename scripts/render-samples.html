@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Page Ledger - sample page renderer (dev only)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Caveat:wght@500;600;700&family=Noto+Sans+Malayalam:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: system-ui, sans-serif; background: #efece4; margin: 0; padding: 24px; }
+  button { font: inherit; padding: 10px 18px; cursor: pointer; }
+  .out { white-space: pre-wrap; background: #fff; padding: 12px; max-height: 300px; overflow: auto; }
+  .previews { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 18px; }
+  .previews figure { margin: 0; }
+  .previews figcaption { font-size: 12px; color: #555; }
+</style>
+</head>
+<body>
+  <h1>Sample-page renderer</h1>
+  <p>Dev-only helper. Draws the made-for-demo pages from <code>scripts/sample-pages-spec.js</code>,
+     records where every visible line sits (normalized 0-1000 bboxes), and saves JPEGs + JSON into
+     <code>fixtures/made/</code> via the guarded dev-server endpoint (<code>FIXTURE_WRITE=1</code>).</p>
+  <button id="go">Generate + save all pages</button>
+  <div class="out" id="out">idle</div>
+  <div class="previews" id="previews"></div>
+
+  <script type="module">
+    import { MADE_PAGES } from "./sample-pages-spec.js";
+
+    const W = 1000, H = 1414;          // one notebook page
+    const ROW_Y0 = 288, ROW_H = 68;    // where rows start / spacing
+    const AMT_X = 940;                 // right edge of the amount column
+    const NAME_X = 112;                // left edge of entries (past the margin line)
+
+    const INK = "#332b1e";
+    const INK_SOFT = "#4b4534";
+    const STRUCK_INK = "rgba(51,43,30,0.55)";
+    const STRIKE = "rgba(150,60,40,0.85)";
+
+    const deg = (d) => (d * Math.PI) / 180;
+
+    // mulberry32 seeded by the page id - grain is stable across re-runs
+    function seeded(pageId) {
+      let h = 1779033703;
+      for (const ch of pageId) {
+        h = Math.imul(h ^ ch.charCodeAt(0), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      return () => {
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return ((h ^= h >>> 16) >>> 0) / 4294967296;
+      };
+    }
+
+    async function ensureFonts() {
+      await Promise.all([
+        document.fonts.load("700 46px Caveat"),
+        document.fonts.load("600 36px Caveat"),
+        document.fonts.load("500 32px Caveat"),
+        document.fonts.load("400 30px Kalam"),
+        document.fonts.load('600 30px "Noto Sans Malayalam"'),
+        document.fonts.load('400 30px "Noto Sans Malayalam"'),
+      ]);
+      await document.fonts.ready;
+    }
+
+    const FONT = {
+      title: "700 46px Caveat",
+      subEn: "600 32px Caveat",
+      subHi: "400 30px Kalam",
+      subMl: '400 30px "Noto Sans Malayalam"',
+      account: "600 26px Caveat",
+      date: "600 30px Caveat",
+      name: "600 36px Caveat",
+      en: "500 32px Caveat",
+      hi: "400 30px Kalam",
+      ml: '400 30px "Noto Sans Malayalam"',
+      amt: "700 44px Caveat",
+      subnote: "600 27px Caveat",
+      sayHi: "400 28px Kalam",
+      sayMl: '400 28px "Noto Sans Malayalam"',
+    };
+
+    const ROT = { dental: -1.3, garage: 1.5, kirana: -0.9, tuition: 1.1 };
+
+    function drawPaper(c, page, r) {
+      c.fillStyle = page.paper;
+      c.fillRect(0, 0, W, H);
+      for (let i = 0; i < 2100; i++) {
+        c.fillStyle = `rgba(120,95,55,${(0.03 + r() * 0.05).toFixed(3)})`;
+        c.fillRect(r() * W, r() * H, 1 + r() * 1.6, 1 + r() * 1.4);
+      }
+      // ruled lines
+      c.strokeStyle = "rgba(80,120,170,0.5)";
+      c.lineWidth = 1;
+      for (let y = 252; y < H - 40; y += 52) {
+        c.beginPath(); c.moveTo(52, y); c.lineTo(W - 44, y); c.stroke();
+      }
+      // red margin + centre divider
+      c.strokeStyle = "rgba(196,70,70,0.6)"; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(84, 30); c.lineTo(84, H - 30); c.stroke();
+      c.strokeStyle = "rgba(120,110,90,0.25)"; c.lineWidth = 1.4;
+      c.beginPath(); c.moveTo(660, 250); c.lineTo(660, H - 44); c.stroke();
+      // bottom vignette (photo edge shadow)
+      const vg = c.createLinearGradient(0, H - 260, 0, H);
+      vg.addColorStop(0, "rgba(90,70,40,0)");
+      vg.addColorStop(1, "rgba(90,70,40,0.18)");
+      c.fillStyle = vg; c.fillRect(0, H - 260, W, 260);
+    }
+
+    function drawHeading(c, page) {
+      c.fillStyle = INK;
+      c.font = FONT.title;
+      c.fillText(page.title.en, 108, 108);
+      const uw = c.measureText(page.title.en).width;
+      c.strokeStyle = "rgba(51,43,30,0.75)"; c.lineWidth = 2.2;
+      c.beginPath(); c.moveTo(108, 124); c.lineTo(108 + uw - 4, 128); c.stroke();
+
+      let sx = 110;
+      const parts = [
+        ...(page.subtitle.en ? [{ t: page.subtitle.en, f: FONT.subEn }] : []),
+        ...(page.subtitle.hi ? [{ t: " · " + page.subtitle.hi, f: FONT.subHi }] : []),
+        ...(page.subtitle.ml ? [{ t: " · " + page.subtitle.ml, f: FONT.subMl }] : []),
+      ];
+      for (const p of parts) {
+        c.font = p.f; c.fillStyle = INK_SOFT;
+        c.fillText(p.t, sx, 166);
+        sx += c.measureText(p.t).width + 8;
+      }
+      c.font = FONT.account; c.fillStyle = "rgba(60,50,35,0.75)";
+      c.fillText(page.account, 110, 206);
+      c.font = FONT.date; c.fillStyle = INK;
+      c.fillText("27/10", W - 156, 96);
+    }
+
+    function drawRows(c, page, out) {
+      let y = ROW_Y0;
+      page.lines.forEach((L, idx) => {
+        const rowY = y;
+        let x = NAME_X;
+        // name (and vehicle in the parentheses where given)
+        const name = L.n + (L.veh ? ` (${L.veh})` : "");
+        c.font = FONT.name;
+        c.fillStyle = L.kind === "struck" ? STRUCK_INK : INK;
+        c.fillText(name, x, rowY);
+        x += c.measureText(name).width + 6;
+
+        // phone (small, after the name - fake demo numbers, clearly garbage-safe)
+        if (L.ph) {
+          c.font = "500 25px Caveat";
+          c.fillStyle = "rgba(70,58,40,0.72)";
+          c.fillText(L.ph, x, rowY);
+          x += c.measureText(L.ph).width + 8;
+        }
+
+        // work: mixed-language segments
+        for (const key of ["en", "hi", "ml"]) {
+          const ws = L.work?.[key];
+          if (!ws) continue;
+          const font = key === "ml" ? FONT.ml : key === "hi" ? FONT.hi : FONT.en;
+          c.font = font;
+          c.fillStyle = L.kind === "struck" ? STRUCK_INK : INK_SOFT;
+          const t = " · " + ws;
+          c.fillText(t, x, rowY);
+          x += c.measureText(t).width + 4;
+        }
+
+        // amount, right-aligned in the amount column
+        if (L.amt) {
+          c.font = FONT.amt;
+          c.fillStyle = L.kind === "struck" ? STRUCK_INK : INK;
+          c.fillText(L.amt, AMT_X - c.measureText(L.amt).width, rowY);
+        }
+
+        if (L.kind === "struck") {
+          c.strokeStyle = STRIKE; c.lineWidth = 4;
+          c.beginPath();
+          c.moveTo(NAME_X - 8, rowY - 15);
+          c.lineTo(AMT_X + 2, rowY - 19);
+          c.stroke();
+        }
+        if (L.kind === "paid") {
+          c.strokeStyle = "rgba(51,43,30,0.85)"; c.lineWidth = 2;
+          c.beginPath(); c.moveTo(NAME_X - 6, rowY + 13); c.lineTo(AMT_X - 2, rowY + 13); c.stroke();
+        }
+        if (L.kind === "smudged") {
+          // ghost digits under a blurred blotch: clearly unreadable
+          c.save();
+          c.globalAlpha = 0.3;
+          c.font = FONT.amt; c.fillStyle = INK;
+          c.fillText("₹5", AMT_X - 56, rowY);
+          c.restore();
+          c.save();
+          c.filter = "blur(5px)";
+          c.fillStyle = "rgba(146,116,74,0.92)";
+          c.beginPath(); c.ellipse(AMT_X - 34, rowY - 16, 62, 27, -0.25, 0, Math.PI * 2); c.fill();
+          c.filter = "none";
+          c.restore();
+        }
+
+        // sub-note (promise / note line, one line lower)
+        const hasSub = !!(L.note?.en || L.note?.hi || L.note?.ml || L.say);
+        if (hasSub) {
+          let nx = NAME_X + 26;
+          const sy = rowY + 34;
+          if (L.note?.en) {
+            c.font = FONT.subnote; c.fillStyle = INK_SOFT;
+            c.fillText(L.note.en, nx, sy);
+            nx += c.measureText(L.note.en).width + 8;
+          }
+          for (const key of ["hi", "ml"]) {
+            const t = L.note?.[key] ?? L.say?.[key];
+            if (!t) continue;
+            c.font = key === "ml" ? FONT.sayMl : FONT.sayHi;
+            c.fillStyle = INK_SOFT;
+            c.fillText(t, nx, sy);
+            nx += c.measureText(t).width + 8;
+          }
+        }
+
+        out.rows.push({
+          row_index: idx,
+          x0raw: NAME_X - 20,
+          x1raw: AMT_X + 24,
+          y0raw: rowY - 48,
+          y1raw: hasSub ? rowY + 42 : rowY + 18,
+        });
+        y += ROW_H + (hasSub ? 10 : 0);
+      });
+    }
+
+    async function bakePage(page) {
+      const boxes = { page: page.id, rows: [] };
+
+      const content = document.createElement("canvas");
+      content.width = W; content.height = H;
+      const c = content.getContext("2d");
+      drawPaper(c, page, seeded(page.id));
+      drawHeading(c, page);
+      drawRows(c, page, boxes);
+
+      // rotate + stamp onto a desk background with a photo shadow
+      const θ = ROT[page.id] ?? 1;
+      const final = document.createElement("canvas");
+      final.width = W; final.height = H;
+      const f = final.getContext("2d");
+      f.fillStyle = "#56514a"; f.fillRect(0, 0, W, H);
+      f.save();
+      f.shadowColor = "rgba(30,22,8,0.5)";
+      f.shadowBlur = 34; f.shadowOffsetX = 12; f.shadowOffsetY = 16;
+      f.translate(W / 2, H / 2); f.rotate(deg(θ));
+      f.drawImage(content, -W / 2, -H / 2);
+      f.restore();
+
+      // move recorded boxes into final-image space via the same rotation
+      const cos = Math.cos(deg(θ)), sin = Math.sin(deg(θ));
+      boxes.rotation = θ;
+      boxes.rows = boxes.rows.map(({ row_index, x0raw, x1raw, y0raw, y1raw }) => {
+        const pts = [
+          [x0raw, y0raw], [x1raw, y0raw], [x0raw, y1raw], [x1raw, y1raw],
+        ].map(([px, py]) => [
+          W / 2 + (px - W / 2) * cos - (py - H / 2) * sin,
+          H / 2 + (px - W / 2) * sin + (py - H / 2) * cos,
+        ]);
+        const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+        const x = Math.min(...xs), y0 = Math.min(...ys);
+        return {
+          row_index,
+          bbox: [
+            Math.max(0, Math.round(x * (1000 / W))),
+            Math.max(0, Math.round(y0 * (1000 / H))),
+            Math.round((Math.max(...xs) - x) * (1000 / W)),
+            Math.round((Math.max(...ys) - y0) * (1000 / H)),
+          ],
+        };
+      });
+
+      const toBlob = (canvas, q) => new Promise((res) => canvas.toBlob(res, "image/jpeg", q));
+      const fullBlob = await toBlob(final, 0.82);
+      const tc = document.createElement("canvas");
+      tc.width = 300;
+      tc.height = Math.round((300 * H) / W);
+      tc.getContext("2d").drawImage(final, 0, 0, tc.width, tc.height);
+      const thumbBlob = await toBlob(tc, 0.62);
+      return { final, fullBlob, thumbBlob, boxes };
+    }
+
+    async function save(name, blob) {
+      const b64 = await new Promise((res) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result.split(",")[1]);
+        fr.readAsDataURL(blob);
+      });
+      const res = await fetch("/__save-blob", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name, dataBase64: b64 }),
+      });
+      const j = await res.json();
+      if (!j.ok) throw new Error(`save failed for ${name}: ${j.error}`);
+      return j;
+    }
+
+    const out = document.getElementById("out");
+    document.getElementById("go").onclick = async () => {
+      const btn = document.getElementById("go");
+      btn.disabled = true;
+      try {
+        out.textContent = "loading fonts…";
+        await ensureFonts();
+        const previews = document.getElementById("previews");
+        previews.innerHTML = "";
+        for (const page of MADE_PAGES) {
+          out.textContent = `drawing ${page.id}…`;
+          const { final, fullBlob, thumbBlob, boxes } = await bakePage(page);
+          await save(`made/${page.id}.jpg`, fullBlob);
+          await save(`made/${page.id}-thumb.jpg`, thumbBlob);
+          await save(`made/boxes-${page.id}.json`, new Blob([JSON.stringify(boxes, null, 2)], { type: "application/json" }));
+          const sizeKB = Math.round(fullBlob.size / 1024);
+          const fig = document.createElement("figure");
+          const img = document.createElement("img");
+          img.src = final.toDataURL("image/jpeg", 0.5);
+          img.width = 240;
+          fig.appendChild(img);
+          const cap = document.createElement("figcaption");
+          cap.textContent = `${page.id} · full JPEG ${sizeKB} KB · ${boxes.rows.length} lines`;
+          fig.appendChild(cap);
+          previews.appendChild(fig);
+          out.textContent += `\n✔ ${page.id}: ${sizeKB} KB, ${boxes.rows.length} lines with boxes`;
+        }
+        out.textContent += "\n\nAll pages saved to fixtures/made/. Done.";
+      } catch (e) {
+        out.textContent += `\nERROR: ${e.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

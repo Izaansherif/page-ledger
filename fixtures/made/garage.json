@@ -1,0 +1,101 @@
+{
+  "columns_detected": ["name / vehicle / phone", "work", "amount ₹"],
+  "rows": [
+    {
+      "row_index": 0,
+      "raw_text": "B. Harish (Activa 6E) 95610 00112 · silencer fit · ₹400",
+      "name": "B. Harish",
+      "phone": "9561000112",
+      "note": "silencer fit (Activa 6E)",
+      "amount_paid": null,
+      "amount_due": 400,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": [],
+      "confidence": { "name": 0.88, "phone": 0.8, "amount_paid": null, "amount_due": 0.87, "follow_up_date": null },
+      "bbox": [103, 162, 873, 63]
+    },
+    {
+      "row_index": 1,
+      "raw_text": "Bolero · clutch plate + fitting · ₹1,200 | कल पिकअप",
+      "name": "Bolero",
+      "phone": null,
+      "note": "clutch plate + fitting; कल पिकअप (pickup tomorrow)",
+      "amount_paid": null,
+      "amount_due": 1200,
+      "follow_up_text": "कल पिकअप (pickup tomorrow)",
+      "follow_up_date": "{{TODAY+1}}",
+      "struck_out": false,
+      "flags": ["vehicle name"],
+      "confidence": { "name": 0.7, "phone": null, "amount_paid": null, "amount_due": 0.83, "follow_up_date": 0.6 },
+      "bbox": [100, 210, 874, 80]
+    },
+    {
+      "row_index": 2,
+      "raw_text": "Cr. By Cash · Harish paid now · ₹250",
+      "name": null,
+      "phone": null,
+      "note": "Harish paid now - Cr. By Cash payment line",
+      "amount_paid": 250,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["payment line"],
+      "confidence": { "name": null, "phone": null, "amount_paid": 0.9, "amount_due": null, "follow_up_date": null },
+      "bbox": [99, 266, 873, 63]
+    },
+    {
+      "row_index": 3,
+      "raw_text": "Raza · tyre puncture · ₹80",
+      "name": "Raza",
+      "phone": null,
+      "note": "tyre puncture",
+      "amount_paid": null,
+      "amount_due": 80,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": true,
+      "flags": ["struck through"],
+      "confidence": { "name": 0.78, "phone": null, "amount_paid": null, "amount_due": 0.7, "follow_up_date": null },
+      "bbox": [97, 314, 873, 63]
+    },
+    {
+      "row_index": 4,
+      "raw_text": "Splendor · brake shoes · ₹350 | balance: शुक्रवार को आएँगे",
+      "name": "Splendor",
+      "phone": null,
+      "note": "brake shoes",
+      "amount_paid": null,
+      "amount_due": 350,
+      "follow_up_text": "balance: शुक्रवार को आएँगे (balance Thursday ko)",
+      "follow_up_date": "{{TODAY+3}}",
+      "struck_out": false,
+      "flags": ["vehicle name"],
+      "confidence": { "name": 0.8, "phone": null, "amount_paid": null, "amount_due": 0.85, "follow_up_date": 0.55 },
+      "bbox": [95, 362, 874, 80]
+    },
+    {
+      "row_index": 5,
+      "raw_text": "Pulsar · पेट्रोल नली",
+      "name": "Pulsar",
+      "phone": null,
+      "note": "पेट्रोल नली (fuel pipe)",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "flags": ["amount unreadable", "vehicle name"],
+      "confidence": { "name": 0.74, "phone": null, "amount_paid": null, "amount_due": null, "follow_up_date": null },
+      "bbox": [93, 417, 873, 63]
+    }
+  ],
+  "page_total_written": null,
+  "page_warnings": [
+    "Names are the customer's vehicles where no name was written",
+    "One line is crossed out",
+    "One amount is smudged and unreadable"
+  ]
+}

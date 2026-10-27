@@ -59,6 +59,18 @@ export function validateExtraction(value) {
           } else fail(`${p}.confidence.${f}`, "must be a number or null");
         }
       }
+      // optional bbox [x, y, w, h] in 0-1000 page coordinates (UI tap-to-locate).
+      // Absent or null is fine (fall back gracefully); present must be sane.
+      const bbox = row.bbox;
+      if (bbox !== undefined && bbox !== null) {
+        if (
+          !Array.isArray(bbox) ||
+          bbox.length !== 4 ||
+          bbox.some((n) => typeof n !== "number" || !Number.isFinite(n) || n < 0 || n > 1000)
+        ) {
+          fail(`${p}.bbox`, "must be null or four numbers in 0-1000 [x, y, w, h]");
+        }
+      }
     });
   }
 

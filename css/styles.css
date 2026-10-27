@@ -1421,11 +1421,13 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 }
 .sample-card:nth-child(2) { animation-delay: 0.06s; }
 .sample-card:nth-child(3) { animation-delay: 0.12s; }
+.sample-card:nth-child(4) { animation-delay: 0.18s; }
+.sample-card:nth-child(5) { animation-delay: 0.24s; }
 .sample-card:hover { transform: translateY(-2px); border-color: var(--accent, #8a5a2b); box-shadow: 0 6px 16px rgba(60, 42, 10, 0.10); }
 .sample-card:active { transform: scale(0.97); }
 .sample-card__img {
   width: 100%;
-  aspect-ratio: 340 / 539;
+  aspect-ratio: 300 / 424; /* the made-for-demo sample pages (1000x1414) */
   object-fit: cover;
   border-radius: 9px;
   border: 1px solid var(--line, #e5e0d4);
@@ -1433,6 +1435,16 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 }
 .sample-card__t { font-weight: 700; font-size: 0.92rem; color: var(--ink, #2c2619); }
 .sample-card__d { font-size: 0.74rem; color: var(--ink-soft, #6d675c); line-height: 1.3; }
+.sample-card__tag {
+  font-size: 0.64rem;
+  color: var(--ink-soft, #6d675c);
+  border: 1px dashed var(--line, #e5e0d4);
+  border-radius: 7px;
+  padding: 2px 6px;
+  background: transparent;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
 
 /* demo banner on the review view: plain, honest, never shouty */
 .demo-banner {

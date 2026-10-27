@@ -12,6 +12,7 @@ import * as sb from "./supabase.js";
 import * as demo from "./demo-store.js";
 import * as ppl from "./people.js";
 import { MicSession, recordingSupported } from "./record.js";
+import { RECORDED } from "./recorded-fixtures.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -1205,15 +1206,24 @@ function wire() {
 
   // Sample pages from bundled fixtures (mock, zero credits). Each card reads
   // its OWN fixture, so the review table matches what the card promises.
+  // data-fixture / data-image come from the card markup; the "made for this
+  // demo" pages live in fixtures/made/, the credited 1860s scan in
+  // fixtures/demo-pages/.
   [...document.querySelectorAll(".sample-card")].forEach((card) => {
+    // When a real recording of this sample exists (scripts/record-fixtures.js),
+    // extend the honest label instead of replacing it.
+    const rec = RECORDED[card.dataset.fixture];
+    if (rec) {
+      const tag = card.querySelector(".sample-card__tag");
+      if (tag) tag.textContent = `Real reading recorded ${niceDay(rec.date)} · replayed free`;
+    }
     card.onclick = async () => {
       if (state.busy) return;
-      const n = card.dataset.n;
       try {
-        const res = await fetch(`/fixtures/demo-pages/page${n}.jpg`);
+        const res = await fetch(card.dataset.image);
         if (!res.ok) throw new Error("The sample page photo could not be loaded.");
         const blob = await res.blob();
-        await handleSelectedFile(blob, { mockFixture: `spike/page${n}` });
+        await handleSelectedFile(blob, { mockFixture: card.dataset.fixture });
       } catch (e) {
         $("#error-msg").textContent = e.message || "The sample page could not be loaded.";
         $("#error-detail").hidden = true;
