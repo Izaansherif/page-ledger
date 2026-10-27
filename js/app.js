@@ -156,7 +156,7 @@ function updateTotals() {
   if (sig === lastTotalsSig) return;
   lastTotalsSig = sig;
   const n = activeRows().length;
-  $("#review-summary").textContent = `${names.size} ${names.size === 1 ? "person" : "people"} · ${n} ${n === 1 ? "line" : "lines"} · due ₹${fmtMoney(b.due)} — check each line before keeping`;
+  $("#review-summary").textContent = `${names.size} ${names.size === 1 ? "person" : "people"} · ${n} ${n === 1 ? "line" : "lines"} · due ₹${fmtMoney(b.due)} — check line by line with the photo, then Save this page`;
   $("#review-totals").innerHTML = `
     <span class="stat"><span class="stat__label">People</span><span class="stat__value">${names.size}</span></span>
     <span class="stat"><span class="stat__label">Paid</span><span class="stat__value">&#8377;${fmtMoney(b.paid)}</span></span>

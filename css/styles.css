@@ -1462,3 +1462,144 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   .sample-card { animation: none; transition: none; }
   .demo-banner, .review-actions .btn--primary#btn-gotop { animation: none; }
 }
+
+/* ============================================================
+   Build story timeline + reading polish + easier samples
+   ============================================================ */
+
+/* ---- build story (collapsed by default; calm, readable, mobile-first) */
+.built {
+  margin-top: 18px;
+  border-top: 1.5px solid var(--line, #e5e0d4);
+  padding-top: 6px;
+}
+.built > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px 4px;
+  font-weight: 700;
+  color: var(--ink, #2c2619);
+  border-radius: 10px;
+  min-height: 44px;
+  transition: background-color 0.15s ease;
+}
+.built > summary::-webkit-details-marker { display: none; }
+.built > summary:hover { background: var(--accent-soft, #f4ead9); }
+.built__tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bg, #faf8f3);
+  background: var(--accent, #8a5a2b);
+  border-radius: 999px;
+  padding: 3px 9px 2px;
+}
+.built__chev {
+  margin-left: auto;
+  width: 9px; height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.55;
+  transition: transform 0.2s ease;
+  flex: 0 0 auto;
+}
+.built[open] .built__chev { transform: rotate(225deg); }
+
+.built__timeline {
+  list-style: none;
+  margin: 8px 0 4px;
+  padding: 0 0 0 4px;
+  position: relative;
+}
+.built__timeline::before {
+  content: "";
+  position: absolute;
+  left: 13px; top: 6px; bottom: 10px;
+  width: 2px;
+  background: var(--line, #e5e0d4);
+}
+.built__timeline li {
+  position: relative;
+  padding: 0 0 16px 36px;
+  animation: item-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.built__timeline li:nth-child(2) { animation-delay: 0.04s; }
+.built__timeline li:nth-child(3) { animation-delay: 0.08s; }
+.built__timeline li:nth-child(4) { animation-delay: 0.12s; }
+.built__timeline li:nth-child(5) { animation-delay: 0.16s; }
+.built__timeline li:nth-child(6) { animation-delay: 0.2s; }
+.built__timeline li:nth-child(7) { animation-delay: 0.24s; }
+.built__timeline li::before {
+  content: "";
+  position: absolute;
+  left: 7px; top: 7px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--bg, #faf8f3);
+  border: 2.5px solid var(--accent, #8a5a2b);
+}
+.built__timeline li:first-child::before { background: var(--accent, #8a5a2b); }
+.built__day {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent, #8a5a2b);
+  margin-bottom: 3px;
+}
+.built__text { color: var(--ink, #2c2619); font-size: 0.95rem; line-height: 1.62; }
+.built__text strong { display: inline; }
+.built__foot {
+  font-size: 0.82rem;
+  color: var(--ink-soft, #6d675c);
+  border-top: 1px dashed var(--line, #e5e0d4);
+  padding: 10px 2px 2px;
+  line-height: 1.5;
+}
+
+/* ---- ask: one calm helper line under the label */
+.ask__help {
+  font-size: 0.82rem;
+  color: var(--ink-soft, #6d675c);
+  margin: -2px 0 8px;
+  line-height: 1.5;
+}
+
+/* ---- samples: bigger thumb area, clearer affordance */
+.samples__label { font-size: 0.9rem; line-height: 1.5; }
+.sample-card { position: relative; }
+.sample-card::after {
+  content: "Tap to read";
+  position: absolute;
+  right: 10px; bottom: 38px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--bg, #faf8f3);
+  background: rgba(44, 38, 25, 0.55);
+  padding: 3px 8px;
+  border-radius: 999px;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+.sample-card:hover::after, .sample-card:focus-visible::after { opacity: 1; transform: translateY(0); }
+
+/* ---- readability pass: breathing room where the eye reads most */
+.hero-sub { line-height: 1.65; }
+.story__body { line-height: 1.6; }
+.people-sub { letter-spacing: 0.01em; }
+.review-title { letter-spacing: -0.01em; }
+.card__title { letter-spacing: -0.01em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .built__timeline li { animation: none; }
+  .built__chev { transition: none; }
+  .sample-card::after { transition: none; }
+}

@@ -205,7 +205,7 @@
         <div class="rule"><span>or</span></div>
 
         <div class="samples" id="samples">
-          <p class="samples__label">No photo handy? Read a sample page:</p>
+          <p class="samples__label">No photo handy? Tap a sample page &mdash; it reads in about a second, free, no key needed:</p>
           <div class="samples__grid">
             <button class="sample-card" data-n="1" type="button">
               <img class="sample-card__img" src="/fixtures/demo-pages/page1-thumb.jpg" width="340" height="539" alt="Sample notebook page 1" loading="lazy" />
@@ -272,6 +272,84 @@
         </article>
       </div>
 
+      <!-- build story: judges read this - it is the honest day-by-day account -->
+      <details id="built" class="built">
+        <summary>
+          <span class="built__tag">New</span>
+          The story of this build &mdash; day 1 to day&nbsp;7
+          <span class="built__chev" aria-hidden="true"></span>
+        </summary>
+        <ol class="built__timeline">
+          <li>
+            <span class="built__day">Day 1</span>
+            <div class="built__text">
+              <strong>Read the rulebook, then ran a spike.</strong>
+              Meta&rsquo;s Model API docs came first &mdash; endpoints, auth, image and
+              audio shapes &mdash; before a single line of guessing. The first working
+              thing: one endpoint turning a 1860s grog-shop ledger photo into
+              clean JSON, in mock mode so no credits were touched.
+            </div>
+          </li>
+          <li>
+            <span class="built__day">Day 2</span>
+            <div class="built__text">
+              <strong>Made reading editable.</strong>
+              The upload screen and the review table arrived: confidence dots on
+              unsure values, struck-out lines shown as struck-out, blanks left
+              blank. The page photo sits beside the table on purpose &mdash; the
+              owner checks everything against it.
+            </div>
+          </li>
+          <li>
+            <span class="built__day">Day 3</span>
+            <div class="built__text">
+              <strong>Turned it into a small CRM.</strong>
+              Pages save; <em>Your people</em> appears. Repeat customers merge
+              across pages (phone first, then identical names), dues sum up, and
+              follow-up promises rise to the top of <em>call today</em>.
+            </div>
+          </li>
+          <li>
+            <span class="built__day">Day 4</span>
+            <div class="built__text">
+              <strong>Gave it a voice.</strong>
+              Tap the mic, speak the follow-up like you would to yourself, and
+              the words land as <strong>editable, owner-checked text</strong> in
+              the note field. Transcription only &mdash; the app never sends a
+              message by itself (rule 6).
+            </div>
+          </li>
+          <li>
+            <span class="built__day">Day 5</span>
+            <div class="built__text">
+              <strong>Earned trust on purpose.</strong>
+              <em>How this page was read</em>: kept vs struck lines, blank
+              fields, reading confidence, and the exact cost receipt per read.
+              Removing a saved page and a full demo reset landed the same day.
+            </div>
+          </li>
+          <li>
+            <span class="built__day">Day 6</span>
+            <div class="built__text">
+              <strong>Wired questions to answers.</strong>
+              <em>Ask my ledger</em>: the phone computes a compact brief from the
+              owner&rsquo;s own figures, the model only words the answer, and every
+              answer cites exactly which figures it used. Demo answers say so.
+            </div>
+          </li>
+          <li>
+            <span class="built__day">Day 7</span>
+            <div class="built__text">
+              <strong>Polish, then honesty passes, then more polish.</strong>
+              Calm motion everywhere, every button traced and tested, honest
+              demo/live labels, sample pages you can tap on the home screen, and
+              the deploy config. You are reading the result.
+            </div>
+          </li>
+        </ol>
+        <p class="built__foot">Solo indie entry, built in public for the Meta Global AI hackathon. Every label here says what is real &mdash; demo things call themselves demo.</p>
+      </details>
+
       <p class="stage-note" id="home-note">Stage&nbsp;1 preview: pages are read and checked, nothing is saved yet.</p>
     </section>
 
@@ -317,6 +395,7 @@
       <!-- Stage 6: ask about your own figures (answers come only from your data) -->
       <div id="ask-block" class="ask" hidden>
         <p class="ask__label">Ask about your money</p>
+        <p class="ask__help">Answers come only from the figures you saved &mdash; the app cites them, and says so when a demo answer stands in.</p>
         <div class="ask__q">
           <button class="pill ask__pill" data-q="owe" type="button">Who owes me the most?</button>
           <button class="pill ask__pill" data-q="week" type="button">How was this week?</button>
