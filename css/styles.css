@@ -33,6 +33,9 @@
 }
 
 * { box-sizing: border-box; }
+/* hidden always wins: showView toggles [hidden]; display rules below must
+   never resurrect a hidden view (this bug stacked every view on the page) */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -148,7 +151,7 @@ body {
 }
 .btn:active { transform: translateY(1px); }
 .btn--primary { background: var(--accent); color: var(--accent-ink); }
-.btn--primary:hover { background: #115e59; }
+.btn--primary:hover { background: #d98f22; }
 .btn--ghost {
   background: var(--surface);
   color: var(--accent);
@@ -210,8 +213,9 @@ body {
 .coach__tip {
   position: absolute;
   max-width: min(340px, calc(100vw - 28px));
-  background: var(--ink, #2c2619);
-  color: #fdf9ee;
+  background: var(--surface, #2c2619);
+  color: var(--ink, #fdf9ee);
+  border: 1px solid var(--line-strong, #4a4234);
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 0.86rem;
@@ -759,7 +763,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .btn { box-shadow: 0 1px 2px rgb(28 25 23 / 0.08); }
 /* (the old teal button shadow was retired with the light theme - the amber
    glow lives in the premium dark layer below) */
-.btn--primary:hover { box-shadow: 0 4px 12px rgb(15 118 110 / 0.32); background: #10716a; }
+.btn--primary:hover { box-shadow: 0 4px 12px rgb(242 169 59 / 0.30); background: #d98f22; }
 .btn:active { transform: translateY(1px) scale(0.995); }
 
 .field input { transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease; }
@@ -821,12 +825,12 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.965); } }
 
 /* ---------- selection & scrollbar ---------- */
-::selection { background: rgb(15 118 110 / 0.18); }
+::selection { background: rgb(242 169 59 / 0.25); }
 input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
 /* ============================================================
-   DARK THEME  (system preference; warm charcoal, calm teal)
+   DARK THEME  (the app's identity; deep ink, one amber lamp)
    ============================================================ */
 /* The light scheme block was removed in the phase-2 restyle: dark ink is
    the app's identity (the directive's design language). If a light theme
@@ -1651,10 +1655,10 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   gap: 10px;
   max-width: min(430px, calc(100vw - 24px));
   padding: 9px 10px 9px 14px;
-  border: 1px solid var(--line-strong, #d6d0c2);
   border-radius: 12px;
-  background: var(--ink, #2c2619);
-  color: #fdf9ee;
+  background: var(--surface, #2c2619);
+  color: var(--ink, #fdf9ee);
+  border: 1px solid var(--line-strong, #4a4234);
   font-size: 0.86rem;
   box-shadow: 0 10px 26px rgb(30 22 8 / 0.30);
 }

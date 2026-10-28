@@ -10,6 +10,18 @@ photos and answering questions, Muse Voice Transcribe for voice notes).
 - Stack: plain HTML/CSS/JS (ES modules) + Supabase + Netlify Functions. **Zero npm dependencies.**
 - Project plan and rules for agents: see `AGENTS.md`.
 
+## Screens
+
+Captured from the running app (desktop and 360px mobile), in `docs/screens/`:
+
+| | |
+|---|---|
+| ![Story opening](docs/screens/01-story-lamp.png) | ![Landing](docs/screens/06-landing.png) |
+| ![Demo picker](docs/screens/07-picker.png) | ![CRM dashboard](docs/screens/09-crm.png) |
+| ![Person panel](docs/screens/10-person-panel.png) | ![Mobile CRM](docs/screens/m05-crm.png) |
+
+The full walk (all five story scenes, review, ask, More menu, own-page, mobile set) lives in `docs/screens/`.
+
 ## Status
 
 - **Stage 0 done** - AI spike, mock pipeline verified end-to-end
