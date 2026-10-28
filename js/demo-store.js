@@ -236,6 +236,24 @@ export async function setFollowUpDate(pageId, rowId, date) {
   return { ok: true, persisted };
 }
 
+// Records money received, in the owner's own hand. Each allocation carries the
+// ABSOLUTE new amounts for one row (the caller computes them), plus an
+// optional follow-up mark - a settled person has nothing left to chase.
+// allocations: [{ pageId, rowId, amountPaid?, amountDue?, followUpDone? }]
+export async function recordPayment(allocations) {
+  const store = read();
+  for (const a of allocations) {
+    const page = store.pages.find((p) => p.id === a.pageId);
+    const row = page?.page_rows.find((r) => r.id === a.rowId);
+    if (!row) continue;
+    if (a.amountPaid !== undefined) row.amount_paid = a.amountPaid;
+    if (a.amountDue !== undefined) row.amount_due = a.amountDue;
+    if (a.followUpDone !== undefined) row.follow_up_done = !!a.followUpDone;
+  }
+  const persisted = persist(store);
+  return { ok: true, persisted };
+}
+
 // Removes one saved page (and its lines) from this browser.
 export async function deletePage(pageId) {
   const store = read();

@@ -1563,6 +1563,24 @@ function openPersonSheet(key, triggerEl = null) {
   $("#person-money").innerHTML =
     moneyBits || `<div class="person-money__item"><span>Amounts</span><strong class="money money--none">none yet</strong></div>`;
 
+  // the pay row appears only when something is actually owed
+  const payRow = $("#person-pay");
+  if (payRow) {
+    if (p.due > 0) {
+      payRow.hidden = false;
+      const form = payRow.querySelector(".person-pay__form");
+      const openBtn = $("#btn-pay-open");
+      if (form) form.hidden = true;
+      if (openBtn) openBtn.hidden = false;
+      const full = $("#pay-full-amt");
+      if (full) full.textContent = ppl.fmtRupees(p.due);
+      const amt = $("#person-pay-amt");
+      if (amt) amt.value = "";
+    } else {
+      payRow.hidden = true;
+    }
+  }
+
   const f = p.followUp;
   if (f) {
     const overdue = f.date < ppl.localToday();
@@ -1594,11 +1612,10 @@ function openPersonSheet(key, triggerEl = null) {
 
   const rows = (p.history ?? [])
     .map((h) => {
-      const amt = h.paid
-        ? `<span class="ph__amt money money--in">₹${ppl.fmtRupees(h.paid)} in</span>`
-        : h.due
-          ? `<span class="ph__amt money money--due">₹${ppl.fmtRupees(h.due)} due</span>`
-          : "";
+      const amt = [
+        h.paid ? `<span class="ph__amt money money--in">₹${ppl.fmtRupees(h.paid)} in</span>` : "",
+        h.due ? `<span class="ph__amt money money--due">₹${ppl.fmtRupees(h.due)} due</span>` : "",
+      ].filter(Boolean).join(" ");
       return `<li class="ph__row"><span class="ph__d">${escapeHTML(niceDay(h.d))}</span><span class="ph__note">${escapeHTML(h.note || "")}</span>${amt}</li>`;
     })
     .join("");
@@ -1678,6 +1695,73 @@ async function moveFollowUpTo(f, newDate) {
       }
     } catch {}
   });
+}
+
+const round2 = (x) => Math.round(x * 100) / 100;
+
+// The owner records money received - the loop's true end. Due lines are
+// settled oldest first, the way a paper ledger gets crossed out. A full
+// settlement also closes the open follow-up: nothing left to chase.
+function buildPaymentAllocation(p, amount) {
+  const rows = (p.history ?? [])
+    .filter((h) => h.due > 0 && h.pageId && h.rowId)
+    .sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+  let left = round2(amount);
+  const allocations = [];
+  const undo = [];
+  for (const h of rows) {
+    if (left <= 0) break;
+    const take = Math.min(left, h.due);
+    allocations.push({
+      pageId: h.pageId,
+      rowId: h.rowId,
+      amountPaid: round2((h.paid || 0) + take),
+      amountDue: round2(h.due - take),
+    });
+    undo.push({ pageId: h.pageId, rowId: h.rowId, amountPaid: round2(h.paid || 0), amountDue: round2(h.due) });
+    left = round2(left - take);
+  }
+  const applied = round2(amount - Math.max(left, 0));
+  if (p.followUp?.rowId && applied >= p.due) {
+    const f = p.followUp;
+    const hit = allocations.find((a) => a.rowId === f.rowId && a.pageId === f.pageId);
+    if (hit) hit.followUpDone = true;
+    else allocations.push({ pageId: f.pageId, rowId: f.rowId, followUpDone: true });
+    undo.push({ pageId: f.pageId, rowId: f.rowId, followUpDone: false });
+  }
+  return { allocations, undo, applied };
+}
+
+// One honest write per row: the amounts change, the panel re-renders on fresh
+// data, and the previous numbers stay one Undo tap away.
+async function recordPaymentFor(amount) {
+  const p = panelPerson;
+  if (!p || !(amount > 0)) return;
+  const key = p.key;
+  const dueBefore = p.due;
+  const { allocations, undo, applied } = buildPaymentAllocation(p, amount);
+  if (!allocations.length || applied <= 0) return;
+  try {
+    await auth().recordPayment(allocations);
+  } catch {
+    window.alert("The payment could not be recorded. Try again.");
+    return;
+  }
+  await loadPeople();
+  if (key && !$("#sheet-person").hidden) openPersonSheet(key, personReturnFocus);
+  const settled = applied >= dueBefore;
+  showUndo(
+    settled ? `Settled - ₹${ppl.fmtRupees(applied)} recorded` : `Recorded ₹${ppl.fmtRupees(applied)}`,
+    async () => {
+      try {
+        await auth().recordPayment(undo);
+        await loadPeople();
+        if (key && !$("#sheet-person").hidden && panelPerson?.key === key) {
+          openPersonSheet(key, personReturnFocus);
+        }
+      } catch {}
+    }
+  );
 }
 
 function onPeopleAction(e) {
@@ -2413,6 +2497,35 @@ function wire() {
     const v = $("#person-move-date").value;
     if (!f?.rowId || !v) return;
     await moveFollowUpTo(f, v);
+  });
+
+  // record payment: money received, in the owner's own hand
+  $("#btn-pay-open").addEventListener("click", () => {
+    $("#person-pay .person-pay__form").hidden = false;
+    $("#btn-pay-open").hidden = true;
+    $("#person-pay-amt").focus({ preventScroll: true });
+  });
+  $("#btn-pay-full").addEventListener("click", () => {
+    const p = panelPerson;
+    if (!p) return;
+    $("#person-pay-amt").value = p.due;
+    $("#btn-pay-save").focus({ preventScroll: true });
+  });
+  $("#person-pay-amt").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      $("#btn-pay-save").click();
+    }
+  });
+  $("#btn-pay-save").addEventListener("click", async () => {
+    const p = panelPerson;
+    if (!p) return;
+    const v = round2(parseFloat($("#person-pay-amt").value));
+    if (!(v > 0)) {
+      $("#person-pay-amt").focus();
+      return;
+    }
+    await recordPaymentFor(Math.min(v, p.due));
   });
 
   // the appbar gains depth once content scrolls beneath it

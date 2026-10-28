@@ -635,6 +635,17 @@
       <p class="sheet__sub" id="person-meta"></p>
       <button id="btn-copy-phone" class="btn btn--ghost btn--small person-copy" type="button" hidden>Copy number</button>
       <div class="person-money" id="person-money"></div>
+      <div id="person-pay" class="person-pay" hidden>
+        <button id="btn-pay-open" class="btn btn--ghost btn--small" type="button">Record payment</button>
+        <span class="person-pay__form" hidden>
+          <label class="person-pay__amount" for="person-pay-amt">
+            <span aria-hidden="true">₹</span>
+            <input type="number" id="person-pay-amt" min="1" step="any" inputmode="decimal" aria-label="Amount received" placeholder="Amount" />
+          </label>
+          <button id="btn-pay-full" class="pill person-move__btn" type="button">Full ₹<span id="pay-full-amt">0</span></button>
+          <button id="btn-pay-save" class="btn btn--primary btn--small" type="button">Save</button>
+        </span>
+      </div>
       <div id="person-follow"></div>
       <div id="person-move" class="person-move" hidden>
         <span class="person-move__label">He said another day? Move it:</span>

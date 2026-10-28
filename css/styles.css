@@ -2874,6 +2874,40 @@ body.story-open .coach__tip { display: none; }
   color-scheme: dark;
 }
 
+/* record payment: the loop's true end, in the owner's own hand */
+.person-pay {
+  margin: 10px 0 2px;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.person-pay__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.person-pay__amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+.person-pay__amount > span { color: var(--ink-faint); font-weight: 700; }
+.person-pay__amount input {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  width: 92px;
+  color-scheme: dark;
+}
+.person-pay__amount:focus-within { box-shadow: var(--focus); }
+
 /* the More menu gets honest section labels */
 .more-group {
   color: var(--ink-faint);

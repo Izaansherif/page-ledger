@@ -95,7 +95,7 @@ export function buildPeople(pages) {
       if (d > p.lastOn) p.lastOn = d;
       if (due > 0 && d > p.lastDueOn) p.lastDueOn = d;
       if (paid || due || (r.note ?? "").trim()) {
-        p.history.push({ d, note: (r.note ?? "").trim(), paid, due });
+        p.history.push({ d, note: (r.note ?? "").trim(), paid, due, pageId: page.id, rowId: r.id ?? null });
       }
       if (r.follow_up_confirmed && r.follow_up_date && !r.follow_up_done) {
         p.followUps.push({

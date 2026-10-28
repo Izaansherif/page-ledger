@@ -247,6 +247,30 @@ export async function setFollowUpDate(rowId, date) {
   return { ok: true };
 }
 
+// Records money received. Each allocation carries the ABSOLUTE new amounts
+// for one row (the caller computes them), plus an optional follow-up mark -
+// a settled person has nothing left to chase.
+// allocations: [{ pageId, rowId, amountPaid?, amountDue?, followUpDone? }]
+export async function recordPayment(allocations) {
+  await withFreshToken();
+  if (!session?.access) throw new Error("Please sign in first.");
+  for (const a of allocations) {
+    const body = {};
+    if (a.amountPaid !== undefined) body.amount_paid = a.amountPaid;
+    if (a.amountDue !== undefined) body.amount_due = a.amountDue;
+    if (a.followUpDone !== undefined) body.follow_up_done = !!a.followUpDone;
+    if (!Object.keys(body).length) continue;
+    const { res } = await call(`/rest/v1/page_rows?id=eq.${encodeURIComponent(a.rowId)}`, {
+      method: "PATCH",
+      auth: true,
+      extraHeaders: { Prefer: "return=minimal" },
+      body,
+    });
+    if (!res.ok) throw new Error(`Could not record the payment (${res.status}). Try again.`);
+  }
+  return { ok: true };
+}
+
 // Removes one page and its lines. RLS scopes both tables to the signed-in
 // owner, so a crafted id can only ever delete the owner's own page.
 export async function deletePage(pageId) {

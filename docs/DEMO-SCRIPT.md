@@ -81,7 +81,13 @@ without you."
    tap **Tomorrow** (or pick a date). Say:
 > "This is the part after the phone call — he says Friday, you tap Friday.
 > The app remembers, and Undo brings yesterday's date back."
-6. Point at the **Demo pages / My pages** switch:
+6. Then the ending that matters: **Record payment** → **Full ₹515** → **Save**.
+   Say:
+> "And when he actually pays — one tap. The money moves from Due to Collected,
+> the follow-up closes itself, and Undo brings the ledger back if your finger
+> slipped."
+7. Undo it back (keep the overdue demo state), then point at the
+   **Demo pages / My pages** switch:
 > "Sample pages and your own photographs stay clearly separated."
 
 ## 2:00 – 2:25 · Ask my ledger (grounded AI)
