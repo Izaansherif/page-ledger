@@ -444,6 +444,90 @@
     </template>
   </main>
 
+  <!-- ================= story opening: five short scenes, once per browser =
+       Shown before the product. No invented facts: the dedication is a
+       general thank-you, and the one personal line is a marked placeholder
+       the owner writes themselves. "Skip to demo" stays one tap away. -->
+  <div id="story" class="story" hidden>
+    <!-- scene 1 · dedication: the shop lamp -->
+    <section class="story-scene story-scene--lamp" data-scene="1">
+      <div class="story-lamp" aria-hidden="true"></div>
+      <div class="story-center">
+        <p class="story-line">For the dukandars who kept us going when everything shut.</p>
+        <p class="story-thanks"><span lang="hi">शुक्रिया</span> · <span lang="ml">നന്ദി</span> · Thank you.</p>
+      </div>
+    </section>
+
+    <!-- scene 2 · the notebook (the 3D hero's little sibling) -->
+    <section class="story-scene" data-scene="2">
+      <div class="s-book" aria-hidden="true">
+        <div class="s-book__inner">
+          <div class="s-book__cover">
+            <span class="s-book__rule"></span>
+            <span class="s-book__rule s-book__rule--s"></span>
+            <span class="s-book__rule s-book__rule--xs"></span>
+            <span class="s-book__line"></span>
+            <span class="s-book__line s-book__line--s"></span>
+            <span class="s-book__line"></span>
+            <span class="s-book__line s-book__line--s"></span>
+          </div>
+          <div class="s-book__spine" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="story-center">
+        <p class="story-line">Every day they wrote it all down. Who took what. Who owes what. Who pays on Friday.</p>
+      </div>
+    </section>
+
+    <!-- scene 3 · the hard part: promises slip between pages -->
+    <section class="story-scene" data-scene="3">
+      <div class="s-lost" aria-hidden="true">
+        <div class="s-lost__page s-lost__page--a"></div>
+        <div class="s-lost__promise"></div>
+        <div class="s-lost__page s-lost__page--b"></div>
+      </div>
+      <div class="story-center">
+        <p class="story-line">Paper is hard to track. Promises get lost between pages.</p>
+        <p class="story-mine">[MY OWN LINE — why this matters to me. I write this myself.]</p>
+      </div>
+    </section>
+
+    <!-- scene 4 · the idea: keep the notebook, photograph the page -->
+    <section class="story-scene" data-scene="4">
+      <div class="s-scan" aria-hidden="true">
+        <img class="s-scan__photo" src="/fixtures/made/kirana-thumb.jpg" width="150" height="240" alt="" />
+        <div class="s-scan__sweep"></div>
+        <div class="s-scan__table">
+          <span class="s-scan__row"></span>
+          <span class="s-scan__row"></span>
+          <span class="s-scan__row s-scan__row--amber"></span>
+        </div>
+      </div>
+      <div class="story-center">
+        <p class="story-line">So keep the notebook. Just photograph the page.</p>
+      </div>
+    </section>
+
+    <!-- scene 5 · you stay in charge -->
+    <section class="story-scene" data-scene="5">
+      <div class="story-center">
+        <p class="story-line">You stay in charge:</p>
+        <ul class="story-chips" role="list">
+          <li class="story-chip">AI reads</li>
+          <li class="story-chip">You check every line</li>
+          <li class="story-chip">Nothing is sent without you.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- shared chrome: progress dots + always-visible skip -->
+    <button class="story-skip" type="button" data-story-skip>Skip to demo</button>
+    <div class="story-dots" aria-hidden="true">
+      <span class="story-dot"></span><span class="story-dot"></span><span class="story-dot"></span>
+      <span class="story-dot"></span><span class="story-dot"></span>
+    </div>
+  </div>
+
   <!-- zoom overlay -->
   <div id="zoom-overlay" class="zoom" hidden>
     <img id="zoom-img" alt="Original notebook page, zoomed" />

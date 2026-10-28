@@ -12,6 +12,7 @@ import * as sb from "./supabase.js";
 import * as demo from "./demo-store.js";
 import * as ppl from "./people.js";
 import { MicSession, recordingSupported } from "./record.js";
+import * as story from "./story.js";
 import { RECORDED } from "./recorded-fixtures.js";
 import * as coach from "./coach.js";
 
@@ -933,9 +934,19 @@ async function showSignedInHome() {
     $("#btn-reset-demo").hidden = true;
   }
   setStageNotes();
-  showView("view-upload");
+  if (story.storySeen()) {
+    showView("view-upload");
+    coach.step("home"); // first-visit: point at the primary sample button once
+  } else {
+    // first visit: the five short scenes play before the product appears
+    showView("view-upload");
+    story.openStory(() => {
+      showView("view-upload");
+      coach.step("home");
+      $("#btn-sample-primary")?.focus({ preventScroll: true });
+    });
+  }
   if (signedIn) await loadRecent();
-  coach.step("home"); // first-visit: point at the primary sample button once
 }
 
 function showAuth() {
@@ -2026,6 +2037,7 @@ function wire() {
 
 wire();
 coach.init();
+story.initStory();
 setAuthMode("signin");
 
 (async function boot() {
