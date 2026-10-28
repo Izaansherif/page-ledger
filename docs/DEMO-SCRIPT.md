@@ -69,13 +69,19 @@ without you."
 
 1. Three big numbers first: **To call / Total due / Collected**. Say:
 > "The CRM writes itself: who to call today, what is owed, what came in."
-2. The red **overdue strip**: "Promises nobody marked done don't get lost —
+2. Tap the **To call** card itself — the list filters to today's calls; tap
+   again and it releases. One line: "The stats ARE the filters."
+3. The red **overdue strip**: "Promises nobody marked done don't get lost —
    overdue sits on top, one tap."
-3. Tap a person → the **side panel**: their whole history, then **Call** and
+4. Tap a person → the **side panel**: their whole history, then **Call** and
    **WhatsApp**. Say:
 > "We never message anyone. The owner reviews the words in this sheet and
 > presses Send in WhatsApp themselves. Templates — not chatbots."
-4. Point at the **Demo pages / My pages** switch:
+5. Still in the panel, the follow-up: **"He said another day? Move it"** →
+   tap **Tomorrow** (or pick a date). Say:
+> "This is the part after the phone call — he says Friday, you tap Friday.
+> The app remembers, and Undo brings yesterday's date back."
+6. Point at the **Demo pages / My pages** switch:
 > "Sample pages and your own photographs stay clearly separated."
 
 ## 2:00 – 2:25 · Ask my ledger (grounded AI)
@@ -95,6 +101,11 @@ without you."
 Show (quick): README status lines, then `netlify/functions/_lib/ai.js` scroll
 for 3 seconds — the verified-facts header.
 
+Then, one breath, **More (⋯)**: "And the ledger belongs to the owner — one tap
+downloads every line as a spreadsheet, or a backup file that restores on any
+device. Nothing is uploaded anywhere." (CSV + Backup visible in the menu; no
+need to actually download on camera.)
+
 ## 2:40 – 3:00 · Close
 
 > "Small shops already run on paper. Page Ledger doesn't ask them to change —
@@ -111,9 +122,10 @@ End card: repo URL (https://github.com/Izaansherif/page-ledger) + live URL
 
 - [ ] Fresh demo state: **More (⋯) → Erase demo pages** → reload → the story
       plays → land on the new landing → save the sample ONCE so the CRM has
-      data before the recording continues.
-- [ ] The story is skipped automatically for returning visitors — if you
-      need it again mid-take, erase again or clear the site data.
+      data before the recording continues (tick **Confirm** on the follow-up
+      row — the CRM only counts follow-ups a human confirmed).
+- [ ] The story is skipped automatically for returning visitors — to show it
+      again mid-take use **More (⋯) → Replay the intro** (no erase needed).
 - [ ] Mic tested once before take (the browser will ask permission — allow and
       keep it allowed, so no dialog appears mid-take).
 - [ ] Do not show any real person's data: fixture/exported sample pages only.

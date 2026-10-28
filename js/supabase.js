@@ -232,6 +232,21 @@ export async function setFollowUpDone(rowId, done = true) {
   return { ok: true };
 }
 
+// Moves a follow-up to a new date. The owner set it by hand, so it arrives
+// confirmed - the same rule as ticking Confirm on the page.
+export async function setFollowUpDate(rowId, date) {
+  await withFreshToken();
+  if (!session?.access) throw new Error("Please sign in first.");
+  const { res } = await call(`/rest/v1/page_rows?id=eq.${encodeURIComponent(rowId)}`, {
+    method: "PATCH",
+    auth: true,
+    extraHeaders: { Prefer: "return=minimal" },
+    body: { follow_up_date: date, follow_up_confirmed: true },
+  });
+  if (!res.ok) throw new Error(`Could not update the follow-up (${res.status}). Try again.`);
+  return { ok: true };
+}
+
 // Removes one page and its lines. RLS scopes both tables to the signed-in
 // owner, so a crafted id can only ever delete the owner's own page.
 export async function deletePage(pageId) {

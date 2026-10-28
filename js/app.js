@@ -1576,6 +1576,22 @@ function openPersonSheet(key, triggerEl = null) {
     $("#person-follow").innerHTML = "";
   }
 
+  // the move row appears only for a real, row-backed follow-up
+  const moveRow = $("#person-move");
+  if (moveRow) {
+    if (f && f.rowId) {
+      moveRow.hidden = false;
+      moveRow.dataset.pageId = f.pageId;
+      moveRow.dataset.rowId = f.rowId;
+      const pickRow = moveRow.querySelector(".person-move__pickrow");
+      const pickBtn = moveRow.querySelector('[data-move="pick"]');
+      if (pickRow) pickRow.hidden = true;
+      if (pickBtn) pickBtn.setAttribute("aria-expanded", "false");
+    } else {
+      moveRow.hidden = true;
+    }
+  }
+
   const rows = (p.history ?? [])
     .map((h) => {
       const amt = h.paid
@@ -1631,6 +1647,37 @@ async function handleFollowDone(pageId, rowId) {
     // the button stays; nothing loses data
   }
   await loadPeople();
+}
+
+function localDatePlus(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// One honest write: the date changes, it counts as confirmed (the owner set
+// it by hand), the panel re-renders on fresh data, and the old date stays
+// one Undo tap away.
+async function moveFollowUpTo(f, newDate) {
+  const key = panelPerson?.key;
+  const oldDate = f.date;
+  try {
+    await auth().setFollowUpDate(f.pageId, f.rowId, newDate);
+  } catch {
+    window.alert("The follow-up could not be moved. Try again.");
+    return;
+  }
+  await loadPeople();
+  if (key && !$("#sheet-person").hidden) openPersonSheet(key, personReturnFocus);
+  showUndo(`Follow-up moved to ${niceDay(newDate)}`, async () => {
+    try {
+      await auth().setFollowUpDate(f.pageId, f.rowId, oldDate);
+      await loadPeople();
+      if (key && !$("#sheet-person").hidden && panelPerson?.key === key) {
+        openPersonSheet(key, personReturnFocus);
+      }
+    } catch {}
+  });
 }
 
 function onPeopleAction(e) {
@@ -2342,6 +2389,39 @@ function wire() {
       // clipboard blocked (older browser): the number sits right above, readable
     }
   };
+  // move a follow-up: the loop closes after the call ("he'll come Friday")
+  $("#person-move").addEventListener("click", async (e) => {
+    const row = $("#person-move");
+    const btn = e.target.closest(".person-move__btn");
+    if (btn && btn.dataset.move === "pick") {
+      const pickRow = row.querySelector(".person-move__pickrow");
+      pickRow.hidden = !pickRow.hidden;
+      btn.setAttribute("aria-expanded", String(!pickRow.hidden));
+      if (!pickRow.hidden) $("#person-move-date").focus({ preventScroll: true });
+      return;
+    }
+    if (btn && btn.dataset.move !== "pick" && btn.dataset.move !== "go") {
+      const f = panelPerson?.followUp;
+      if (!f?.rowId) return;
+      const newDate = btn.dataset.move === "today" ? ppl.localToday() : localDatePlus(1);
+      await moveFollowUpTo(f, newDate);
+      return;
+    }
+  });
+  $("#person-move .person-move__go").addEventListener("click", async () => {
+    const f = panelPerson?.followUp;
+    const v = $("#person-move-date").value;
+    if (!f?.rowId || !v) return;
+    await moveFollowUpTo(f, v);
+  });
+
+  // the appbar gains depth once content scrolls beneath it
+  const bar = document.querySelector(".appbar");
+  if (bar) {
+    const onScroll = () => bar.classList.toggle("appbar--scrolled", (window.scrollY || 0) > 6);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
   // overdue banner: one tap switches to the Call today list
   $("#overdue-banner").onclick = () =>
     document.querySelector('.people-chip[data-chip="today"]')?.click();

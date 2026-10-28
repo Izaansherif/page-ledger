@@ -222,6 +222,20 @@ export async function setFollowUpDone(pageId, rowId, done = true) {
   return { ok: true, persisted };
 }
 
+// Moves a follow-up to a new date - the loop closes after the call: "he'll
+// come Friday" becomes Friday. The owner set it by hand, so it counts as
+// confirmed (the same rule as ticking Confirm on the page).
+export async function setFollowUpDate(pageId, rowId, date) {
+  const store = read();
+  const page = store.pages.find((p) => p.id === pageId);
+  const row = page?.page_rows.find((r) => r.id === rowId);
+  if (!row) throw new Error("That follow-up could not be found.");
+  row.follow_up_date = date;
+  row.follow_up_confirmed = true;
+  const persisted = persist(store);
+  return { ok: true, persisted };
+}
+
 // Removes one saved page (and its lines) from this browser.
 export async function deletePage(pageId) {
   const store = read();

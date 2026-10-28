@@ -2852,3 +2852,65 @@ body.story-open .coach__tip { display: none; }
 
 /* copy-number: a quiet helper under the person's phone line */
 .person-copy { margin: 2px 0 10px; }
+
+/* move a follow-up: one tap, the loop closes after the call */
+.person-move {
+  margin: 10px 0 2px;
+  display: grid;
+  gap: 8px;
+}
+.person-move__label { color: var(--ink-faint); font-size: 13px; }
+.person-move__row { display: flex; flex-wrap: wrap; gap: 8px; }
+.person-move__btn { font-size: 13px; }
+.person-move__pickrow { display: flex; gap: 8px; align-items: center; }
+.person-move__date {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  color-scheme: dark;
+}
+
+/* the More menu gets honest section labels */
+.more-group {
+  color: var(--ink-faint);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 14px 0 2px;
+}
+
+/* empty state: a small notebook, drawn not typed */
+.empty-ico {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+  margin: 0 auto 12px;
+}
+.empty-ico svg { width: 24px; height: 24px; }
+
+/* thin dark scrollbars (webkit) + Firefox equivalent */
+html { scrollbar-color: var(--line-strong) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; border: 2px solid var(--paper); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* the appbar gains depth once content scrolls beneath it */
+.appbar--scrolled {
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.35), 0 1px 0 rgb(242 169 59 / 0.08);
+}
+
+/* people cards: a whisper of lift on hover (never on touch) */
+@media (hover: hover) {
+  .pcard { transition: border-color 0.15s ease, transform 0.12s ease; }
+  .pcard:hover { transform: translateY(-1px); }
+}
