@@ -38,7 +38,7 @@ const STEPS = [
     key: "home",
     // first-visit home only; on the auth wall (real mode) there is no button
     target: () => (document.getElementById("btn-sample-primary")?.offsetParent ? "#btn-sample-primary" : null),
-    text: "One tap reads a sample page, exactly like your own photo would. Free, no key needed.",
+    text: "Pick a sample page - it reads exactly like your own photo would. Free, no key needed.",
   },
   {
     key: "review",

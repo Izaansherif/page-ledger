@@ -3,9 +3,35 @@
 **Track:** Indie Developer (solo participant)
 **Repo:** https://github.com/Izaansherif/page-ledger  (public — required by rules)
 **Live URL:** ✅ https://pageledger.netlify.app/ (Netlify, auto-builds on every push to `main`; functions verified live — sample read, grounded ask, transcript all working)
-**Demo video:** script ready — docs/DEMO-SCRIPT.md (record against the live URL above)
+**Demo video:** script ready — docs/DEMO-SCRIPT.md (rewritten Oct 28 for the story-first flow; record against the live URL above)
 **Submission deadline:** Wed Nov 4, 9:00 PM ET via CV platform (Meta Global AI Developer Hackathon – Cerebral Valley)
 **Problem statement:** Build for Your World — brings Meta's models into a domain I know firsthand (small-shop paper ledgers in India), frees up time, and makes something possible that wasn't before (photo-to-CRM in one tap).
+
+## Design & flow update (Oct 28)
+
+The product now opens with its story before the tool:
+
+- **Story opening** (once per browser): five short scenes — a dedication to
+  the dukandars with the amber shop lamp (शुक्रिया · നന്ദി · Thank you), the
+  3D notebook, the lost promise, the photograph-the-page idea, and the three
+  trust rules. "Skip to demo" is always one tap away; reduced-motion users
+  get a plain stacked page; returning visitors go straight to the landing.
+- **New flow**: landing ("Your notebook, turned into a CRM." + View demo /
+  Use my own page) → demo picker (five large sample cards) → reading with
+  real phases → check screen with **"Confirm and open my CRM"** → the CRM:
+  three big stat cards (To call / Total due / Collected), the overdue strip,
+  search + filter chips, a per-person side panel with history and Call /
+  WhatsApp templates, and "Ask my ledger". A **Demo pages / My pages** switch
+  keeps sample pages and the owner's own photographs clearly separated.
+  Everything administrative (privacy, erase demo, sign out, how it was
+  built) moved into a **More** menu.
+- **Dark premium identity**: deep warm ink, one amber accent (the shop lamp),
+  glass panels with 1px borders, a faint living grid, and a glow reserved for
+  the primary button. No purple gradients, no emoji headings.
+- **Honesty pass**: plain words everywhere (no "project keys" or "database
+  rules" in the UI), the privacy note states both modes truthfully before any
+  upload (samples never leave the device; in live mode a photo is sent to
+  Meta's model to be read), and the demo remains labelled end to end.
 
 ## Build status (as of Oct 27)
 

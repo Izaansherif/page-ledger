@@ -909,7 +909,7 @@ function setStageNotes() {
   $("#review-note").textContent = signedIn
     ? (state.demoStore
         ? "Demo mode: this page saves to this device only - nothing leaves the app."
-        : "Saving is real: this page + photo land in your account, protected by database rules.")
+        : "Saving is real: this page and its photo land in your private account. Only you can see them.")
     : "Preview mode: you can check and edit the reading, but on signed-out devices nothing is saved.";
 }
 

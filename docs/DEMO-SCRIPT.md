@@ -3,29 +3,49 @@
 Target: the hackathon judging video (required, primary artifact).
 Recording: laptop browser at 1280×720 minimum (phone layout can be shown at
 the end in a side-by-side or a second window). Quiet room — one segment uses
-the real microphone. Reset the demo BEFORE recording: press **Erase demo
-pages** in the top bar (no sign-in exists in demo — the device *is* the
-account), then save the sample page once so the video starts clean but ends
-with data on screen.
+the real microphone.
+
+Reset the demo BEFORE recording: **More menu (⋯) → Erase demo pages** (no
+sign-in exists in demo — the device *is* the account), reload, and let the
+story play once so the recording opens the way a judge's first visit does.
 
 Every label on screen says what is real: demo mode is announced by a badge
 ("Sample reading") and demo chips. Nothing hidden, no fake cloud.
 
 ---
 
-## 0:00 – 0:20 · The problem (talking over the home screen)
+## 0:00 – 0:20 · The story (the why, in five scenes)
 
-> "This is my father's shop notebook — money in, money owed, and 'he said he
-> will pay next Tuesday' scribbled in the margins. Finding who to call means
-> flipping pages. Page Ledger turns ONE photo of a page into a working
-> mini-CRM: customers, amounts, and who to chase today."
+The app opens on the story: five short scenes, tap to advance (or let the
+tap-clicks fall on the beat of the narration).
 
-**On screen:** home hero. Keep the camera on the hero words + the sample button.
+> "This one is for the dukandars — the shopkeepers who kept our streets
+> running when everything shut. Shukriya. Nandi. Thank you."
 
-## 0:20 – 0:50 · Photo → checkable table (: the core trust idea)
+Scene 2 (the notebook turning): "Every day they wrote it all down. Who took
+what. Who owes what. Who pays on Friday."
 
-1. **Try a sample page** → loading phases run.
-2. Review table appears. say:
+Scene 3 (pages blur, a promise slips away): "Paper is hard to track.
+Promises get lost between pages." *(the owner's own line sits here)*
+
+Scene 4 (the light sweep): "So keep the notebook. Just photograph the page."
+
+Scene 5 (three chips): "AI reads. You check every line. Nothing is sent
+without you."
+
+**On screen:** the story scenes. End the segment as the landing appears:
+"Your notebook, turned into a CRM."
+
+## 0:20 – 0:30 · Landing → demo picker
+
+1. **View demo** → the five sample pages as large cards.
+> "Five made-for-demo pages — a dental clinic, a garage, a kirana khata,
+> tuition fees, and an 1860s museum scan. Tap one and it reads."
+
+## 0:30 – 1:00 · Photo → checkable table (the core trust idea)
+
+1. Pick the **dental clinic** card → loading phases run.
+2. Review table appears. Say:
 > "The AI reads the page — but nothing is saved yet. Every line is editable,
 > struck-out lines are excluded, and blank fields stay blank. The AI never
 > invents data; a human confirms."
@@ -34,33 +54,31 @@ Every label on screen says what is real: demo mode is announced by a badge
 > "The app shows exactly what the AI did: lines kept, lines struck out, fields
 > it could not read, average read confidence, and the exact cost of the read."
 
-## 0:50 – 1:20 · Voice note + save
+## 1:00 – 1:30 · Voice note + confirm
 
 1. On a follow-up row, tap the **mic** and actually speak:
    *"Aishu said she will bring the four hundred this evening."*
 2. The transcript fills the note field. Say:
 > "Your own voice becomes text you can edit — never an AI-written message.
 > This runs on Muse Voice Transcribe through our own serverless function."
-3. Tick **Confirm** on the follow-up date, then **Save this page**.
-4. Green "Saved" — say: "saved to the owner's account — because that page is
-   private: database rules, not promises."
+3. Tick **Confirm** on the follow-up date, then **Confirm and open my CRM**.
+4. Green "Saved" — say: "saved to the owner's own space — on this device in
+   demo mode, or the owner's private account when the cloud is linked."
 
-## 1:20 – 1:50 · People view + WhatsApp (the money moment)
+## 1:30 – 2:00 · The CRM (the money moment)
 
-1. The red **overdue strip** is sitting above the list if a promise is past due
-   (Aishu P., "Thursday" read as the Thursday that just passed — flagged amber
-   in review, confirmed at save). Tap it: "Show them" → the **Call today** list
-   with the overdue regular first. Say:
-> "Promises nobody marked done don't get lost — overdue sits on top, one tap."
-2. Show: totals chips, the Call today list, the merged customer across pages
-   (Anandettan's sugar line + promise line are one person), money due/paid.
-3. Tap **Done** on a follow-up: the overdue strip clears with it.
-4. Tap **WhatsApp message** on a debtor: the sheet opens with a pre-written
-   reminder containing the real figure. Say:
+1. Three big numbers first: **To call / Total due / Collected**. Say:
+> "The CRM writes itself: who to call today, what is owed, what came in."
+2. The red **overdue strip**: "Promises nobody marked done don't get lost —
+   overdue sits on top, one tap."
+3. Tap a person → the **side panel**: their whole history, then **Call** and
+   **WhatsApp**. Say:
 > "We never message anyone. The owner reviews the words in this sheet and
 > presses Send in WhatsApp themselves. Templates — not chatbots."
+4. Point at the **Demo pages / My pages** switch:
+> "Sample pages and your own photographs stay clearly separated."
 
-## 1:50 – 2:20 · Ask my ledger (grounded AI)
+## 2:00 – 2:25 · Ask my ledger (grounded AI)
 
 1. Tap **"Who owes me the most?"** → answer + "from your figures" chips.
 2. Then **"Who should I chase today?"**. Say:
@@ -68,7 +86,7 @@ Every label on screen says what is real: demo mode is announced by a badge
 > it shows exactly which figures it used, and says plainly if data is missing.
 > No new numbers. No messages to customers."
 
-## 2:20 – 2:35 · Honesty + how it's built (fast)
+## 2:25 – 2:40 · Honesty + how it's built (fast)
 
 > "Everything you just saw ran on saved sample fixtures — zero API credits
 > burned in the demo. The same code has a live mode pointed at the Meta Model
@@ -77,7 +95,7 @@ Every label on screen says what is real: demo mode is announced by a badge
 Show (quick): README status lines, then `netlify/functions/_lib/ai.js` scroll
 for 3 seconds — the verified-facts header.
 
-## 2:35 – 3:00 · Close
+## 2:40 – 3:00 · Close
 
 > "Small shops already run on paper. Page Ledger doesn't ask them to change —
 > it reads what they already write, then quietly does the chores: totals,
@@ -91,44 +109,21 @@ End card: repo URL (https://github.com/Izaansherif/page-ledger) + live URL
 
 ### Recording checklist
 
-- [ ] Fresh demo state: Erase demo pages (top bar) → reload → save the sample
-      ONCE so the recent strip shows ≥1 page before the recording continues.
+- [ ] Fresh demo state: **More (⋯) → Erase demo pages** → reload → the story
+      plays → land on the new landing → save the sample ONCE so the CRM has
+      data before the recording continues.
+- [ ] The story is skipped automatically for returning visitors — if you
+      need it again mid-take, erase again or clear the site data.
 - [ ] Mic tested once before take (the browser will ask permission — allow and
       keep it allowed, so no dialog appears mid-take).
 - [ ] Do not show any real person's data: fixture/exported sample pages only.
 - [ ] If the mock transcript doesn't match what you said — perfect, that's the
       demo honesty moment: 'Demo transcript filled' is labelled on screen, and
       in the saved-sample pages it fills with the matching Aishu line anyway.
-- [ ] 3:00 hard cap. Practise segment 1:50–2:20 — it is the densest.
+- [ ] 3:00 hard cap. Practise segment 1:30–2:00 — it is the densest.
 - [ ] Credits are safe by construction: sample-page reads are always served
       from saved fixtures in any mode (they never touch the API), and live
       own-photo reads are capped by `LIVE_CALLS_PER_MINUTE`/`LIVE_CALLS_PER_DAY`
       (default 8/min, 150/day) with a friendly fallback message. Say it in one
-      line in the 2:20 honesty segment: "and a public demo can never run the
+      line in the 2:25 honesty segment: "and a public demo can never run the
       key dry — the reads are capped, and the samples are free."
-
----
-
-### Cue sheet — the exact click order, one take
-
-Start: browser at 1280×720+, at `pageledger.netlify.app`, home hero visible.
-**Before recording starts** (not filmed): double-check the demo state is
-clean — press **Erase demo pages** (a confirm message appears; confirm) and
-reload. Do this once, not on camera: the segment 0:00 opens on the hero.
-
-| beat | seconds | what you do | note |
-|---|---|---|---|
-| 0 | 0:00–0:20 | nothing — voice-over on the hero | the 3D scene reacts to the pointer: move the mouse gently |
-| 1 | 0:20–0:50 | click **Try a sample notebook page** (big green) | dental page reads; phases run ≈2.5s |
-| 2 | | point at the follow-up row "planned 2026-10-27, confirm it" (amber) | the AI read the written Thursday as the one just passed — say it out loud |
-| 3 | | tick its **Confirm** checkbox | cell flips to "Confirmed 2026-10-27" |
-| 4 | | click **Confirm all clear lines** (above the table) | flag-free rows get checked |
-| 5 | | click a name cell, retype the same words, press Enter | shows editability without changing any totals |
-| 6 | | open **How this page was read** (below the table) | kept/struck lines, confidence, cost receipt; close it |
-| 7 | 0:50–1:20 | click the row **mic**, speak ≈3s, click again to stop | the note fills, labelled "Demo transcript filled"; if the mic errors the app says type it — do that |
-| 8 | | click **Save this page** | pulse + "Saved ✓"; People auto-lands with the red **overdue strip** |
-| 9 | 1:20–1:50 | point at the strip → click **Show them** | switches to Call today: Aishu first, "overdue" badge |
-| 10 | | click **Back** (top-left) → home → open the **kirana** sample card → tick Anandettan's follow-up **Confirm** → **Confirm all clear lines** → **Save** | two saved pages fill out totals; the strip shows again |
-| 11 | | on People: Anandettan's card → **WhatsApp message** → read the pre-filled ₹395 reminder → click **Cancel** (never Send) | "Templates, not chatbots" lands here |
-| 12 | | tap **Done** on a follow-up | the red strip clears with it |
-| 13 | 1:50–2:20 | ask pills (**Who owes me the most?** → **Who should I chase today?**) | the answer numbers are the SAME ones in the People totals — point at both once |
