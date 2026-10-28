@@ -95,11 +95,11 @@ function showUndo(label, undoFn) {
 
 /* Browser Back/Forward feels native: every stable view is one history entry
    (loading/error/auth stay transient - they are never history destinations). */
-const HISTORY_VIEWS = new Set(["view-upload", "view-review", "view-people"]);
+const HISTORY_VIEWS = new Set(["view-landing", "view-upload", "view-picker", "view-review", "view-people"]);
 let historySync = false; // popstate re-entry guard
 
 function showView(name) {
-  for (const v of ["view-upload", "view-loading", "view-error", "view-review", "view-auth", "view-people"]) {
+  for (const v of ["view-landing", "view-upload", "view-picker", "view-loading", "view-error", "view-review", "view-auth", "view-people"]) {
     $(`#${v}`).hidden = v !== name;
   }
   syncBottomBar(name);
@@ -122,7 +122,7 @@ function syncBottomBar(name) {
   const s = $("#bar-secondary");
   if (!bar || !p || !s) return;
   const conf = {
-    "view-upload": { p: ["Try a sample page", () => $("#btn-sample-primary").click()], s: ["Photograph", () => $("#btn-camera").click()] },
+    "view-upload": { p: ["Samples", () => showView("view-picker")], s: ["Photograph", () => $("#btn-camera").click()] },
     "view-review": { p: [$("#btn-save")?.textContent?.trim() || "Save", () => $("#btn-save").click()], s: ["Back", () => $("#btn-back").click()] },
     "view-people": { p: ["New page", () => $("#btn-people-back").click()], s: null },
   }[name] ?? null;
@@ -906,11 +906,6 @@ function signedInNow() {
 
 function setStageNotes() {
   const signedIn = (state.sbConfigured || state.demoStore) && signedInNow();
-  $("#home-note").innerHTML = signedIn
-    ? (state.demoStore
-        ? "Demo mode: your pages save to <strong>this device only</strong> - connect the project later for cloud backup."
-        : "Signed in. Pages you save stay in your private account.")
-    : "Everything below runs on your sample pages - your own photos are not saved in this mode.";
   $("#review-note").textContent = signedIn
     ? (state.demoStore
         ? "Demo mode: this page saves to this device only - nothing leaves the app."
@@ -935,13 +930,13 @@ async function showSignedInHome() {
   }
   setStageNotes();
   if (story.storySeen()) {
-    showView("view-upload");
-    coach.step("home"); // first-visit: point at the primary sample button once
+    showView("view-landing");
+    coach.step("home"); // first-visit: point at the primary demo button once
   } else {
     // first visit: the five short scenes play before the product appears
-    showView("view-upload");
+    showView("view-landing");
     story.openStory(() => {
-      showView("view-upload");
+      showView("view-landing");
       coach.step("home");
       $("#btn-sample-primary")?.focus({ preventScroll: true });
     });
@@ -1399,6 +1394,23 @@ function closeShield() {
   if (hadFocus) $("#btn-shield").focus({ preventScroll: true });
 }
 
+/* ------------------------------- the More menu (useful, not every-minute) */
+function openMore() {
+  const sh = $("#sheet-more");
+  if (!sh) return;
+  sh.hidden = false;
+  $("#btn-more").setAttribute("aria-expanded", "true");
+  sh.querySelector(".sheet__panel").focus({ preventScroll: true });
+}
+function closeMore() {
+  const sh = $("#sheet-more");
+  if (!sh) return;
+  const hadFocus = sh.contains(document.activeElement);
+  sh.hidden = true;
+  $("#btn-more").setAttribute("aria-expanded", "false");
+  if (hadFocus) $("#btn-more").focus({ preventScroll: true });
+}
+
 async function handleFollowDone(pageId, rowId) {
   try {
     await auth().setFollowUpDone(pageId, rowId, true);
@@ -1637,16 +1649,33 @@ function wire() {
     }
     card.onclick = () => readSamplePage(card.dataset.fixture, card.dataset.image);
   });
-  // the big primary button starts the DEFAULT sample without a second tap
-  $("#btn-sample-primary").onclick = () =>
-    readSamplePage("made/dental", "/fixtures/made/dental.jpg");
+  // the big primary button opens the demo picker (the 5 sample pages)
+  $("#btn-sample-primary").onclick = () => showView("view-picker");
+  $("#btn-own-page").onclick = () => {
+    showView("view-upload");
+    $("#btn-camera")?.focus({ preventScroll: true });
+  };
+  $("#btn-picker-own").onclick = () => {
+    showView("view-upload");
+    $("#btn-camera")?.focus({ preventScroll: true });
+  };
+  $("#btn-upload-to-picker").onclick = () => showView("view-picker");
+  // the brand mark is the calm way back to the landing
+  $("#brand").onclick = (e) => {
+    e.preventDefault();
+    showView("view-landing");
+    window.scrollTo(0, 0);
+  };
 
   $("#btn-retry").onclick = () => {
     if (state.lastRequest) runExtraction(state.lastRequest);
     else showSignedInHome();
   };
   $("#btn-error-back").onclick = resetToUpload;
-  $("#btn-back").onclick = resetToUpload;
+  $("#btn-back").onclick = () => {
+    resetToUpload();
+    showView("view-picker"); // the demo loop: read -> check -> back -> next sample
+  };
 
   $("#btn-add-row").onclick = () => {
     const r = makeRow({ flags: ["added by hand"] });
@@ -1902,7 +1931,7 @@ function wire() {
     peopleNudgeDismissed = true;
     hidePeopleNudge();
   };
-  $("#btn-people-back").onclick = () => showView("view-upload");
+  $("#btn-people-back").onclick = () => showView("view-picker"); // the demo loop continues
 
   /* ------------- Section 3: people search + filter chips + history ------- */
   $("#people-search").addEventListener("input", (e) => {
@@ -1935,7 +1964,9 @@ function wire() {
   // browser Back/Forward walks the saved views instead of leaving the app
   window.addEventListener("popstate", () => {
     const name = (location.hash || "").replace(/^#/, "");
-    const view = ["upload", "review", "people"].includes(name) ? `view-${name}` : "view-upload";
+    const view = ["landing", "upload", "picker", "review", "people"].includes(name)
+      ? `view-${name}`
+      : "view-landing";
     if (!$(`#${view}`).hidden) return; // already there
     if (view === "view-review" && !state.extraction) return; // nothing to show
     historySync = true;
@@ -1944,6 +1975,7 @@ function wire() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !$("#sheet-msg").hidden) closeMsgSheet();
     if (e.key === "Escape" && !$("#sheet-shield").hidden) closeShield();
+    if (e.key === "Escape" && !$("#sheet-more").hidden) closeMore();
     // keep Tab inside whichever sheet is open (keyboard focus trap)
     if (e.key === "Tab") {
       const sh =
@@ -1951,7 +1983,9 @@ function wire() {
           ? $("#sheet-msg")
           : !$("#sheet-shield").hidden
             ? $("#sheet-shield")
-            : null;
+            : !$("#sheet-more").hidden
+              ? $("#sheet-more")
+              : null;
       if (!sh) return;
       const els = [
         ...sh.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
@@ -1975,6 +2009,14 @@ function wire() {
   $("#btn-shield").onclick = openShield;
   $("#btn-shield-close").onclick = closeShield;
   $("#shield-backdrop").onclick = closeShield;
+  // the More menu: privacy, erase demo, sign out, how it was built
+  $("#btn-more").onclick = openMore;
+  $("#btn-more-close").onclick = closeMore;
+  $("#more-backdrop").onclick = closeMore;
+  $("#btn-more-privacy").onclick = () => {
+    closeMore();
+    openShield();
+  };
   // overdue banner: one tap switches to the Call today list
   $("#overdue-banner").onclick = () =>
     document.querySelector('.people-chip[data-chip="today"]')?.click();

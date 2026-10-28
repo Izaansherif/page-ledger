@@ -58,31 +58,37 @@
           People
           <span class="appbar-people__badge" id="badge-people" hidden>0</span>
         </button>
-        <div class="account" id="account" hidden>
-          <span class="account__email" id="account-email"></span>
-          <button id="btn-reset-demo" class="btn btn--ghost btn--small btn--danger" type="button" hidden>Erase demo pages</button>
-          <button id="btn-signout" class="btn btn--ghost btn--small" type="button">Sign out</button>
-        </div>
+        <button id="btn-more" class="btn btn--ghost btn--small" type="button" aria-expanded="false" aria-controls="sheet-more" aria-label="More options">
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="5.5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="18.5" cy="12" r="1.7" fill="currentColor"/></svg>
+          More
+        </button>
       </div>
     </div>
   </header>
 
   <main id="view" class="view">
     <!-- ================================================= upload view -->
-    <section id="view-upload" class="home" aria-labelledby="upload-title">
-      <div class="hero">
+    <!-- ============================================== landing (the product)
+         One headline, one sentence, two buttons, one trust line - and the 3D
+         scene as the main visual. Everything else moved to the picker, the
+         own-page flow or the More menu. -->
+    <section id="view-landing" class="home" aria-labelledby="landing-title" hidden>
+      <div class="hero hero--landing">
         <div class="hero__copy">
-          <h1 class="hero-title" id="upload-title">Your shop runs on a notebook.<br/>Now give it a&nbsp;memory.</h1>
+          <h1 class="hero-title" id="landing-title">Your notebook, turned into a&nbsp;CRM.</h1>
           <p class="hero-sub">
-            Photograph any page. Page Ledger reads the customers, the money taken
-            and the money owed - and you check every line before anything is kept.
-            No re-typing an old book, ever.
+            Photograph a page. Page Ledger reads the people and the money -
+            and you check every line before anything is kept.
           </p>
-          <div class="chiprow" aria-label="Works with">
-            <span class="chip">₹ amounts</span>
-            <span class="chip">+91 phones</span>
-            <span class="chip">English · हिंदी · മലയാളം</span>
+          <div class="landing-cta">
+            <button id="btn-sample-primary" class="btn btn--primary btn--block btn--xl" type="button">
+              View demo
+            </button>
+            <button id="btn-own-page" class="btn btn--ghost btn--block btn--xl" type="button">
+              Use my own page
+            </button>
           </div>
+          <p class="landing-trust">AI reads. You confirm. Nothing is sent without you.</p>
         </div>
 
       <!-- 3D scene: a photographed page -> the JSON the reader produced ->
@@ -138,58 +144,32 @@
           </div>
         </div>
       </div>
+    </section>
 
+    <!-- ============================================== own-page flow -->
+    <section id="view-upload" class="home" aria-labelledby="upload-title" hidden>
+      <h1 class="own-title" id="upload-title">Photograph your own page</h1>
       <div class="card card--cta" id="dropzone">
-        <button id="btn-sample-primary" class="btn btn--primary btn--block btn--xl" type="button">
-          Try a sample notebook page
-        </button>
-        <button id="btn-camera" class="btn btn--ghost btn--block" type="button">
+        <button id="btn-camera" class="btn btn--primary btn--block btn--xl" type="button">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l.9-1.4A1.5 1.5 0 0 1 9.9 4h4.2a1.5 1.5 0 0 1 1.3.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12.4" r="3.1" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
-          Photograph your own page
+          Photograph a page
         </button>
         <input id="file-input" type="file" accept="image/*" capture="environment" hidden />
-
-        <div class="rule"><span>or pick a different sample</span></div>
-
-        <div class="samples" id="samples">
-          <div class="samples__grid">
-            <button class="sample-card" data-fixture="made/dental" data-image="/fixtures/made/dental.jpg" type="button">
-              <img class="sample-card__img" src="/fixtures/made/dental-thumb.jpg" width="300" height="424" alt="Sample notebook page: dental clinic follow-ups" loading="lazy" />
-              <span class="sample-card__t">Dental clinic</span>
-              <span class="sample-card__d">ortho follow-ups, one cash payment</span>
-              <span class="sample-card__tag">Sample page (made for this demo)</span>
-            </button>
-            <button class="sample-card" data-fixture="made/garage" data-image="/fixtures/made/garage.jpg" type="button">
-              <img class="sample-card__img" src="/fixtures/made/garage-thumb.jpg" width="300" height="424" alt="Sample notebook page: garage work and dues" loading="lazy" />
-              <span class="sample-card__t">Garage</span>
-              <span class="sample-card__d">vehicles, dues, a promise to collect</span>
-              <span class="sample-card__tag">Sample page (made for this demo)</span>
-            </button>
-            <button class="sample-card" data-fixture="made/kirana" data-image="/fixtures/made/kirana.jpg" type="button">
-              <img class="sample-card__img" src="/fixtures/made/kirana-thumb.jpg" width="300" height="424" alt="Sample notebook page: kirana store credit khata" loading="lazy" />
-              <span class="sample-card__t">Kirana credit</span>
-              <span class="sample-card__d">khata entries, one paid, one coming Friday</span>
-              <span class="sample-card__tag">Sample page (made for this demo)</span>
-            </button>
-            <button class="sample-card" data-fixture="made/tuition" data-image="/fixtures/made/tuition.jpg" type="button">
-              <img class="sample-card__img" src="/fixtures/made/tuition-thumb.jpg" width="300" height="424" alt="Sample notebook page: tuition fees" loading="lazy" />
-              <span class="sample-card__t">Tuition fees</span>
-              <span class="sample-card__d">monthly fees, one full payment received</span>
-              <span class="sample-card__tag">Sample page (made for this demo)</span>
-            </button>
-            <button class="sample-card" data-fixture="spike/page1" data-image="/fixtures/demo-pages/page1.jpg" type="button">
-              <img class="sample-card__img" src="/fixtures/demo-pages/page1-thumb.jpg" width="340" height="539" alt="1860s public-domain ledger scan" loading="lazy" />
-              <span class="sample-card__t">Old-style ledger</span>
-              <span class="sample-card__d">1860s scan, faded ink, two customers</span>
-              <span class="sample-card__tag">Public-domain museum scan &middot; credited</span>
-            </button>
-          </div>
-        </div>
 
         <p class="dropzone__hint" id="drop-hint">
           On a computer you can also drag a photo into this card.
         </p>
       </div>
+
+      <button id="btn-upload-to-picker" class="btn btn--ghost btn--block" type="button">
+        Try a sample page instead
+      </button>
+
+      <p class="stage-note" id="upload-privacy-note">
+        With the sample pages, nothing leaves your device. In live mode a photo
+        of your own page is sent to Meta's model to be read - the app says so
+        clearly before any upload.
+      </p>
 
       <!-- people quick tile: the "know who to call today" payoff -->
       <button id="tile-people" class="card card--tile" type="button" hidden>
@@ -206,34 +186,49 @@
       </button>
     </section>
 
-      <!-- story: three steps -->
-      <div class="story" aria-label="How Page Ledger works">
-        <article class="story__card">
-          <div class="story__ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l.9-1.4A1.5 1.5 0 0 1 9.9 4h4.2a1.5 1.5 0 0 1 1.3.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12.4" r="3.1" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
-          </div>
-          <h2 class="story__title">1 · Photograph a page</h2>
-          <p class="story__body">Any notebook, any handwriting. Even half a page counts.</p>
-        </article>
-        <span class="story__arrow" aria-hidden="true"></span>
-        <article class="story__card">
-          <div class="story__ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9.5h8M8 12.5h8M8 15.5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="17" cy="17" r="3.4" fill="var(--surface)" stroke="currentColor" stroke-width="1.7"/><path d="M15.9 17l.8.8 1.4-1.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <h2 class="story__title">2 · Check what was read</h2>
-          <p class="story__body">The photo stays beside the table. Unsure cells are marked - you fix or confirm.</p>
-        </article>
-        <span class="story__arrow" aria-hidden="true"></span>
-        <article class="story__card">
-          <div class="story__ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 9h6M15 9h2M7 12.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M14.6 19c1.6-1 2.4-4.4 1.2-6.4" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0"/><text x="16.2" y="17.6" font-size="8.5" font-weight="700" fill="currentColor" font-family="system-ui, sans-serif">&#8377;</text></svg>
-          </div>
-          <h2 class="story__title">3 · Know who to call today</h2>
-          <p class="story__body">Dues, money in, follow-ups - and WhatsApp is one tap away.</p>
-        </article>
+    <!-- ============================================== demo picker -->
+    <section id="view-picker" class="home" aria-labelledby="picker-title" hidden>
+      <h1 class="own-title" id="picker-title">Pick a sample page</h1>
+      <p class="picker-sub">Five made-for-demo pages. Tap one and it reads.</p>
+
+      <div class="samples samples--picker" id="samples">
+        <div class="samples__grid">
+          <button class="sample-card" data-fixture="made/dental" data-image="/fixtures/made/dental.jpg" type="button">
+            <img class="sample-card__img" src="/fixtures/made/dental-thumb.jpg" width="300" height="424" alt="Sample notebook page: dental clinic follow-ups" loading="lazy" />
+            <span class="sample-card__t">Dental clinic</span>
+            <span class="sample-card__d">ortho follow-ups, one cash payment</span>
+            <span class="sample-card__tag">Sample page (made for this demo)</span>
+          </button>
+          <button class="sample-card" data-fixture="made/garage" data-image="/fixtures/made/garage.jpg" type="button">
+            <img class="sample-card__img" src="/fixtures/made/garage-thumb.jpg" width="300" height="424" alt="Sample notebook page: garage work and dues" loading="lazy" />
+            <span class="sample-card__t">Garage</span>
+            <span class="sample-card__d">vehicles, dues, a promise to collect</span>
+            <span class="sample-card__tag">Sample page (made for this demo)</span>
+          </button>
+          <button class="sample-card" data-fixture="made/kirana" data-image="/fixtures/made/kirana.jpg" type="button">
+            <img class="sample-card__img" src="/fixtures/made/kirana-thumb.jpg" width="300" height="424" alt="Sample notebook page: kirana store credit khata" loading="lazy" />
+            <span class="sample-card__t">Kirana credit</span>
+            <span class="sample-card__d">khata entries, one paid, one coming Friday</span>
+            <span class="sample-card__tag">Sample page (made for this demo)</span>
+          </button>
+          <button class="sample-card" data-fixture="made/tuition" data-image="/fixtures/made/tuition.jpg" type="button">
+            <img class="sample-card__img" src="/fixtures/made/tuition-thumb.jpg" width="300" height="424" alt="Sample notebook page: tuition fees" loading="lazy" />
+            <span class="sample-card__t">Tuition fees</span>
+            <span class="sample-card__d">monthly fees, one full payment received</span>
+            <span class="sample-card__tag">Sample page (made for this demo)</span>
+          </button>
+          <button class="sample-card" data-fixture="spike/page1" data-image="/fixtures/demo-pages/page1.jpg" type="button">
+            <img class="sample-card__img" src="/fixtures/demo-pages/page1-thumb.jpg" width="340" height="539" alt="1860s public-domain ledger scan" loading="lazy" />
+            <span class="sample-card__t">Old-style ledger</span>
+            <span class="sample-card__d">1860s scan, faded ink, two customers</span>
+            <span class="sample-card__tag">Public-domain museum scan &middot; credited</span>
+          </button>
+        </div>
       </div>
 
-      <p class="stage-note" id="home-note">Everything on this page runs in your browser &mdash; your notebook photos and figures never leave your device in demo mode.</p>
+      <button id="btn-picker-own" class="btn btn--ghost btn--block" type="button">
+        Use my own page instead
+      </button>
     </section>
 
     <!-- ================================================= auth view -->
@@ -571,6 +566,29 @@
       </ul>
       <p class="shield-foot">This device right now: <strong data-slot="state"></strong></p>
       <button id="btn-shield-close" class="btn btn--ghost btn--block" type="button">Close</button>
+    </div>
+  </div>
+
+  <!-- More menu: the controls that are useful but not every-minute.
+       The erase/sign-out rows keep their original ids so the existing
+       wiring and visibility logic keep working unchanged. -->
+  <div id="sheet-more" class="sheet" hidden>
+    <button id="more-backdrop" class="sheet__backdrop" type="button" aria-label="Close menu" tabindex="-1"></button>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="more-title" tabindex="-1">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <h2 class="sheet__title" id="more-title">More</h2>
+      <div class="account" id="account" hidden>
+        <span class="account__email" id="account-email"></span>
+        <button id="btn-reset-demo" class="btn btn--ghost btn--block btn--danger" type="button" hidden>Erase demo pages</button>
+        <button id="btn-signout" class="btn btn--ghost btn--block" type="button">Sign out</button>
+      </div>
+      <button id="btn-more-privacy" class="btn btn--ghost btn--block" type="button">Where your pages live</button>
+      <div class="more-note">
+        <b>How this was built:</b> plain HTML, CSS and JavaScript - no framework,
+        no build step. One AI module on Netlify Functions; the sample pages read
+        from saved files, so a demo never spends credits.
+      </div>
+      <button id="btn-more-close" class="btn btn--ghost btn--block" type="button">Close</button>
     </div>
   </div>
 
