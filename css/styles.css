@@ -2840,3 +2840,15 @@ body.story-open .coach__tip { display: none; }
 .pcard__follow--over { background: var(--red-bg); }
 .pcard__follow--over .pcard__follow-text { color: var(--red); }
 .pcard__follow--over .fc--amber { color: var(--red); }
+
+/* sort row sits under the filter chips, same pill language */
+.people-sortrow { margin-top: 9px; }
+.people-sort { font-size: 13px; }
+.people-sort[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* copy-number: a quiet helper under the person's phone line */
+.person-copy { margin: 2px 0 10px; }

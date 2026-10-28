@@ -5,11 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Page Ledger - your notebook becomes your CRM</title>
   <meta name="description" content="Photograph a page of your paper notebook. Page Ledger turns it into customers, dues and follow-ups. Check every line before it is kept." />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#131110" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/css/styles.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z' fill='%23fff' opacity='.92'/%3E%3Cpath d='M13 12h7M13 16h7M13 20h4' stroke='%230f766e' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f2a93b'/%3E%3Cpath d='M10 7h9a4 4 0 0 1 4 4v14h-9a4 4 0 0 1-4-4V7z' fill='%23131110' opacity='.92'/%3E%3Cpath d='M13 12h7M13 16h7M13 20h4' stroke='%23f2a93b' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Page Ledger" />
+  <meta property="og:title" content="Page Ledger - your notebook becomes your CRM" />
+  <meta property="og:description" content="Photograph a page of your paper notebook. Page Ledger turns it into customers, dues and follow-ups. Check every line before it is kept." />
+  <meta property="og:url" content="https://pageledger.netlify.app/" />
+  <meta property="og:image" content="https://pageledger.netlify.app/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Page Ledger - your notebook becomes your CRM" />
+  <meta name="twitter:description" content="Photograph a page. Check every line. Know who to call today." />
+  <meta name="twitter:image" content="https://pageledger.netlify.app/og-image.png" />
   <script>
     /* Opened as a plain file (file://)? Module scripts are blocked there, so
        the whole app would look broken. Show exact instructions instead. This
@@ -304,6 +316,11 @@
           <button class="pill people-chip" data-chip="today" type="button" aria-pressed="false">Call today</button>
           <button class="pill people-chip" data-chip="paid" type="button" aria-pressed="false">Paid</button>
         </div>
+        <div class="people-chips people-sortrow" role="group" aria-label="Sort people">
+          <button class="pill people-sort" data-sort="due" type="button" aria-pressed="true">Due first</button>
+          <button class="pill people-sort" data-sort="name" type="button" aria-pressed="false">Name A&ndash;Z</button>
+          <button class="pill people-sort" data-sort="recent" type="button" aria-pressed="false">Recent</button>
+        </div>
       </div>
 
       <!-- Stage 6: ask about your own figures (answers come only from your data) -->
@@ -590,6 +607,11 @@
         <button id="btn-signout" class="btn btn--ghost btn--block" type="button">Sign out</button>
       </div>
       <button id="btn-more-privacy" class="btn btn--ghost btn--block" type="button">Where your pages live</button>
+      <button id="btn-more-csv" class="btn btn--ghost btn--block" type="button">Download all lines as CSV</button>
+      <button id="btn-more-backup" class="btn btn--ghost btn--block" type="button" hidden>Download a backup</button>
+      <button id="btn-more-restore" class="btn btn--ghost btn--block" type="button" hidden>Restore a backup&hellip;</button>
+      <input id="file-restore" type="file" accept=".json,application/json" hidden aria-hidden="true" tabindex="-1" />
+      <button id="btn-more-story" class="btn btn--ghost btn--block" type="button">Replay the intro</button>
       <div class="more-note">
         <b>How this was built:</b> plain HTML, CSS and JavaScript - no framework,
         no build step. One AI module on Netlify Functions; the sample pages read
@@ -607,6 +629,7 @@
       <div class="sheet__grip" aria-hidden="true"></div>
       <h2 class="sheet__title" id="person-name">Person</h2>
       <p class="sheet__sub" id="person-meta"></p>
+      <button id="btn-copy-phone" class="btn btn--ghost btn--small person-copy" type="button" hidden>Copy number</button>
       <div class="person-money" id="person-money"></div>
       <div id="person-follow"></div>
       <div id="person-history" class="person-history"></div>

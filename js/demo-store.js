@@ -244,3 +244,43 @@ export function resetDemoData() {
     return false;
   }
 }
+
+/* ------------------------------------------------------- backup / restore */
+// The ledger belongs to the owner, not to this browser. A backup is a plain
+// JSON file the owner keeps (and can re-import on any device). Demo mode only:
+// a real cloud account already has the data in their own private project.
+export function exportAllPages() {
+  const store = read();
+  const u = session?.user;
+  return {
+    app: "page-ledger",
+    format: 1,
+    exportedAt: new Date().toISOString(),
+    pages: store.pages.filter((p) => !u || p.owner === u.email),
+  };
+}
+
+// Merges a backup file into this browser: pages the browser does not have are
+// added, pages it already has (same id) are left untouched. Nothing is
+// deleted - a restore can never lose the owner's current data.
+export function restoreAllPages(data) {
+  if (!data || data.app !== "page-ledger" || !Array.isArray(data.pages)) {
+    throw new Error("That file is not a Page Ledger backup.");
+  }
+  const store = read();
+  const byId = new Map(store.pages.map((p) => [p.id, p]));
+  let added = 0;
+  for (const p of data.pages) {
+    if (!p || typeof p.id !== "string" || !Array.isArray(p.page_rows)) continue;
+    if (!byId.has(p.id)) {
+      byId.set(p.id, p);
+      added++;
+    }
+  }
+  store.pages = [...byId.values()].sort((a, b) =>
+    String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")),
+  );
+  const ok = persist(store);
+  if (!ok) throw new Error("This browser could not save the restored pages - it is out of demo space.");
+  return { added, total: store.pages.length };
+}

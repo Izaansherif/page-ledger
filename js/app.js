@@ -1291,7 +1291,9 @@ function personCard(p, todayList) {
 
 /* ------------------------------------------------ people search + filters */
 // Chips scope the list; the summary chips above always show the WHOLE truth.
-const peopleFilter = { chip: "all", q: "" };
+// Sort re-orders the Everyone list only - Call today stays urgency-ordered
+// (overdue first) because it is an action queue, not a browse list.
+const peopleFilter = { chip: "all", q: "", sort: "due" };
 
 function filterPeople(data) {
   const q = peopleFilter.q.trim().toLowerCase();
@@ -1305,9 +1307,15 @@ function filterPeople(data) {
     }
     return true;
   };
+  const sorters = {
+    due: (a, b) => (b.due - a.due) || String(a.name ?? "").localeCompare(String(b.name ?? "")),
+    name: (a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), ["en", "hi", "ml"]),
+    recent: (a, b) => String(b.lastOn ?? "").localeCompare(String(a.lastOn ?? "")),
+  };
+  const sort = sorters[peopleFilter.sort] ?? sorters.due;
   return {
     toCall: data.toCall.filter(pass),
-    rest: data.rest.filter(pass),
+    rest: data.rest.filter(pass).sort(sort),
     any: data.all.some(pass),
   };
 }
@@ -1443,6 +1451,13 @@ function closeShield() {
 function openMore() {
   const sh = $("#sheet-more");
   if (!sh) return;
+  // backup/restore are a demo-store feature: a real cloud account's data
+  // already lives in the owner's own private project - a browser file would
+  // be an incomplete copy pretending to be the whole thing
+  const backupBtn = $("#btn-more-backup");
+  const restoreBtn = $("#btn-more-restore");
+  if (backupBtn) backupBtn.hidden = !state.demoStore;
+  if (restoreBtn) restoreBtn.hidden = !state.demoStore;
   sh.hidden = false;
   $("#btn-more").setAttribute("aria-expanded", "true");
   sh.querySelector(".sheet__panel").focus({ preventScroll: true });
@@ -1454,6 +1469,69 @@ function closeMore() {
   sh.hidden = true;
   $("#btn-more").setAttribute("aria-expanded", "false");
   if (hadFocus) $("#btn-more").focus({ preventScroll: true });
+}
+
+/* ------------------ data ownership: CSV export + backup / restore --------- */
+// The ledger belongs to the owner, not to this browser. One tap downloads
+// every line as a spreadsheet; a backup is a plain JSON file that can be
+// restored on any device. Nothing is uploaded anywhere - the file goes
+// straight from this device to the owner's hand.
+function downloadFile(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+function csvCell(v) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+// One row per line on a page - kept, struck-out and excluded all travel with
+// a status column, so the spreadsheet is the whole truth, not a flattering
+// subset. The BOM makes Excel open Malayalam/Hindi notes as UTF-8.
+async function downloadLinesCsv() {
+  const pages = await auth().listRecentPages();
+  const head = ["page_date", "saved_on", "name", "phone", "note", "paid_rupees", "due_rupees", "follow_up_date", "follow_up_done", "status"];
+  const rows = [head.join(",")];
+  for (const p of pages) {
+    for (const r of p.page_rows ?? []) {
+      const status = r.struck_out ? "struck-out" : r.included === false ? "excluded" : "kept";
+      rows.push([
+        p.taken_on ?? "",
+        String(p.created_at ?? "").slice(0, 10),
+        r.name ?? "",
+        r.phone ?? "",
+        r.note ?? "",
+        r.amount_paid ?? "",
+        r.amount_due ?? "",
+        r.follow_up_date ?? "",
+        r.follow_up_done ? "yes" : "no",
+        status,
+      ].map(csvCell).join(","));
+    }
+  }
+  downloadFile(
+    new Blob(["\uFEFF" + rows.join("\r\n")], { type: "text/csv;charset=utf-8" }),
+    `page-ledger-lines-${ppl.localToday()}.csv`,
+  );
+  return pages.reduce((n, p) => n + (p.page_rows?.length ?? 0), 0);
+}
+
+// Demo mode only: a real cloud account's data already lives in the owner's
+// own private Supabase project, so a browser-file backup would be a lie.
+function downloadBackup() {
+  const data = demo.exportAllPages();
+  downloadFile(
+    new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+    `page-ledger-backup-${ppl.localToday()}.json`,
+  );
+  return data.pages.length;
 }
 
 /* ------------------------------------------- the person side panel (CRM) */
@@ -1489,7 +1567,9 @@ function openPersonSheet(key, triggerEl = null) {
   if (f) {
     const overdue = f.date < ppl.localToday();
     const when = f.date === ppl.localToday() ? "today" : niceDay(f.date);
-    $("#person-follow").innerHTML = `<div class="pcard__follow${p.toCall ? " pcard__follow--due" : ""}">
+    // same language as the cards: red = the promise slipped, amber = due today
+    const tone = overdue ? " pcard__follow--over" : p.toCall ? " pcard__follow--due" : "";
+    $("#person-follow").innerHTML = `<div class="pcard__follow${tone}">
       <div class="pcard__follow-text">Follow-up · ${escapeHTML(when)}${f.text ? ` · ${escapeHTML(f.text)}` : ""}${overdue ? ' <span class="fc fc--amber">overdue</span>' : ""}</div>
     </div>`;
   } else {
@@ -1522,6 +1602,13 @@ function openPersonSheet(key, triggerEl = null) {
   const msg = $("#person-msg");
   msg.disabled = !p.waOk;
   msg.textContent = p.waOk ? "WhatsApp message" : "Phone missing - add it later";
+
+  // one-tap copy of the number, for owners who paste into any other app
+  const copyBtn = $("#btn-copy-phone");
+  if (copyBtn) {
+    copyBtn.hidden = !p.waOk;
+    copyBtn.textContent = "Copy number";
+  }
 
   $("#sheet-person").hidden = false;
   $("#sheet-person .sheet__panel").focus({ preventScroll: true });
@@ -2177,6 +2264,83 @@ function wire() {
   $("#btn-more-privacy").onclick = () => {
     closeMore();
     openShield();
+  };
+  // data ownership: spreadsheet of every line, JSON backup, restore (demo only)
+  $("#btn-more-csv").onclick = async () => {
+    try {
+      const n = await downloadLinesCsv();
+      closeMore();
+      showUndo(`Spreadsheet downloaded - ${n} line${n === 1 ? "" : "s"}`, () => {});
+    } catch {
+      window.alert("The spreadsheet could not be built. Try again.");
+    }
+  };
+  $("#btn-more-backup").onclick = () => {
+    try {
+      const n = downloadBackup();
+      closeMore();
+      showUndo(`Backup downloaded - ${n} page${n === 1 ? "" : "s"}`, () => {});
+    } catch {
+      window.alert("The backup could not be built. Try again.");
+    }
+  };
+  $("#btn-more-restore").onclick = () => $("#file-restore").click();
+  $("#file-restore").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // picking the same file twice must still work
+    if (!file) return;
+    let data = null;
+    try {
+      data = JSON.parse(await file.text());
+    } catch {}
+    if (!data || data.app !== "page-ledger" || !Array.isArray(data.pages)) {
+      window.alert("That file is not a Page Ledger backup.");
+      return;
+    }
+    const n = data.pages.length;
+    const ok = window.confirm(`Restore ${n} page${n === 1 ? "" : "s"} from this backup? Nothing you have now is deleted.`);
+    if (!ok) return;
+    try {
+      const res = demo.restoreAllPages(data);
+      await loadPeople();
+      await loadRecent();
+      closeMore();
+      showUndo(`Backup restored - ${res.added} page${res.added === 1 ? "" : "s"} added`, () => {});
+    } catch (err) {
+      window.alert(err?.message || "The backup could not be restored.");
+    }
+  });
+  // the 5-scene intro, replayable on demand (a demo aid that costs nothing)
+  $("#btn-more-story").onclick = () => {
+    closeMore();
+    story.openStory(() => {
+      showView("view-landing");
+      $("#btn-sample-primary")?.focus({ preventScroll: true });
+    });
+  };
+  // sort pills: re-order the Everyone list (Call today stays urgency-ordered)
+  [...document.querySelectorAll(".people-sort")].forEach((sortBtn) => {
+    sortBtn.onclick = () => {
+      peopleFilter.sort = sortBtn.dataset.sort;
+      [...document.querySelectorAll(".people-sort")].forEach((x) =>
+        x.setAttribute("aria-pressed", String(x === sortBtn)),
+      );
+      renderPeople(peopleCache.data, peopleCache.pagesCount ?? 0, true);
+    };
+  });
+  // copy the number: for owners who paste it into any other app themselves
+  $("#btn-copy-phone").onclick = async () => {
+    if (!panelPerson?.waOk) return;
+    try {
+      await navigator.clipboard.writeText(`+${panelPerson.digits}`);
+      const b = $("#btn-copy-phone");
+      b.textContent = "Copied";
+      setTimeout(() => {
+        b.textContent = "Copy number";
+      }, 1600);
+    } catch {
+      // clipboard blocked (older browser): the number sits right above, readable
+    }
   };
   // overdue banner: one tap switches to the Call today list
   $("#overdue-banner").onclick = () =>
