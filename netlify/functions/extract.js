@@ -134,6 +134,16 @@ export async function handler(event) {
           "This demo's live reading budget is used up for right now. The bundled sample pages still read perfectly - go back and tap a sample page.",
       });
     }
+    if (err.code === "MOCK_NEEDS_FIXTURE") {
+      // Demo mode + the visitor's own photo: honest 400, not a fake outage.
+      return json(400, {
+        ok: false,
+        code: "mock_needs_fixture",
+        sampleOnly: true,
+        error:
+          "Demo mode reads only the sample pages - your own photo needs the connected reading service, which is off in this demo. Go back and tap one of the sample pages - they read fully and cost nothing.",
+      });
+    }
     if (err.code === "EXTRACTION_INVALID") {
       return json(502, {
         ok: false,

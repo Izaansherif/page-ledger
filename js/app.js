@@ -92,11 +92,23 @@ function showUndo(label, undoFn) {
   undoTimer = setTimeout(clear, 5500);
 }
 
+/* Browser Back/Forward feels native: every stable view is one history entry
+   (loading/error/auth stay transient - they are never history destinations). */
+const HISTORY_VIEWS = new Set(["view-upload", "view-review", "view-people"]);
+let historySync = false; // popstate re-entry guard
+
 function showView(name) {
   for (const v of ["view-upload", "view-loading", "view-error", "view-review", "view-auth", "view-people"]) {
     $(`#${v}`).hidden = v !== name;
   }
   syncBottomBar(name);
+  if (!HISTORY_VIEWS.has(name)) return;
+  const target = `#${name.replace("view-", "")}`;
+  if (historySync) {
+    historySync = false;
+    return;
+  }
+  if (location.hash !== target) history.pushState({ view: name }, "", target);
 }
 
 /* ------------------------------------------------- phone bottom action bar */
@@ -842,10 +854,13 @@ async function runExtraction(request) {
       d.hidden = false;
       d.textContent = `Detail: ${String(err.detail).slice(0, 280)}`;
     } else if (err.sampleOnly) {
-      // Live-budget cap (Section 5): end on the sample fallback, never a dead end.
+      // Sample-fallback endings (live-budget cap, or an own photo in demo
+      // mode): end on the samples, never a dead end.
       d.hidden = false;
       d.textContent =
-        "The saved sample pages are not affected by the budget - go back and tap one of the sample pages.";
+        err.code === "mock_needs_fixture"
+          ? "The saved sample pages read fully in this demo and cost nothing - go back and tap one of them."
+          : "The saved sample pages are not affected by the budget - go back and tap one of the sample pages.";
     } else {
       d.hidden = true;
       d.textContent = "";
@@ -1366,8 +1381,11 @@ function openShield() {
 function closeShield() {
   const sh = $("#sheet-shield");
   if (!sh) return;
+  const hadFocus = sh.contains(document.activeElement);
   sh.hidden = true;
   $("#btn-shield").setAttribute("aria-expanded", "false");
+  // keyboard users land back on the button that opened the sheet
+  if (hadFocus) $("#btn-shield").focus({ preventScroll: true });
 }
 
 async function handleFollowDone(pageId, rowId) {
@@ -1903,9 +1921,44 @@ function wire() {
   $("#people-list").addEventListener("click", onPeopleAction);
   $("#btn-sheet-close").onclick = closeMsgSheet;
   $("#sheet-backdrop").onclick = closeMsgSheet;
+  // browser Back/Forward walks the saved views instead of leaving the app
+  window.addEventListener("popstate", () => {
+    const name = (location.hash || "").replace(/^#/, "");
+    const view = ["upload", "review", "people"].includes(name) ? `view-${name}` : "view-upload";
+    if (!$(`#${view}`).hidden) return; // already there
+    if (view === "view-review" && !state.extraction) return; // nothing to show
+    historySync = true;
+    showView(view);
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !$("#sheet-msg").hidden) closeMsgSheet();
     if (e.key === "Escape" && !$("#sheet-shield").hidden) closeShield();
+    // keep Tab inside whichever sheet is open (keyboard focus trap)
+    if (e.key === "Tab") {
+      const sh =
+        !$("#sheet-msg").hidden
+          ? $("#sheet-msg")
+          : !$("#sheet-shield").hidden
+            ? $("#sheet-shield")
+            : null;
+      if (!sh) return;
+      const els = [
+        ...sh.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+      ].filter((el) => !el.disabled && el.offsetParent !== null);
+      if (!els.length) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (!sh.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
   });
   // the trust shield: always available, never an interrupt
   $("#btn-shield").onclick = openShield;

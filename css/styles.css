@@ -201,6 +201,7 @@ body {
   border-radius: 8px;
   padding: 5px 10px;
   font-size: 0.76rem;
+  min-height: 40px;
   cursor: pointer;
   pointer-events: auto;
 }
@@ -2144,3 +2145,15 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   color: var(--ink-soft, #6d675c);
 }
 .people-hint b { color: var(--ink, #2c2619); font-weight: 700; }
+
+/* ============================================================= */
+/* Phase-1 fixes: narrow-phone appbar wrap + tap-target minimums */
+@media (max-width: 480px) {
+  .appbar__inner { flex-wrap: wrap; row-gap: 6px; padding: 8px 12px; }
+  .appbar__right { flex-wrap: wrap; row-gap: 6px; }
+  .account__email { display: none; } /* device-local email is noise on a phone */
+  .account .btn--ghost { padding: 6px 10px; }
+}
+.people-nudge__x { width: 44px; height: 44px; font-size: 1.35rem; }
+.undo-toast__btn { min-height: 40px; }
+.undo-toast__x { width: 40px; height: 40px; padding: 0; }

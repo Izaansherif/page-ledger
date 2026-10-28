@@ -166,10 +166,13 @@ export async function callModel({
 }) {
   if (AI_CONFIG.mode === "mock" || mockFixture) {
     if (!mockFixture) {
-      throw new Error(
-        "AI_MODE=mock but no mockFixture was passed. Pass one (e.g. 'spike/page1') " +
-          "or set AI_MODE=live in .env after adding META_API_KEY.",
+      // A visitor's own photo in demo mode. Not an outage - say what is true:
+      // the demo reads only the bundled sample pages (no credits spent).
+      const e = new Error(
+        "Demo mode reads only the sample pages - your own photo needs the connected reading service.",
       );
+      e.code = "MOCK_NEEDS_FIXTURE";
+      throw e;
     }
     const file = path.join(REPO_ROOT, "fixtures", `${mockFixture}.json`);
     let text;
@@ -506,12 +509,24 @@ export async function askLedger({ question, brief, fixture = null }) {
       maxTokens: 700,
     });
 
-  let res = await attempt();
+  const attemptOnce = async () => {
+    try {
+      return await attempt();
+    } catch (e) {
+      // unparseable JSON counts as a failed attempt (rule 4: retry once)
+      if (e && e.rawContent !== undefined) {
+        return { json: null, content: String(e.rawContent), usage: e.usage ?? null, latencyMs: e.latencyMs ?? 0, model: "unknown" };
+      }
+      throw e;
+    }
+  };
+
+  let res = await attemptOnce();
   let retries = 0;
   let ok = validShape(res.json);
   if (!ok) {
     retries = 1; // rule 4: retry once
-    res = await attempt();
+    res = await attemptOnce();
     ok = validShape(res.json);
   }
   if (!ok) {
@@ -557,23 +572,35 @@ export async function extractPage({ imageBase64, mime = "image/jpeg", baseDate, 
     });
 
   let res;
+  // A failed attempt is either a schema-validation miss OR a thrown
+  // "unparseable JSON" from callModel - both must get rule 4's one retry.
+  const attemptOnce = async () => {
+    try {
+      return await attempt();
+    } catch (e) {
+      if (e && e.rawContent !== undefined) {
+        return { json: null, content: String(e.rawContent), usage: e.usage ?? null, latencyMs: e.latencyMs ?? 0, model: "unknown" };
+      }
+      throw e;
+    }
+  };
   if (fixture) {
     // A bundled sample page: its JSON is a saved artifact, served in ANY mode,
     // never touching the API and never consuming the live budget.
-    res = await attempt();
+    res = await attemptOnce();
   } else if (AI_CONFIG.mode === "mock") {
     // Real photo, no key configured: callModel explains what to do. No budget.
-    res = await attempt();
+    res = await attemptOnce();
   } else {
     // Real photo, live mode: this is the burn. Capped per minute and per day.
     assertLiveBudget("page read");
-    res = await attempt();
+    res = await attemptOnce();
   }
   let retries = 0;
   let v = validateExtraction(res.json);
   if (!v.ok) {
     retries = 1; // rule 4: retry once
-    res = await attempt();
+    res = await attemptOnce();
     v = validateExtraction(res.json);
   }
   if (!v.ok) {
