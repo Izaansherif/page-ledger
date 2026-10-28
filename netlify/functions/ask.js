@@ -56,12 +56,13 @@ function sanitizeBrief(raw) {
         .map((p) => ({ name: String(p?.name ?? "").slice(0, 40), due: num(p?.due) }))
         .filter((p) => p.name)
     : [];
-  const today = Array.isArray(raw.today)
-    ? raw.today
+  // The client calls this list "todayCall" (Stage 6-era code read "today",
+  // which silently dropped it); accept both names.
+  const callRaw = Array.isArray(raw.todayCall) ? raw.todayCall : Array.isArray(raw.today) ? raw.today : [];
+  const today = callRaw
         .slice(0, 8)
         .map((p) => ({ name: String(p?.name ?? "").slice(0, 40), when: String(p?.when ?? "").slice(0, 24) }))
-        .filter((p) => p.name)
-    : [];
+        .filter((p) => p.name);
   const out = {
     today: String(raw.todayDate ?? "").slice(0, 10),
     pages: num(raw.pages) ?? 0,

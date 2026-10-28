@@ -1,0 +1,4 @@
+{
+  "answer": "The outstanding amounts, largest first: {{TOP}}. I only read figures from the pages you saved - nothing is invented and no message is written for you.",
+  "based_on": ["topDue:{{TOP_NAME}}", "totals.due {{DUE}}", "totals.people {{PEOPLE}}"]
+}

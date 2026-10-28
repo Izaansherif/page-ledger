@@ -416,7 +416,7 @@ export async function transcribeAudio({ wavBase64, fixture = "voice/note" }) {
  * the UI only displays the answer - it never auto-sends anything to anyone.
  * Returns { answer, basedOn, usage, estCostUSD, latencyMs, model, retries }.
  */
-export async function askLedger({ question, brief, fixture = "ask/summary" }) {
+export async function askLedger({ question, brief, fixture = null }) {
   const { ASK_JSON_SCHEMA, ASK_SCHEMA_NAME, buildAskSystemPrompt } = await import("./prompts.js");
   const t0 = Date.now();
 
@@ -427,18 +427,54 @@ export async function askLedger({ question, brief, fixture = "ask/summary" }) {
     parsed.answer.length <= 700 &&
     Array.isArray(parsed.based_on ?? []);
 
+  // Demo answers are grounded the same way the live model is: they may only
+  // cite figures from the sanitized brief. The fixture texts hold {{TOKENS}}
+  // that this fills from the owner's real numbers - the demo answer always
+  // matches what the People view shows, whatever the visitor saved.
+  const rupees = (n) => "\u20b9" + Number(n ?? 0).toLocaleString("en-IN");
+  function fillAsk(text) {
+    const t = brief?.totals ?? {};
+    const call = Array.isArray(brief?.todayCall) ? brief.todayCall : [];
+    const chase = call[0] ?? null;
+    const chaseName = chase ? chase.name : "nobody";
+    const chaseTxt = chase ? `${chase.name} (${String(chase.when ?? "").trim()})` : "nobody yet - confirm a follow-up on a page and they show up here";
+    const top = Array.isArray(brief?.topDue) ? brief.topDue[0] ?? null : null;
+    const topName = top ? top.name : "nobody";
+    const topTxt = top ? `${top.name}, ${rupees(top.due)}` : "nobody owes anything yet";
+    const overdueCount = call.filter((p) => /^overdue/.test(String(p.when ?? ""))).length;
+    return String(text)
+      .replace(/\{\{\s*CHASE_NAME\s*\}\}/g, chaseName)
+      .replace(/\{\{\s*CHASE\s*\}\}/g, chaseTxt)
+      .replace(/\{\{\s*TOP_NAME\s*\}\}/g, topName)
+      .replace(/\{\{\s*TOP\s*\}\}/g, topTxt)
+      .replace(/\{\{\s*TODAY_COUNT\s*\}\}/g, String(call.length))
+      .replace(/\{\{\s*OVERDUE_COUNT\s*\}\}/g, String(overdueCount))
+      .replace(/\{\{\s*DUE\s*\}\}/g, rupees(t.due))
+      .replace(/\{\{\s*PAID\s*\}\}/g, rupees(t.paid))
+      .replace(/\{\{\s*PEOPLE\s*\}\}/g, String(t.people ?? 0))
+      .replace(/\{\{\s*PAGES\s*\}\}/g, String(brief?.pages ?? 1));
+  }
+
+  // Exact-match slug map: a visitor's free-text question never builds a path.
+  const ASK_FIXTURE_BY_QUESTION = new Map([
+    ["Who owes me the most?", "ask/owe"],
+    ["How was this week in my ledger?", "ask/week"],
+    ["Who should I chase today?", "ask/today"],
+  ]);
+  const slug = fixture ?? ASK_FIXTURE_BY_QUESTION.get(String(question ?? "").trim()) ?? "ask/summary";
+
   if (AI_CONFIG.mode === "mock") {
-    const file = path.join(REPO_ROOT, "fixtures", `${fixture}.json`);
+    const file = path.join(REPO_ROOT, "fixtures", `${slug}.json`);
     let parsed;
     try {
       parsed = JSON.parse(fs.readFileSync(file, "utf8"));
     } catch (e) {
-      throw new Error(`Mock fixture "${fixture}" could not be read (${file}): ${e.message}`);
+      throw new Error(`Mock fixture "${slug}" could not be read (${file}): ${e.message}`);
     }
-    if (!validShape(parsed)) throw new Error(`Mock fixture "${fixture}" has no usable answer.`);
+    if (!validShape(parsed)) throw new Error(`Mock fixture "${slug}" has no usable answer.`);
     return {
-      answer: parsed.answer,
-      basedOn: parsed.based_on ?? [],
+      answer: fillAsk(parsed.answer),
+      basedOn: (parsed.based_on ?? []).map((s) => fillAsk(String(s))),
       usage: null,
       estCostUSD: null,
       latencyMs: Date.now() - t0,

@@ -1,0 +1,4 @@
+{
+  "answer": "Your ledger right now: {{PAID}} collected and {{DUE}} still out, across {{PEOPLE}} people from {{PAGES}} page(s) you saved. I only read the figures you saved - I do not guess values for days you have not photographed.",
+  "based_on": ["totals.paid {{PAID}}", "totals.due {{DUE}}", "pages {{PAGES}}"]
+}
