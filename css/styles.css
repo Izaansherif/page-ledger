@@ -2754,3 +2754,89 @@ body.story-open .coach__tip { display: none; }
 .sheet__panel { box-shadow: 0 -18px 60px rgb(0 0 0 / 0.55); }
 
 ::selection { background: rgb(242 169 59 / 0.35); }
+
+/* ============================================================
+   CRM dashboard polish (Oct 28): stats are filters, people are scannable
+   ============================================================ */
+/* stat cards: bigger numbers, tap-to-filter with an honest pressed state */
+.stat {
+  padding: 11px 14px 10px;
+  border-radius: var(--radius);
+}
+.stat__value { font-size: 22px; letter-spacing: -0.01em; }
+.stat--due .stat__value { color: var(--amber); }
+.stat--tap {
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  position: relative;
+  transition: border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+.stat--tap::after {
+  content: "";
+  position: absolute;
+  right: 11px;
+  top: 13px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--ink-faint);
+  border-bottom: 1.5px solid var(--ink-faint);
+  transform: rotate(-45deg);
+  opacity: 0.75;
+}
+.stat--tap:hover { border-color: var(--line-strong); }
+.stat--tap:hover::after { border-color: var(--accent); opacity: 1; }
+.stat--tap:active { transform: translateY(1px); }
+.stat--tap[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(242 169 59 / 0.16);
+}
+.stat--tap[aria-pressed="true"]::after { border-color: var(--accent); opacity: 1; }
+.stat--tap:focus-visible { outline: none; box-shadow: var(--focus); }
+
+/* filter chips carry their counts */
+.pill__n {
+  color: var(--ink-faint);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  margin-left: 3px;
+}
+.pill[aria-pressed="true"] .pill__n { color: inherit; opacity: 0.72; }
+
+/* people cards: initial disc + a visible "this opens" cue */
+.pcard__ava {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink-soft);
+  background: rgb(255 255 255 / 0.045);
+  border: 1px solid var(--line-strong);
+}
+.pcard__ava--due {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.pcard__line { cursor: pointer; }
+.pcard__line::after {
+  content: "›";
+  align-self: center;
+  color: var(--ink-faint);
+  font-size: 19px;
+  line-height: 1;
+  padding-left: 2px;
+}
+.pcard:hover .pcard__line::after { color: var(--accent); }
+.pcard:hover { border-color: var(--line-strong); }
+.pcard__line:focus-visible { outline: none; box-shadow: var(--focus); border-radius: var(--radius-sm); }
+
+/* overdue follow-ups read red: the promise already slipped */
+.pcard__follow--over { background: var(--red-bg); }
+.pcard__follow--over .pcard__follow-text { color: var(--red); }
+.pcard__follow--over .fc--amber { color: var(--red); }

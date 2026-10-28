@@ -1226,19 +1226,27 @@ async function handleAsk(kind) {
 
 function summaryChips(data) {
   const t = data.totals;
-  const card = (label, val, cls = "") =>
-    `<div class="stat${cls ? ` stat--${cls}` : ""}">
+  // the stats ARE the filters: tap "To call" to see only today's calls, tap
+  // again to release the filter. aria-pressed keeps it honest for keyboards.
+  const card = (label, val, cls = "", filter = "") =>
+    `<button class="stat${cls ? ` stat--${cls}` : ""}${filter ? " stat--tap" : ""}" type="button"${
+      filter ? ` data-filter="${filter}" aria-pressed="${peopleFilter.chip === filter}"` : ""
+    }>
       <span class="stat__label">${label}</span>
       <strong class="stat__value">${val}</strong>
-    </div>`;
+    </button>`;
   return [
-    card("To call", t.toCall, t.toCall > 0 ? "due" : ""),
-    card("Total due", `₹${ppl.fmtRupees(t.due)}`),
-    card("Collected", `₹${ppl.fmtRupees(t.paid)}`),
+    card("To call", t.toCall, t.toCall > 0 ? "due" : "", "today"),
+    card("Total due", `₹${ppl.fmtRupees(t.due)}`, "", "owes"),
+    card("Collected", `₹${ppl.fmtRupees(t.paid)}`, "", "paid"),
   ].join("");
 }
 
 function personCard(p, todayList) {
+  // one-letter disc: amber when this person is a today-call, quiet otherwise
+  const initial = [...(p.nameMissing ? "?" : String(p.name).trim())][0]?.toUpperCase() || "?";
+  const ava = `<span class="pcard__ava${p.toCall ? " pcard__ava--due" : ""}" aria-hidden="true">${escapeHTML(initial)}</span>`;
+
   const money = [
     p.due > 0 ? `<span class="money money--due">due ₹${ppl.fmtRupees(p.due)}</span>` : "",
     p.paid > 0 ? `<span class="money money--in">in ₹${ppl.fmtRupees(p.paid)}</span>` : "",
@@ -1257,7 +1265,9 @@ function personCard(p, todayList) {
       f.rowId
         ? `<button class="pcard__done" data-page-id="${escapeAttr(f.pageId)}" data-row-id="${escapeAttr(f.rowId)}" type="button" aria-label="Mark follow-up done">Done</button>`
         : "";
-    follow = `<div class="pcard__follow${p.toCall ? " pcard__follow--due" : ""}">
+    // red = the promise already slipped; amber = due today
+    const tone = overdue ? " pcard__follow--over" : p.toCall ? " pcard__follow--due" : "";
+    follow = `<div class="pcard__follow${tone}">
         <div class="pcard__follow-text">Follow-up · ${escapeHTML(when)}${f.text ? ` · ${escapeHTML(f.text)}` : ""} ${dueTag}</div>
         ${doneBtn}
       </div>`;
@@ -1268,6 +1278,7 @@ function personCard(p, todayList) {
 
   return `<article class="pcard${p.toCall ? " pcard--due" : ""}" role="listitem" data-key="${escapeAttr(p.key)}">
     <div class="pcard__line" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Open ${escapeAttr(p.name)} - history, call and message">
+      ${ava}
       <div class="pcard__who">
         <h3 class="pcard__name">${p.nameMissing ? `Name missing <span class="chip chip--amber">check the page</span>` : escapeHTML(p.name)}</h3>
         <p class="pcard__meta">${contact}${seen ? ` · ${escapeHTML(seen)}` : ""}</p>
@@ -1336,6 +1347,19 @@ function renderPeople(data, pagesCount, fromFilter = false) {
   $("#people-list").innerHTML = view.rest.map((p) => personCard(p, false)).join("");
   $("#people-none").hidden = view.any || !hasPeople;
   $("#people-summary").innerHTML = hasPeople ? summaryChips(data) : "";
+  // chip counts: each filter shows what's behind it before you tap
+  if (hasPeople) {
+    const counts = {
+      all: data.all.length,
+      owes: data.all.filter((p) => p.due > 0).length,
+      today: data.totals.toCall,
+      paid: data.all.filter((p) => p.paid > 0).length,
+    };
+    [...document.querySelectorAll(".people-chip")].forEach((b) => {
+      const base = b.dataset.label ?? (b.dataset.label = b.textContent.trim());
+      b.innerHTML = `${escapeHTML(base)} <span class="pill__n">${counts[b.dataset.chip] ?? 0}</span>`;
+    });
+  }
   if (hasPeople && !fromFilter) animateCounts($("#people-summary"));
   const sk = $("#people-skipped");
   if (data.skipped) {
@@ -2074,6 +2098,14 @@ function wire() {
       );
       renderPeople(peopleCache.data, peopleCache.pagesCount ?? 0, true);
     };
+  });
+  // the stat cards ARE filters: tap to apply, tap again to release
+  $("#people-summary").addEventListener("click", (e) => {
+    const b = e.target.closest(".stat--tap");
+    if (!b) return;
+    const active = b.getAttribute("aria-pressed") === "true";
+    const target = active ? "all" : b.dataset.filter;
+    document.querySelector(`.people-chip[data-chip="${target}"]`)?.click();
   });
 
   /* ------------- Section 3: ask with your own words ---------------------- */
