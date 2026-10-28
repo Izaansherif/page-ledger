@@ -97,7 +97,8 @@ End card: repo URL (https://github.com/Izaansherif/page-ledger) + live URL
       keep it allowed, so no dialog appears mid-take).
 - [ ] Do not show any real person's data: fixture/exported sample pages only.
 - [ ] If the mock transcript doesn't match what you said — perfect, that's the
-      demo honesty moment: "this is the fixture text in demo mode."
+      demo honesty moment: 'Demo transcript filled' is labelled on screen, and
+      in the saved-sample pages it fills with the matching Aishu line anyway.
 - [ ] 3:00 hard cap. Practise segment 1:50–2:20 — it is the densest.
 - [ ] Credits are safe by construction: sample-page reads are always served
       from saved fixtures in any mode (they never touch the API), and live
@@ -105,3 +106,29 @@ End card: repo URL (https://github.com/Izaansherif/page-ledger) + live URL
       (default 8/min, 150/day) with a friendly fallback message. Say it in one
       line in the 2:20 honesty segment: "and a public demo can never run the
       key dry — the reads are capped, and the samples are free."
+
+---
+
+### Cue sheet — the exact click order, one take
+
+Start: browser at 1280×720+, at `pageledger.netlify.app`, home hero visible.
+**Before recording starts** (not filmed): double-check the demo state is
+clean — press **Erase demo pages** (a confirm message appears; confirm) and
+reload. Do this once, not on camera: the segment 0:00 opens on the hero.
+
+| beat | seconds | what you do | note |
+|---|---|---|---|
+| 0 | 0:00–0:20 | nothing — voice-over on the hero | the 3D scene reacts to the pointer: move the mouse gently |
+| 1 | 0:20–0:50 | click **Try a sample notebook page** (big green) | dental page reads; phases run ≈2.5s |
+| 2 | | point at the follow-up row "planned 2026-10-27, confirm it" (amber) | the AI read the written Thursday as the one just passed — say it out loud |
+| 3 | | tick its **Confirm** checkbox | cell flips to "Confirmed 2026-10-27" |
+| 4 | | click **Confirm all clear lines** (above the table) | flag-free rows get checked |
+| 5 | | click a name cell, retype the same words, press Enter | shows editability without changing any totals |
+| 6 | | open **How this page was read** (below the table) | kept/struck lines, confidence, cost receipt; close it |
+| 7 | 0:50–1:20 | click the row **mic**, speak ≈3s, click again to stop | the note fills, labelled "Demo transcript filled"; if the mic errors the app says type it — do that |
+| 8 | | click **Save this page** | pulse + "Saved ✓"; People auto-lands with the red **overdue strip** |
+| 9 | 1:20–1:50 | point at the strip → click **Show them** | switches to Call today: Aishu first, "overdue" badge |
+| 10 | | click **Back** (top-left) → home → open the **kirana** sample card → tick Anandettan's follow-up **Confirm** → **Confirm all clear lines** → **Save** | two saved pages fill out totals; the strip shows again |
+| 11 | | on People: Anandettan's card → **WhatsApp message** → read the pre-filled ₹395 reminder → click **Cancel** (never Send) | "Templates, not chatbots" lands here |
+| 12 | | tap **Done** on a follow-up | the red strip clears with it |
+| 13 | 1:50–2:20 | ask pills (**Who owes me the most?** → **Who should I chase today?**) | the answer numbers are the SAME ones in the People totals — point at both once |
