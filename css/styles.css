@@ -5,26 +5,31 @@
    ============================================================ */
 
 :root {
-  --paper: #f7f5f0;          /* page background warm off-white */
-  --surface: #ffffff;
-  --ink: #1c1917;            /* almost-black warm */
-  --ink-soft: #57534e;       /* muted body text */
-  --ink-faint: #78716c;
-  --line: #e7e5e4;
-  --line-strong: #d6d3d1;
-  --accent: #0f766e;         /* deep teal - buttons */
-  --accent-ink: #ffffff;
-  --accent-soft: #e6f2f0;    /* light teal wash */
-  --amber: #b45309;          /* "check this" border/text */
-  --amber-bg: #fef3e2;       /* low confidence wash */
-  --red: #b91c1c;            /* bad phone */
-  --red-bg: #fdecec;
-  --green: #166534;          /* confirmed/ok */
-  --struck: #a8a29e;         /* crossed-out rows */
+  /* DARK is the default theme: deep warm ink, one amber accent - the shop
+     lamp from the story. Light lives in the prefers-color-scheme block. */
+  color-scheme: dark;
+  --paper: #0e0c09;          /* deep warm ink */
+  --surface: #171310;        /* raised panel */
+  --surface-glass: rgb(23 19 16 / 0.86);
+  --ink: #f5efe4;            /* warm off-white text */
+  --ink-soft: #b8ac97;       /* muted body text */
+  --ink-faint: #8d8271;
+  --line: #2c2620;           /* fine 1px borders */
+  --line-strong: #3d352b;
+  --accent: #f2a93b;         /* the amber lamp - the only accent */
+  --accent-ink: #241703;     /* dark text on amber */
+  --accent-soft: rgb(242 169 59 / 0.12);
+  --amber: #fbbf24;          /* "check this" */
+  --amber-bg: rgb(56 41 16 / 0.4);
+  --amber-strong: #fbbf24;
+  --red: #f87171;
+  --red-bg: #3d1a17;
+  --green: #4ade80;
+  --struck: #6f6961;
   --radius: 12px;
   --radius-sm: 8px;
-  --shadow: 0 1px 2px rgb(28 25 23 / 0.06), 0 4px 14px rgb(28 25 23 / 0.05);
-  --focus: 0 0 0 3px #0f766e55;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.45), 0 6px 18px rgb(0 0 0 / 0.35);
+  --focus: 0 0 0 3px rgb(242 169 59 / 0.35);
 }
 
 * { box-sizing: border-box; }
@@ -33,14 +38,36 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   background-color: var(--paper);
-  background-image: radial-gradient(rgb(28 25 23 / 0.045) 1px, transparent 1.4px);
-  background-size: 26px 26px;
+  /* the faint living grid - barely there, always moving */
+  background-image:
+    linear-gradient(rgb(242 169 59 / 0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(242 169 59 / 0.032) 1px, transparent 1px);
+  background-size: 46px 46px;
   background-attachment: fixed;
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.45;
   min-height: 100dvh;
+}
+@media (prefers-reduced-motion: no-preference) {
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -46px;
+    z-index: -1;
+    background-image:
+      linear-gradient(rgb(242 169 59 / 0.032) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(242 169 59 / 0.032) 1px, transparent 1px);
+    background-size: 46px 46px;
+    animation: app-grid-drift 30s linear infinite;
+    pointer-events: none;
+  }
+  body { background-image: none; }
+}
+@keyframes app-grid-drift {
+  from { transform: translate(0, 0); }
+  to { transform: translate(46px, 46px); }
 }
 
 /* ---------- app bar ---------- */
@@ -730,7 +757,8 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 }
 
 .btn { box-shadow: 0 1px 2px rgb(28 25 23 / 0.08); }
-.btn--primary { box-shadow: 0 2px 6px rgb(15 118 110 / 0.28); }
+/* (the old teal button shadow was retired with the light theme - the amber
+   glow lives in the premium dark layer below) */
 .btn--primary:hover { box-shadow: 0 4px 12px rgb(15 118 110 / 0.32); background: #10716a; }
 .btn:active { transform: translateY(1px) scale(0.995); }
 
@@ -800,77 +828,9 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 /* ============================================================
    DARK THEME  (system preference; warm charcoal, calm teal)
    ============================================================ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #131110;
-    --surface: #201d19;
-    --ink: #edeae4;
-    --ink-soft: #b6b0a7;
-    --ink-faint: #8d867c;
-    --line: #2d2925;
-    --line-strong: #3b3630;
-    --accent: #0f766e;
-    --accent-ink: #ffffff;
-    --accent-soft: #122f2b;
-    --amber: #fbbf24;
-    --amber-bg: #38291040;
-    --red: #f87171;
-    --red-bg: #3d1a17;
-    --green: #4ade80;
-    --struck: #6f6961;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 18px rgb(0 0 0 / 0.35);
-    --focus: 0 0 0 3px rgb(45 212 191 / 0.28);
-  }
-
-  body {
-    background-color: var(--paper);
-    background-image: radial-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1.4px);
-  }
-
-  /* accent used as *text* must go lighter on dark surfaces */
-  .brand, .btn--ghost, .photo-note, .flag, .hint, .row-del, .raw-toggle:hover { color: #4fd1c5; }
-  .btn--ghost { border-color: #2f5f5a; }
-  .btn--ghost:hover { background: var(--accent-soft); }
-  .brand__mark svg { color: #14a390; }
-  .brand__mark svg path:first-child { opacity: 0.14; }
-
-  .mode-badge { color: var(--amber); border-color: #4a3a12; background: #2b2110; }
-  .warnings { color: #fcd34d; border-color: #4a3a12; background: #2b2110; }
-  .warnings strong { color: #fde68a; }
-  .flag { border-color: #4a3a12; background: #2b2110; }
-
-  .field input {
-    background: #191613;
-    border-color: var(--line-strong);
-    color: var(--ink);
-  }
-  .field--low input { border-color: #b3870f50; background: #2b211098; }
-  .field--bad input { border-color: #b91c1c88; background: #3d1a17; }
-  .field--bad .hint { color: var(--red); }
-  .field--low label { color: var(--amber); }
-  .field--bad label { color: var(--red); }
-
-  .card--error { border-top-color: var(--red); }
-  .card__body--detail, .stage-note, .dropzone__hint, .photo-note { color: var(--ink-faint); }
-
-  .photo-thumb { outline-color: #fff; }
-  .photo-thumb__zoom-tag { background: rgb(0 0 0 / 0.66); }
-
-  .included-toggle, .followup-confirm { color: var(--ink-soft); }
-  .followup-confirm:has(input:checked) { color: var(--green); }
-  .rawline { background: #191613; border-color: var(--line-strong); border-left-color: var(--amber); color: var(--ink-soft); }
-
-  .chip { background: var(--surface); color: var(--ink-soft); border-color: var(--line-strong); }
-  .loading__title { color: var(--ink); }
-  .loading__sub { color: var(--ink-soft); }
-  .scan { background: var(--surface); border-color: var(--line-strong); }
-  .scan__bar { background: var(--line-strong); }
-  .table-cols--head { color: var(--ink-faint); }
-  .stat { background: var(--surface); border-color: var(--line); }
-  .story__ico { color: #4fd1c5; }
-  .tips__list li::before { border-color: #14a390; }
-  .stage-note { color: var(--ink-faint); }
-}
+/* The light scheme block was removed in the phase-2 restyle: dark ink is
+   the app's identity (the directive's design language). If a light theme
+   is wanted later, it comes back as an explicit toggle, not an OS flip. */
 
 /* ============================================================
    Stage 2: auth view, account chip, recent pages, save flow
@@ -1968,8 +1928,8 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   display: flex;
   align-items: center;
   gap: 1.6cqw;
-  background: #0f766e;
-  color: #fff;
+  background: #f2a93b;
+  color: #241703;
   font-weight: 700;
   font-size: clamp(6px, 1.85cqw, 10.5px);
   border-radius: 6px;
@@ -2726,3 +2686,67 @@ body.story-open .coach__tip { display: none; }
     border-radius: 18px 0 0 18px;
   }
 }
+
+/* ===========================================================================
+   PREMIUM DARK LAYER - the app's identity.
+   Deep ink, one amber accent, glass panels, 1px borders, glow on the
+   primary button only.
+   =========================================================================== */
+/* glass: raised panels are translucent and blur what moves behind them */
+.card,
+.sheet__panel,
+.pcard {
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.appbar {
+  background: rgb(14 12 9 / 0.78);
+  border-bottom-color: rgb(242 169 59 / 0.14);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .card, .sheet__panel, .pcard { background: var(--surface); }
+  .appbar { background: var(--paper); }
+}
+
+/* the single glow: the primary button carries the lamp */
+.btn--primary {
+  background: linear-gradient(180deg, #f7b84f, #f2a93b);
+  box-shadow:
+    0 0 0 1px rgb(242 169 59 / 0.4),
+    0 2px 10px rgb(242 169 59 / 0.32),
+    0 10px 30px rgb(242 169 59 / 0.14);
+}
+.btn--primary:hover { filter: brightness(1.05); }
+.btn--ghost { border-color: var(--line-strong); }
+.btn--ghost:hover { background: var(--accent-soft); }
+
+/* inputs: darker wells, amber focus */
+.field input { background: rgb(0 0 0 / 0.28); }
+.field--low input { border-color: rgb(251 191 36 / 0.38); background: rgb(56 41 16 / 0.55); }
+.field--bad input { border-color: rgb(248 113 113 / 0.45); background: rgb(61 26 23 / 0.6); }
+.field--bad .hint { color: var(--red); }
+.field--low label { color: var(--amber); }
+.field--bad label { color: var(--red); }
+
+/* amber-glass badges */
+.mode-badge,
+.warnings,
+.flag {
+  color: #fcd34d;
+  border-color: rgb(251 191 36 / 0.32);
+  background: rgb(43 33 16 / 0.75);
+}
+.warnings strong { color: #fde68a; }
+
+.rawline { background: rgb(0 0 0 / 0.24); }
+.table-cols--head { color: var(--ink-faint); }
+.chip { background: rgb(255 255 255 / 0.045); border-color: var(--line-strong); }
+.scan { background: var(--surface); }
+.photo-thumb__zoom-tag { background: rgb(0 0 0 / 0.66); }
+
+/* sheets rise out of deeper shadow */
+.sheet__backdrop { background: rgb(0 0 0 / 0.6); }
+.sheet__panel { box-shadow: 0 -18px 60px rgb(0 0 0 / 0.55); }
+
+::selection { background: rgb(242 169 59 / 0.35); }
