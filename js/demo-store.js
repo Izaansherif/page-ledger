@@ -156,7 +156,7 @@ export async function uploadPagePhoto() {
   return { path: "demo-photo" };
 }
 
-export async function savePage({ takenOn, pageTotalWritten, pageWarnings, rows, thumb }) {
+export async function savePage({ takenOn, pageTotalWritten, pageWarnings, rows, thumb, demo }) {
   const u = session?.user;
   if (!u) throw new Error("Please sign in first.");
   const store = read();
@@ -165,6 +165,10 @@ export async function savePage({ takenOn, pageTotalWritten, pageWarnings, rows, 
     owner: u.email,
     created_at: new Date().toISOString(),
     taken_on: takenOn || null,
+    // demo flag: true when this page came from a made-for-demo sample.
+    // Drives the CRM's Demo pages / My pages switch (cloud pages have no
+    // flag and always count as the owner's own).
+    demo: !!demo,
     photo: thumb ?? null,
     page_total_written: pageTotalWritten ?? null,
     page_warnings: pageWarnings ?? [],

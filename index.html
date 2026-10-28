@@ -261,11 +261,18 @@
     <!-- ================================================= people view -->
     <section id="view-people" class="panel people-wrap" hidden>
       <div class="people-head">
-        <button id="btn-people-back" class="btn btn--ghost btn--small" type="button" aria-label="Back to home">
+        <button id="btn-people-back" class="btn btn--ghost btn--small" type="button" aria-label="Add another page">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M14 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Back
+          Add another page
         </button>
         <h1 class="people-title">Your people</h1>
+      </div>
+
+      <!-- Demo pages / My pages: which saved pages feed this CRM.
+           Cloud accounts have only their own pages, so the switch is hidden. -->
+      <div class="crm-switch" id="crm-switch" role="group" aria-label="Which pages to show">
+        <button id="mode-demo" class="crm-switch__btn" type="button" aria-pressed="true">Demo pages</button>
+        <button id="mode-my" class="crm-switch__btn" type="button" aria-pressed="false">My pages</button>
       </div>
 
       <!-- shown right after a saved sample lands here: one plain-language nudge -->
@@ -415,7 +422,7 @@
       </div>
 
       <div class="review-actions">
-        <button id="btn-save" class="btn btn--primary" type="button" hidden>Save this page</button>
+        <button id="btn-save" class="btn btn--primary" type="button" hidden>Confirm and open my CRM</button>
         <p class="save-status" id="save-status" hidden></p>
         <button id="btn-gotop" class="btn btn--primary" type="button" hidden>See your people &amp; money &rarr;</button>
         <button id="btn-back" class="btn btn--ghost" type="button">Read another page</button>
@@ -589,6 +596,25 @@
         from saved files, so a demo never spends credits.
       </div>
       <button id="btn-more-close" class="btn btn--ghost btn--block" type="button">Close</button>
+    </div>
+  </div>
+
+  <!-- person side panel: one person's history, then Call and WhatsApp.
+       Bottom sheet on phones; a right-side drawer on wide screens (CSS). -->
+  <div id="sheet-person" class="sheet" hidden>
+    <button id="person-backdrop" class="sheet__backdrop" type="button" aria-label="Close person" tabindex="-1"></button>
+    <div class="sheet__panel sheet__panel--person" role="dialog" aria-modal="true" aria-labelledby="person-name" tabindex="-1">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <h2 class="sheet__title" id="person-name">Person</h2>
+      <p class="sheet__sub" id="person-meta"></p>
+      <div class="person-money" id="person-money"></div>
+      <div id="person-follow"></div>
+      <div id="person-history" class="person-history"></div>
+      <div class="pcard__actions person-actions">
+        <a id="person-call" class="btn btn--ghost btn--small call-btn" href="#" hidden>Call</a>
+        <button id="person-msg" class="btn btn--primary btn--small msg-btn" type="button">WhatsApp message</button>
+      </div>
+      <button id="btn-person-close" class="btn btn--ghost btn--block" type="button">Close</button>
     </div>
   </div>
 

@@ -242,7 +242,7 @@ function updateTotals() {
   if (sig === lastTotalsSig) return;
   lastTotalsSig = sig;
   const n = activeRows().length;
-  $("#review-summary").textContent = `${names.size} ${names.size === 1 ? "person" : "people"} · ${n} ${n === 1 ? "line" : "lines"} · due ₹${fmtMoney(b.due)} — check line by line with the photo, then Save this page`;
+  $("#review-summary").textContent = `${names.size} ${names.size === 1 ? "person" : "people"} · ${n} ${n === 1 ? "line" : "lines"} · due ₹${fmtMoney(b.due)} — check line by line with the photo, then confirm`;
   $("#review-totals").innerHTML = `
     <span class="stat"><span class="stat__label">People</span><span class="stat__value">${names.size}</span></span>
     <span class="stat"><span class="stat__label">Paid</span><span class="stat__value">&#8377;${fmtMoney(b.paid)}</span></span>
@@ -929,6 +929,13 @@ async function showSignedInHome() {
     $("#btn-reset-demo").hidden = true;
   }
   setStageNotes();
+  // a fresh load straight into the CRM (#people) is honored - a judge or an
+  // owner returning to a bookmarked CRM should land on their people, not the
+  // marketing screen
+  if (story.storySeen() && (location.hash || "") === "#people") {
+    await loadPeople();
+    return;
+  }
   if (story.storySeen()) {
     showView("view-landing");
     coach.step("home"); // first-visit: point at the primary demo button once
@@ -1088,11 +1095,38 @@ function applyPeopleData(data) {
   }
 }
 
+/* --------------------------------------------------------- the CRM mode */
+// "Demo pages" = pages saved from the made-for-demo samples; "My pages" =
+// pages the owner photographed themselves. Cloud pages carry no demo flag
+// and always count as the owner's own. Persisted per browser (try/catch).
+let crmMode = null;
+
+function resolveCrmMode() {
+  if (crmMode) return crmMode;
+  const fallback = state.demoStore ? "demo" : "my";
+  try {
+    crmMode = localStorage.getItem("pl.crm.mode") || fallback;
+  } catch {
+    crmMode = fallback;
+  }
+  if (crmMode !== "demo" && crmMode !== "my") crmMode = fallback;
+  return crmMode;
+}
+
+function reflectCrmMode() {
+  $("#mode-demo")?.setAttribute("aria-pressed", String(crmMode === "demo"));
+  $("#mode-my")?.setAttribute("aria-pressed", String(crmMode === "my"));
+}
+
 async function loadPeople() {
   if (!(state.sbConfigured || state.demoStore) || !auth().getSession()) {
     showAuth();
     return;
   }
+  // cloud owners have no demo pages - hide the switch entirely there
+  $("#crm-switch").hidden = !state.demoStore;
+  const mode = resolveCrmMode();
+  reflectCrmMode();
   let pages = [];
   try {
     pages = await auth().listRecentPages();
@@ -1102,6 +1136,13 @@ async function loadPeople() {
       "Could not load your people (offline?). Try again in a moment.";
     return;
   }
+  pages = pages.filter((p) => {
+    // pages saved before the demo flag existed were all sample reads in the
+    // demo store (own-photo reads never saved there), so a missing flag
+    // resolves to the store's nature: demo pages on device, own pages in cloud
+    const isDemo = p.demo ?? state.demoStore;
+    return mode === "demo" ? isDemo : !isDemo;
+  });
   const data = ppl.buildPeople(pages);
   applyPeopleData(data);
   peopleCache.pagesCount = pages.length;
@@ -1185,12 +1226,15 @@ async function handleAsk(kind) {
 
 function summaryChips(data) {
   const t = data.totals;
-  const chip = (label, val, cls = "") => `<span class="chip--info ${cls}">${label} <strong>${val}</strong></span>`;
+  const card = (label, val, cls = "") =>
+    `<div class="stat${cls ? ` stat--${cls}` : ""}">
+      <span class="stat__label">${label}</span>
+      <strong class="stat__value">${val}</strong>
+    </div>`;
   return [
-    chip("To call", t.toCall, t.toCall > 0 ? "chip--since" : ""),
-    chip("People", t.people),
-    chip("Due", `₹${ppl.fmtRupees(t.due)}`),
-    chip("Paid in", `₹${ppl.fmtRupees(t.paid)}`),
+    card("To call", t.toCall, t.toCall > 0 ? "due" : ""),
+    card("Total due", `₹${ppl.fmtRupees(t.due)}`),
+    card("Collected", `₹${ppl.fmtRupees(t.paid)}`),
   ].join("");
 }
 
@@ -1219,29 +1263,11 @@ function personCard(p, todayList) {
       </div>`;
   }
 
-  // expandable history (Section 3): every kept line with money, newest first
-  const historyRows = (p.history ?? [])
-    .map((h) => {
-      const amt = h.paid
-        ? `<span class="ph__amt money money--in">₹${ppl.fmtRupees(h.paid)} in</span>`
-        : h.due
-          ? `<span class="ph__amt money money--due">₹${ppl.fmtRupees(h.due)} due</span>`
-          : "";
-      return `<li class="ph__row"><span class="ph__d">${escapeHTML(niceDay(h.d))}</span><span class="ph__note">${escapeHTML(h.note || "")}</span>${amt}</li>`;
-    })
-    .join("");
-  const history = historyRows
-    ? `<div class="pcard__history" hidden><ul class="ph">${historyRows}</ul></div>`
-    : "";
+  // history and Call/WhatsApp actions moved into the person side panel
+  // (openPersonSheet) - the card stays a calm, tappable summary line.
 
-  // Call is the phone's own dialer (os-level, nothing automated); the message
-  // sheet stays pre-written templates the owner sends themselves (rule 6).
-  const callBtn = p.waOk
-    ? `<a class="btn btn--ghost btn--small call-btn" href="tel:+${escapeAttr(p.digits)}" aria-label="Call ${escapeAttr(p.name)}">Call</a>`
-    : "";
-
-  return `<article class="pcard${p.toCall ? " pcard--due" : ""}${historyRows ? " pcard--fold" : ""}" role="listitem" data-key="${escapeAttr(p.key)}">
-    <div class="pcard__line"${historyRows ? ' title="Tap this person to see their history"' : ""}>
+  return `<article class="pcard${p.toCall ? " pcard--due" : ""}" role="listitem" data-key="${escapeAttr(p.key)}">
+    <div class="pcard__line" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Open ${escapeAttr(p.name)} - history, call and message">
       <div class="pcard__who">
         <h3 class="pcard__name">${p.nameMissing ? `Name missing <span class="chip chip--amber">check the page</span>` : escapeHTML(p.name)}</h3>
         <p class="pcard__meta">${contact}${seen ? ` · ${escapeHTML(seen)}` : ""}</p>
@@ -1249,13 +1275,6 @@ function personCard(p, todayList) {
       <div class="pcard__money">${money}</div>
     </div>
     ${follow}
-    ${history}
-    <div class="pcard__actions">
-      ${callBtn}
-      <button class="btn btn--primary btn--small msg-btn" data-key="${escapeAttr(p.key)}" type="button" ${p.waOk ? "" : "disabled"}>
-        ${p.waOk ? "WhatsApp message" : "Phone missing - add it later"}
-      </button>
-    </div>
   </article>`;
 }
 
@@ -1291,7 +1310,9 @@ function renderPeople(data, pagesCount, fromFilter = false) {
     emptyEl.hidden = false;
     emptyEl.querySelector(".card__body").textContent = pagesCount
       ? "The pages you saved did not keep any names or numbers yet. Check them from Recent pages."
-      : "Save a page and its people appear here with money in, money owed and who to call. Nothing is shared - the ledger is yours.";
+      : resolveCrmMode() === "my"
+        ? "Pages you photograph yourself land here. The Demo pages side holds the made-for-demo ledger - switch above to see it."
+        : "Save a page and its people appear here with money in, money owed and who to call. Nothing is shared - the ledger is yours.";
   } else {
     emptyEl.hidden = true;
   }
@@ -1411,6 +1432,87 @@ function closeMore() {
   if (hadFocus) $("#btn-more").focus({ preventScroll: true });
 }
 
+/* ------------------------------------------- the person side panel (CRM) */
+// One person's whole story: money in / out, the follow-up, every kept line,
+// then Call (the phone's own dialer) and WhatsApp (pre-written templates the
+// owner edits and sends - rule 6). Bottom sheet on phones, side panel on
+// wide screens (CSS).
+let panelPerson = null;
+let personReturnFocus = null;
+
+function openPersonSheet(key, triggerEl = null) {
+  const p = peopleCache.byKey.get(key);
+  if (!p) return;
+  coach.complete(); // the visitor is using the real thing
+  hidePeopleNudge();
+  panelPerson = p;
+  personReturnFocus = triggerEl instanceof HTMLElement ? triggerEl : document.activeElement;
+
+  $("#person-name").textContent = p.nameMissing ? "Name missing - check the page" : p.name;
+  const seen = p.pagesCount ? `${p.pagesCount} ${p.pagesCount === 1 ? "page" : "pages"}${p.lastOn ? ` · last ${niceDay(p.lastOn)}` : ""}` : "";
+  $("#person-meta").textContent = [p.waOk ? `+${p.digits}` : String(p.phone ?? "") || "no phone yet", seen]
+    .filter(Boolean)
+    .join(" · ");
+
+  const moneyBits = [
+    p.due > 0 ? `<div class="person-money__item"><span>Due</span><strong class="money money--due">₹${ppl.fmtRupees(p.due)}</strong></div>` : "",
+    p.paid > 0 ? `<div class="person-money__item"><span>Collected</span><strong class="money money--in">₹${ppl.fmtRupees(p.paid)}</strong></div>` : "",
+  ].filter(Boolean).join("");
+  $("#person-money").innerHTML =
+    moneyBits || `<div class="person-money__item"><span>Amounts</span><strong class="money money--none">none yet</strong></div>`;
+
+  const f = p.followUp;
+  if (f) {
+    const overdue = f.date < ppl.localToday();
+    const when = f.date === ppl.localToday() ? "today" : niceDay(f.date);
+    $("#person-follow").innerHTML = `<div class="pcard__follow${p.toCall ? " pcard__follow--due" : ""}">
+      <div class="pcard__follow-text">Follow-up · ${escapeHTML(when)}${f.text ? ` · ${escapeHTML(f.text)}` : ""}${overdue ? ' <span class="fc fc--amber">overdue</span>' : ""}</div>
+    </div>`;
+  } else {
+    $("#person-follow").innerHTML = "";
+  }
+
+  const rows = (p.history ?? [])
+    .map((h) => {
+      const amt = h.paid
+        ? `<span class="ph__amt money money--in">₹${ppl.fmtRupees(h.paid)} in</span>`
+        : h.due
+          ? `<span class="ph__amt money money--due">₹${ppl.fmtRupees(h.due)} due</span>`
+          : "";
+      return `<li class="ph__row"><span class="ph__d">${escapeHTML(niceDay(h.d))}</span><span class="ph__note">${escapeHTML(h.note || "")}</span>${amt}</li>`;
+    })
+    .join("");
+  $("#person-history").innerHTML = rows
+    ? `<h3 class="people-sub">Every line kept</h3><ul class="ph">${rows}</ul>`
+    : `<p class="person-history__none">No kept lines for this person yet.</p>`;
+
+  // Call is the phone's own dialer (os-level, nothing automated)
+  const call = $("#person-call");
+  if (p.waOk) {
+    call.hidden = false;
+    call.href = `tel:+${p.digits}`;
+    call.setAttribute("aria-label", `Call ${p.name}`);
+  } else {
+    call.hidden = true;
+  }
+  const msg = $("#person-msg");
+  msg.disabled = !p.waOk;
+  msg.textContent = p.waOk ? "WhatsApp message" : "Phone missing - add it later";
+
+  $("#sheet-person").hidden = false;
+  $("#sheet-person .sheet__panel").focus({ preventScroll: true });
+}
+
+function closePersonSheet() {
+  const sh = $("#sheet-person");
+  if (!sh) return;
+  const hadFocus = sh.contains(document.activeElement);
+  sh.hidden = true;
+  panelPerson = null;
+  if (hadFocus && personReturnFocus) personReturnFocus.focus({ preventScroll: true });
+  personReturnFocus = null;
+}
+
 async function handleFollowDone(pageId, rowId) {
   try {
     await auth().setFollowUpDone(pageId, rowId, true);
@@ -1421,16 +1523,10 @@ async function handleFollowDone(pageId, rowId) {
 }
 
 function onPeopleAction(e) {
-  // tap the person line -> fold open their history (Section 3)
+  // tap the person line -> the person side panel (history + call + message)
   const lineEl = e.target.closest(".pcard__line");
   if (lineEl) {
-    const card = lineEl.closest(".pcard");
-    const hist = card?.querySelector(".pcard__history");
-    if (hist) {
-      const open = card.classList.toggle("pcard--open");
-      hist.hidden = !open;
-      lineEl.setAttribute("aria-expanded", String(open));
-    }
+    openPersonSheet(lineEl.closest(".pcard")?.dataset.key, lineEl);
     return;
   }
   const done = e.target.closest(".pcard__done");
@@ -1481,7 +1577,7 @@ function resetSaveUi() {
   btn.hidden = !((state.sbConfigured || state.demoStore) && auth().getSession() && !state.savedPageId);
   btn.disabled = false;
   btn.classList.remove("is-saved");
-  btn.innerHTML = "Save this page";
+  btn.innerHTML = "Confirm and open my CRM";
 }
 
 async function handleSave() {
@@ -1545,6 +1641,7 @@ async function handleSave() {
         pageWarnings: state.extraction.page_warnings ?? [],
         rows: rowsPayload,
         thumb: await shrinkForDemo(state.jpegBlob),
+        demo: !!state.lastRequest?.mockFixture, // sample reads feed the Demo pages side of the CRM
       });
       state.savedPageId = res.pageId;
       st.textContent = `Saved on this device (demo) - ${res.savedRows} lines kept.`;
@@ -1583,7 +1680,7 @@ async function handleSave() {
     st.classList.add("save-error");
     st.textContent = e2.message || "Could not save. Try again.";
     btn.disabled = false;
-    btn.innerHTML = "Save this page";
+    btn.innerHTML = "Confirm and open my CRM";
   } finally {
     state.saving = false;
   }
@@ -1933,6 +2030,37 @@ function wire() {
   };
   $("#btn-people-back").onclick = () => showView("view-picker"); // the demo loop continues
 
+  /* ------------- CRM: Demo pages / My pages switch ----------------------- */
+  const setMode = (mode) => {
+    if (crmMode === mode) return;
+    crmMode = mode;
+    try {
+      localStorage.setItem("pl.crm.mode", mode);
+    } catch {}
+    reflectCrmMode();
+    loadPeople();
+  };
+  $("#mode-demo").onclick = () => setMode("demo");
+  $("#mode-my").onclick = () => setMode("my");
+
+  /* ------------- person side panel --------------------------------------- */
+  $("#btn-person-close").onclick = closePersonSheet;
+  $("#person-backdrop").onclick = closePersonSheet;
+  $("#person-msg").onclick = (e) => {
+    if (panelPerson) openMsgSheet(panelPerson, e.currentTarget);
+  };
+  // keyboard: Enter/Space on a person card opens the panel
+  const personKey = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const line = e.target.closest?.(".pcard__line");
+    if (line) {
+      e.preventDefault();
+      openPersonSheet(line.closest(".pcard")?.dataset.key, line);
+    }
+  };
+  $("#today-list").addEventListener("keydown", personKey);
+  $("#people-list").addEventListener("keydown", personKey);
+
   /* ------------- Section 3: people search + filter chips + history ------- */
   $("#people-search").addEventListener("input", (e) => {
     peopleFilter.q = e.target.value;
@@ -1969,23 +2097,24 @@ function wire() {
       : "view-landing";
     if (!$(`#${view}`).hidden) return; // already there
     if (view === "view-review" && !state.extraction) return; // nothing to show
+    // a deep link (or Back) into the CRM needs its data - an empty shell
+    // would look like data loss
+    if (view === "view-people" && !peopleCache.data) {
+      loadPeople();
+      return;
+    }
     historySync = true;
     showView(view);
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !$("#sheet-msg").hidden) closeMsgSheet();
-    if (e.key === "Escape" && !$("#sheet-shield").hidden) closeShield();
-    if (e.key === "Escape" && !$("#sheet-more").hidden) closeMore();
+    // whichever sheet is open (msg, shield, more, person) answers Escape first
+    const openSheet = [...document.querySelectorAll(".sheet")].find((s) => !s.hidden);
+    if (e.key === "Escape" && openSheet) {
+      ({ "sheet-msg": closeMsgSheet, "sheet-shield": closeShield, "sheet-more": closeMore, "sheet-person": closePersonSheet }[openSheet.id] ?? (() => {}))();
+    }
     // keep Tab inside whichever sheet is open (keyboard focus trap)
     if (e.key === "Tab") {
-      const sh =
-        !$("#sheet-msg").hidden
-          ? $("#sheet-msg")
-          : !$("#sheet-shield").hidden
-            ? $("#sheet-shield")
-            : !$("#sheet-more").hidden
-              ? $("#sheet-more")
-              : null;
+      const sh = openSheet;
       if (!sh) return;
       const els = [
         ...sh.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
