@@ -116,6 +116,9 @@ export async function handler(event) {
       model: result.model,
       latencyMs: result.latencyMs,
       retries: result.retries,
+      // "json_schema" when the gateway enforced structured output,
+      // "json_prompt" when it fell back to prompting + validation
+      responseFormat: result.responseFormat ?? null,
       baseDate,
       // A fixture-served sample read is demo content even in live mode - the
       // badge on screen must not claim it was a live model call.
