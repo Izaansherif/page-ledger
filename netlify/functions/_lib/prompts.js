@@ -14,7 +14,7 @@ RULES:
 - amounts: plain numbers, no currency symbols or commas. "paid" is money received, "due" is money still owed. If the page uses one column, decide from context and add "amount_ambiguous" to row flags.
 - dates: keep the original text exactly in follow_up_text (e.g. "after 2 weeks"). Give follow_up_date as YYYY-MM-DD ONLY if it can be worked out with certainty from BASE_DATE, otherwise null.
 - If a row is crossed out, set struck_out to true.
-- bbox: OPTIONAL. Only when a line's exact place on the page is clearly visible, set bbox to [x, y, w, h] in 0-1000 coordinates of the photo (x,y = top-left of the line, w,h = its size). If unsure, leave bbox out entirely - never guess a position.
+- bbox: set to [x, y, w, h] in 0-1000 coordinates of the photo (x,y = top-left of the line, w,h = its size) ONLY when a line's exact place is clearly visible; otherwise null - never guess a position.
 - raw_text: the full line as you read it, so a human can compare.
 - If the page shows a written total, return it as page_total_written, otherwise null.
 - confidence: 0 to 1 for each field you return.
@@ -66,7 +66,7 @@ export const EXTRACTION_JSON_SCHEMA = {
         required: [
           "row_index", "raw_text", "name", "phone", "note",
           "amount_paid", "amount_due", "follow_up_text", "follow_up_date",
-          "struck_out", "flags", "confidence",
+          "struck_out", "flags", "confidence", "bbox",
         ],
         properties: {
           row_index: { type: "number" },

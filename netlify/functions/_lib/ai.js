@@ -265,7 +265,10 @@ export async function callModel({
   const useSchema = !!jsonSchema && structuredOutputSupported;
   const body = { model, temperature, max_tokens: maxTokens, messages };
   if (useSchema) {
-    body.response_format = { type: "json_schema", json_schema: { name: schemaName, schema: jsonSchema } };
+    // strict: true - the Modal endpoint's documented structured-output shape;
+    // the schemas are strict-compatible (additionalProperties:false, complete
+    // required lists, nullable instead of optional fields).
+    body.response_format = { type: "json_schema", json_schema: { name: schemaName, strict: true, schema: jsonSchema } };
   }
 
   const t0 = Date.now();

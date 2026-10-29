@@ -52,7 +52,7 @@ No code, data, or assets are used that we don't have rights to; all demo data an
 
 | Feature | Meta model | How it's used |
 |---|---|---|
-| Read notebook photo | **Muse Spark Open** on a Modal shared endpoint (OpenAI-compatible Chat Completions; `response_format` JSON schema with automatic prompt fallback + validation) | Photo → structured JSON rows (name, phone, paid, due, follow-up, flags, confidence) |
+| Read notebook photo | **Muse Spark Open** (`meta-models/Muse-Spark-Open-816B-A42B`, Modal shared endpoint; OpenAI-compatible Chat Completions; `response_format` JSON schema, strict, with automatic prompt fallback + validation) | Photo → structured JSON rows (name, phone, paid, due, follow-up, flags, confidence) |
 | Ask your business | **Muse Spark Open** (same gateway) | The app computes a compact figures brief from the owner's own saved pages; the model turns question+brief into a validated JSON answer that cites the figures it used — numbers only from the brief, "data missing" allowed |
 | Voice notes | `muse-voice-transcribe-1.0` (Meta Model API, file endpoint POST /v1/asr/transcribe, WAV PCM16 24 kHz) | Owner dictates a follow-up note; transcript lands as EDITABLE text the owner checks before saving — no AI-written message is ever sent |
 | Weekly digest | folded into "Ask my ledger" preset questions (**Muse Spark Open**) | Same grounded answer path; app computes numbers, model only words them |
