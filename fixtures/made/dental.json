@@ -1,9 +1,13 @@
 {
-  "columns_detected": ["name / phone", "work", "amount ₹"],
+  "columns_detected": [
+    "name",
+    "note",
+    "amount"
+  ],
   "rows": [
     {
       "row_index": 0,
-      "raw_text": "Ravi K. 98765 00021 · arch wire change · ₹300",
+      "raw_text": "Ravi K. 98765 00021 · arch wire change ₹300",
       "name": "Ravi K.",
       "phone": "9876500021",
       "note": "arch wire change",
@@ -12,13 +16,19 @@
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.9, "phone": 0.85, "amount_paid": null, "amount_due": 0.88, "follow_up_date": null },
-      "bbox": [82, 162, 873, 61]
+      "confidence": {
+        "name": 0.98,
+        "phone": 0.98,
+        "amount_paid": 0.99,
+        "amount_due": 0.98,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 1,
-      "raw_text": "Priya S. · elastics pack · ₹150",
+      "raw_text": "Priya S. · elastics pack ₹150",
       "name": "Priya S.",
       "phone": null,
       "note": "elastics pack",
@@ -27,43 +37,63 @@
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.88, "phone": null, "amount_paid": null, "amount_due": 0.84, "follow_up_date": null },
-      "bbox": [83, 210, 873, 61]
+      "confidence": {
+        "name": 0.98,
+        "phone": 1,
+        "amount_paid": 0.99,
+        "amount_due": 0.98,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 2,
-      "raw_text": "Jamil A. 98765 00033 · bonding · बाईं तरफ · ₹650",
+      "raw_text": "Jamil A. 98765 00033 · bonding · बाई तरफ ₹650",
       "name": "Jamil A.",
       "phone": "9876500033",
-      "note": "bonding बाईं तरफ (left side)",
+      "note": "bonding · बाई तरफ",
       "amount_paid": null,
       "amount_due": 650,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.87, "phone": 0.82, "amount_paid": null, "amount_due": 0.86, "follow_up_date": null },
-      "bbox": [85, 259, 873, 61]
+      "confidence": {
+        "name": 0.97,
+        "phone": 0.98,
+        "amount_paid": 0.99,
+        "amount_due": 0.98,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 3,
-      "raw_text": "Cr. By Cash · counter sale · ₹500",
+      "raw_text": "Cr. By Cash · counter sale ₹500",
       "name": null,
       "phone": null,
-      "note": "counter sale - Cr. By Cash payment line",
+      "note": "Cr. By Cash · counter sale",
       "amount_paid": 500,
       "amount_due": null,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
-      "flags": ["payment line"],
-      "confidence": { "name": null, "phone": null, "amount_paid": 0.92, "amount_due": null, "follow_up_date": null },
-      "bbox": [86, 307, 873, 61]
+      "bbox": null,
+      "flags": [
+        "payment line"
+      ],
+      "confidence": {
+        "name": 0.99,
+        "phone": 1,
+        "amount_paid": 0.98,
+        "amount_due": 0.99,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 4,
-      "raw_text": "Sanju G. · wax strips · ₹100",
+      "raw_text": "Sanju G. · wax strips ₹100",
       "name": "Sanju G.",
       "phone": null,
       "note": "wax strips",
@@ -72,9 +102,17 @@
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": true,
-      "flags": ["struck through"],
-      "confidence": { "name": 0.8, "phone": null, "amount_paid": null, "amount_due": 0.75, "follow_up_date": null },
-      "bbox": [88, 355, 873, 61]
+      "bbox": null,
+      "flags": [
+        "struck_out"
+      ],
+      "confidence": {
+        "name": 0.85,
+        "phone": 1,
+        "amount_paid": 0.99,
+        "amount_due": 0.9,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 5,
@@ -87,30 +125,43 @@
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
-      "flags": ["amount unreadable"],
-      "confidence": { "name": 0.86, "phone": null, "amount_paid": null, "amount_due": null, "follow_up_date": null },
-      "bbox": [89, 403, 873, 61]
+      "bbox": null,
+      "flags": [
+        "amount_obscured"
+      ],
+      "confidence": {
+        "name": 0.97,
+        "phone": 1,
+        "amount_paid": 0.5,
+        "amount_due": 0.4,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 6,
-      "raw_text": "Aishu P. · collection · वसूली · ₹400 | promise: शुक्रवार को आएँगे",
+      "raw_text": "Aishu P. · collection · वसूली promise: शुक्रवार को आएँगे ₹400",
       "name": "Aishu P.",
       "phone": null,
-      "note": "collection वसूली",
+      "note": "collection · वसूली promise: शुक्रवार को आएँगे",
       "amount_paid": null,
       "amount_due": 400,
-      "follow_up_text": "promise: शुक्रवार को आएँगे (aayenge Thursday)",
-      "follow_up_date": "{{TODAY-1}}",
+      "follow_up_text": "शुक्रवार को आएँगे",
+      "follow_up_date": "{{TODAY+1}}",
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.89, "phone": null, "amount_paid": null, "amount_due": 0.8, "follow_up_date": 0.55 },
-      "bbox": [91, 451, 874, 78]
+      "confidence": {
+        "name": 0.97,
+        "phone": 1,
+        "amount_paid": 0.99,
+        "amount_due": 0.96,
+        "follow_up_date": 0.85
+      }
     }
   ],
   "page_total_written": null,
   "page_warnings": [
-    "Bottom half of the page is unused",
-    "One amount is smudged and unreadable",
-    "One line is crossed out"
+    "stain obscures amount for Manu R. row",
+    "struck-through row present (Sanju G.)"
   ]
 }

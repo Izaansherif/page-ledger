@@ -42,6 +42,10 @@ without you."
 > "Five made-for-demo pages — a dental clinic, a garage, a kirana khata,
 > tuition fees, and an 1860s museum scan. Tap one and it reads."
 
+Point at one card's label for one breath:
+> "Each card states exactly what it replays: the real reading, the day it was
+> recorded, and the model that did it — meta-models/Muse-Spark-Open-816B-A42B."
+
 ## 0:30 – 1:00 · Photo → checkable table (the core trust idea)
 
 1. Pick the **dental clinic** card → loading phases run.
@@ -71,8 +75,13 @@ without you."
 > "The CRM writes itself: who to call today, what is owed, what came in."
 2. Tap the **To call** card itself — the list filters to today's calls; tap
    again and it releases. One line: "The stats ARE the filters."
-3. The red **overdue strip**: "Promises nobody marked done don't get lost —
-   overdue sits on top, one tap."
+3. The follow-up beat: the page's own promise was *"coming Friday"*, so the
+   saved state shows it on the person card (**Follow-up · Fri, 30 Oct**) and
+   in **To call** from that day — amber when due, red the day after:
+   "Promises nobody marked done don't get lost — overdue sits on top, one
+   tap." *(If the overdue strip isn't red yet on recording day, say the line
+   on Anandettan's card instead — the state ages into overdue on its own,
+   exactly like a real ledger.)*
 4. Tap a person → the **side panel**: their whole history, then **Call** and
    **WhatsApp**. Say:
 > "We never message anyone. The owner reviews the words in this sheet and
@@ -81,13 +90,13 @@ without you."
    tap **Tomorrow** (or pick a date). Say:
 > "This is the part after the phone call — he says Friday, you tap Friday.
 > The app remembers, and Undo brings yesterday's date back."
-6. Then the ending that matters: **Record payment** → **Full ₹515** → **Save**.
+6. Then the ending that matters: **Record payment** → **Full ₹395** → **Save**.
    Say:
 > "And when he actually pays — one tap. The money moves from Due to Collected,
 > the follow-up closes itself, and Undo brings the ledger back if your finger
 > slipped."
-7. Undo it back (keep the overdue demo state), then point at the
-   **Demo pages / My pages** switch:
+7. Undo it back (keep the demo state: ₹395 due, the follow-up alive), then
+   point at the **Demo pages / My pages** switch:
 > "Sample pages and your own photographs stay clearly separated."
 
 ## 2:00 – 2:25 · Ask my ledger (grounded AI)

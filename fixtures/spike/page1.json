@@ -1,193 +1,359 @@
 {
-  "columns_detected": ["date", "goods / charge", "amount"],
+  "columns_detected": [
+    "date",
+    "description",
+    "amount"
+  ],
   "rows": [
     {
       "row_index": 0,
-      "raw_text": "Votel Tyson (1861) - heading line",
-      "name": "Votel Tyson",
-      "phone": "+91 94470 00021",
-      "note": "account heading, year 1861 - demo phone, not from the page",
+      "raw_text": "Val Tyson",
+      "name": "Val Tyson",
+      "phone": null,
+      "note": "account header",
       "amount_paid": null,
       "amount_due": null,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.72, "phone": 0.6, "amount_paid": null, "amount_due": null, "follow_up_date": null }
+      "confidence": {
+        "name": 0.9,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 1,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 1,
-      "raw_text": "Feb 12: 3 Dr M15cs a 5 - 15 (margin)",
-      "name": "Votel Tyson",
+      "raw_text": "1861",
+      "name": null,
       "phone": null,
-      "note": "Feb 12 - 3 drams",
+      "note": "year header",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "bbox": null,
+      "flags": [],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 1,
+        "follow_up_date": 1
+      }
+    },
+    {
+      "row_index": 2,
+      "raw_text": "Feby 12 3 Drinks at 5c -",
+      "name": null,
+      "phone": null,
+      "note": "Feby 12 3 Drinks at 5c",
       "amount_paid": null,
       "amount_due": 15,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.85, "phone": null, "amount_paid": null, "amount_due": 0.65, "follow_up_date": null }
-    },
-    {
-      "row_index": 2,
-      "raw_text": "March 8: 1 gt Brandy 40, 2 Drrs 5, gluets 15 - 65",
-      "name": "Votel Tyson",
-      "phone": null,
-      "note": "March 8 - brandy / drams",
-      "amount_paid": null,
-      "amount_due": 65,
-      "follow_up_text": "asked for a copy of his bill",
-      "follow_up_date": "{{TODAY+2}}",
-      "struck_out": false,
-      "flags": [],
-      "confidence": { "name": 0.86, "phone": null, "amount_paid": null, "amount_due": 0.72, "follow_up_date": 0.58 }
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.85,
+        "follow_up_date": 1
+      }
     },
     {
       "row_index": 3,
-      "raw_text": "Aug 20: 1 pt Brandy 25",
-      "name": "Votel Tyson",
+      "raw_text": "March 8 1 qt Brandy 40 2 drinks 5c 1 flask 15c -",
+      "name": null,
       "phone": null,
-      "note": "Aug 20 - 1 pt brandy",
+      "note": "March 8 1 qt Brandy 40 2 drinks 5c 1 flask 15c",
+      "amount_paid": null,
+      "amount_due": 65,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "bbox": null,
+      "flags": [],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.85,
+        "follow_up_date": 1
+      }
+    },
+    {
+      "row_index": 4,
+      "raw_text": "Aug 20 1 pt Brandy 25c",
+      "name": null,
+      "phone": null,
+      "note": "Aug 20 1 pt Brandy 25c",
       "amount_paid": null,
       "amount_due": 25,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
-      "flags": ["amount_ambiguous"],
-      "confidence": { "name": 0.84, "phone": null, "amount_paid": null, "amount_due": 0.58, "follow_up_date": null }
+      "bbox": null,
+      "flags": [
+        "amount_ambiguous"
+      ],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.6,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 4,
-      "raw_text": "1860 Alexander Biles: Apr 27, 1 qt whiskey 40 to May 1st 3 Drs 5 - 55",
+      "row_index": 5,
+      "raw_text": "1868 Alexander Biles",
       "name": "Alexander Biles",
-      "phone": "+91 98470 00011",
-      "note": "Apr 27 - gt whiskey + drams (demo phone, not from the page)",
+      "phone": null,
+      "note": "account header 1868",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "bbox": null,
+      "flags": [],
+      "confidence": {
+        "name": 0.85,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 1,
+        "follow_up_date": 1
+      }
+    },
+    {
+      "row_index": 6,
+      "raw_text": "Apl 27 1 qt whiskey 40 May 1st 3 Dks 5c -",
+      "name": null,
+      "phone": null,
+      "note": "Apl 27 1 qt whiskey 40 May 1st 3 Dks 5c",
       "amount_paid": null,
       "amount_due": 55,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.9, "phone": 0.6, "amount_paid": null, "amount_due": 0.78, "follow_up_date": null }
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.75,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 5,
-      "raw_text": "5 Drs whiskey 5 (Aug, margin shows 25)",
-      "name": "Alexander Biles",
+      "row_index": 7,
+      "raw_text": "Aug 2 5 Dks whiskey 5c",
+      "name": null,
       "phone": null,
-      "note": "Aug entries",
+      "note": "Aug 2 5 Dks whiskey 5c",
       "amount_paid": null,
       "amount_due": 25,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
-      "flags": ["amount_ambiguous"],
-      "confidence": { "name": 0.88, "phone": null, "amount_paid": null, "amount_due": 0.5, "follow_up_date": null }
+      "bbox": null,
+      "flags": [],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.8,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 6,
-      "raw_text": "1867 Feb 26: 1/2 gal whiskey - 200",
-      "name": "Alexander Biles",
+      "row_index": 8,
+      "raw_text": "1867",
+      "name": null,
       "phone": null,
-      "note": "Feb 26 - half gallon whiskey",
+      "note": "year header",
+      "amount_paid": null,
+      "amount_due": null,
+      "follow_up_text": null,
+      "follow_up_date": null,
+      "struck_out": false,
+      "bbox": null,
+      "flags": [],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 1,
+        "follow_up_date": 1
+      }
+    },
+    {
+      "row_index": 9,
+      "raw_text": "Feb To 1/2 gal whiskey 200",
+      "name": null,
+      "phone": null,
+      "note": "Feb To 1/2 gal whiskey",
       "amount_paid": null,
       "amount_due": 200,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.91, "phone": null, "amount_paid": null, "amount_due": 0.82, "follow_up_date": null }
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.85,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 7,
-      "raw_text": "March: 1 PT Br 50 to ? at 10 a - 100",
-      "name": "Alexander Biles",
+      "row_index": 10,
+      "raw_text": "1869 March To 1 QT Br 50 to Oils 15 at 10c a",
+      "name": null,
       "phone": null,
-      "note": "March - part brandy, words faded",
+      "note": "March To 1 QT Br 50 to Oils 15 at 10c",
       "amount_paid": null,
       "amount_due": 100,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
-      "flags": ["amount_ambiguous"],
-      "confidence": { "name": 0.87, "phone": null, "amount_paid": null, "amount_due": 0.55, "follow_up_date": null }
+      "bbox": null,
+      "flags": [],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.75,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 8,
-      "raw_text": "Aug 28 '69 (different ink): 1 PT whis 100 to Candy 25 - 125",
-      "name": "Alexander Biles",
+      "row_index": 11,
+      "raw_text": "Aug 28th To 2 QTs whis 100 to Candy 25",
+      "name": null,
       "phone": null,
-      "note": "Aug 28 - whiskey + candy, later ink",
+      "note": "Aug 28th To 2 QTs whis 100 to Candy 25",
       "amount_paid": null,
       "amount_due": 125,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.89, "phone": null, "amount_paid": null, "amount_due": 0.62, "follow_up_date": null }
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.85,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 9,
-      "raw_text": "(Snuff 15) - partly crossed out",
-      "name": "Alexander Biles",
+      "row_index": 12,
+      "raw_text": "Snuff 15 -",
+      "name": null,
       "phone": null,
-      "note": "snuff entry",
+      "note": "Snuff",
       "amount_paid": null,
       "amount_due": 15,
       "follow_up_text": null,
       "follow_up_date": null,
-      "struck_out": true,
+      "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.88, "phone": null, "amount_paid": null, "amount_due": 0.54, "follow_up_date": null }
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.85,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 10,
-      "raw_text": "Dec 11 '69: 2 qts whis sold at the Calige - 200",
-      "name": "Alexander Biles",
+      "row_index": 13,
+      "raw_text": "Dec 11th 1869 To 2 qts whis sold at the Calige",
+      "name": null,
       "phone": null,
-      "note": "Dec 11 - 2 qts whiskey",
+      "note": "Dec 11th 1869 To 2 qts whis sold at the Calige",
       "amount_paid": null,
       "amount_due": 200,
-      "follow_up_text": "said he will stop by this week",
-      "follow_up_date": "{{TODAY}}",
+      "follow_up_text": null,
+      "follow_up_date": null,
       "struck_out": false,
+      "bbox": null,
       "flags": [],
-      "confidence": { "name": 0.9, "phone": null, "amount_paid": null, "amount_due": 0.7, "follow_up_date": 0.61 }
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 0.8,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 11,
-      "raw_text": "Feb 26th 1870: Cr. By Cash 200",
-      "name": "Alexander Biles",
+      "row_index": 14,
+      "raw_text": "Feb 26th 1870 Cr By Cash 200",
+      "name": null,
       "phone": null,
-      "note": "Cr. by cash - payment received",
+      "note": "Cr By Cash payment",
       "amount_paid": 200,
       "amount_due": null,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
-      "flags": [],
-      "confidence": { "name": 0.92, "phone": null, "amount_paid": 0.85, "amount_due": null, "follow_up_date": null }
+      "bbox": null,
+      "flags": [
+        "payment line"
+      ],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 0.9,
+        "amount_due": 1,
+        "follow_up_date": 1
+      }
     },
     {
-      "row_index": 12,
-      "raw_text": "Feb 26 1870 - Settle in full By Cash",
-      "name": "Alexander Biles",
+      "row_index": 15,
+      "raw_text": "Feb 26 1870 Settle in full By Cash",
+      "name": null,
       "phone": null,
-      "note": "settled in full by cash",
+      "note": "Settle in full By Cash - settlement notation",
       "amount_paid": null,
       "amount_due": null,
       "follow_up_text": null,
       "follow_up_date": null,
       "struck_out": false,
-      "flags": [],
-      "confidence": { "name": 0.93, "phone": null, "amount_paid": null, "amount_due": null, "follow_up_date": null }
+      "bbox": null,
+      "flags": [
+        "payment line"
+      ],
+      "confidence": {
+        "name": 1,
+        "phone": 1,
+        "amount_paid": 1,
+        "amount_due": 1,
+        "follow_up_date": 1
+      }
     }
   ],
-  "page_total_written": null,
+  "page_total_written": 720,
   "page_warnings": [
-    "Old ledger: ink is faded in places, several words remain unreadable",
-    "Right margin shows subtotals that could not be confirmed from the page alone",
-    "One entry is written in a later, different ink (blue/purple)"
+    "historical ledger not Indian business format - conventions may not apply",
+    "handwritten cursive faded ink difficult to read",
+    "amounts in cents/dollars ambiguous - no currency headings",
+    "page tilted and stained",
+    "some amounts only in description not in amount column"
   ]
 }
