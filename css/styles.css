@@ -2932,6 +2932,15 @@ body.story-open .coach__tip { display: none; }
 }
 .empty-ico svg { width: 24px; height: 24px; }
 
+/* landing footer: the quiet credit line */
+.landing-foot {
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  margin: 18px 0 6px;
+}
+.landing-foot b { color: var(--ink); font-weight: 600; }
+
 /* thin dark scrollbars (webkit) + Firefox equivalent */
 html { scrollbar-color: var(--line-strong) transparent; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }

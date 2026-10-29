@@ -4,8 +4,9 @@ A photo of a paper shop notebook becomes a working mini-CRM: customers, phone
 numbers, money owed and received, follow-up lists - and WhatsApp in one tap.
 
 Built for the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026,
-Indie Developer track). All AI runs on the **Meta Model API** (Muse Spark for reading
-photos and answering questions, Muse Voice Transcribe for voice notes).
+Indie Developer track). Page reads and the owner's Q&A run on **Muse Spark Open**
+served from a Modal shared endpoint; voice notes on **Muse Voice Transcribe**
+(Meta Model API). All AI calls through one module, `netlify/functions/_lib/ai.js`.
 
 - Stack: plain HTML/CSS/JS (ES modules) + Supabase + Netlify Functions. **Zero npm dependencies.**
 - Project plan and rules for agents: see `AGENTS.md`.
@@ -40,6 +41,7 @@ The full walk (all five story scenes, review, ask, More menu, own-page, mobile s
 - **Redesign done (Oct 28)** - the app now opens with a five-scene story (a dedication to the dukandars with the amber shop lamp, the notebook, the lost promise, the idea, the three trust rules; "Skip to demo" one tap away; plays once per browser; reduced-motion users get a plain page), then a clean landing ("Your notebook, turned into a CRM."), a demo picker with the five sample pages as large cards, the check screen ("Confirm and open my CRM"), and a CRM dashboard: three big stat cards (To call / Total due / Collected), the overdue strip, search + filter chips, a per-person side panel with history and Call/WhatsApp templates, "Ask my ledger", and a Demo pages / My pages switch that keeps sample reads and the owner's own photographs clearly separated. Dark premium identity throughout: deep ink, one amber accent (the shop lamp), glass panels with 1px borders, a faint living grid, glow reserved for the primary button. Admin controls (privacy, erase demo, sign out, how it was built) live in a More menu.
 - **CRM + data ownership pass done (Oct 29)** - the three stat cards are now real filters (tap "To call" to see only today's calls, tap again to release; `aria-pressed` + keyboard); person cards get initial discs (amber for today-calls), a chevron tap cue, and red strips for overdue follow-ups (amber stays due-today, in the cards and the panel); filter chips show live counts; a sort row re-orders the Everyone list (Due first / Name A–Z / Recent - Call today stays urgency-ordered); the person panel gains a one-tap "Copy number"; the More menu gains "Download all lines as CSV" (every line, kept/struck/excluded labeled, UTF-8 BOM so Excel opens Malayalam/Hindi correctly), "Download a backup" + "Restore a backup…" (demo mode only - a plain JSON file, restore merges by page id and never deletes), and "Replay the intro"; the favicon and PWA icons are amber now (teal leftover removed), the app is installable (`manifest.json` + icons), and social share cards work (`og-image.png` + Open Graph/Twitter tags); unknown addresses get a real 404 page.
 - **Closing-the-loop pass done (Oct 29)** - the person panel now records money received ("Record payment" → amount or one-tap Full → Save): due lines settle oldest first the way a paper ledger gets crossed out, a full settlement also closes the open follow-up, the Collected stat moves up, and Undo brings the previous numbers back; the panel also moves a follow-up ("He said another day? Move it" → Today / Tomorrow / pick a date, confirmed because the owner set it, Undo restores); history lines show what came in AND what is still due on the same line; the More menu groups the owner's data tools under a "Your data" label; the appbar gains depth on scroll, scrollbars go thin and dark, and the empty state gets a drawn notebook glyph.
+- **Gateway pass done (Oct 29)** - the reading gateway is wired to **Muse Spark Open on a Modal shared endpoint** (`MODEL_BASE_URL` / `MODEL_API_KEY` / `MODEL_NAME`; keys only in Netlify env vars or a gitignored .env - never logged, never in browser code); `scripts/check-model.js` verifies the endpoint before anything relies on it (lists the exact model ids from GET /models, runs one real read of the dental sample through the app's own pipeline, compares the output field-by-field with the saved fixture, reports tokens and cost - cost only when `MODEL_PRICE_INPUT`/`MODEL_PRICE_OUTPUT` state a real price); if the endpoint does not enforce `response_format` JSON schema, the module falls back to prompting for JSON with the existing validator plus one retry (rule 4), and remembers the finding so later calls skip straight to the working mode; `scripts/record-fixtures.js` now records real reads for **all five samples** (the four made-for-demo pages + the 1860s museum scan), saving model, date and token cost into `js/recorded-fixtures.js`, after which the sample cards honestly say "Real reading recorded \<date\> with Muse Spark Open"; voice notes stay on the Meta Model API (`transcribe.js` untouched); the live-mode budget caps and the friendly sample fallback are unchanged; the landing footer and the More menu say "Built with Muse Spark Open", and the privacy sheet states that in live mode a photo is sent to the model.
 - Demo path needs **no Meta API key** and no Supabase project: mock mode serves fixtures (zero credits); live mode is wired and ready for a key
 
 ## Next (after the hackathon — not built yet, listed honestly)
@@ -93,7 +95,9 @@ node scripts/spike-extract.js test-pages/page1.jpg --mock
 
 Live mode (burns a few hundredths of a cent per page):
 
-1. Put your key in `.env` as `META_API_KEY=...` and set `AI_MODE=live`.
+1. Put the gateway key in `.env` as `MODEL_API_KEY=...` and set `AI_MODE=live`
+   (`MODEL_BASE_URL`/`MODEL_NAME` defaults live in `netlify/functions/_lib/ai.js`;
+   run `node scripts/check-model.js` to verify the key and list the exact model ids).
 2. Drop 3 notebook photos into `test-pages/`.
 3. `node scripts/spike-extract.js test-pages/page1.jpg`
 
@@ -101,6 +105,6 @@ Live mode (burns a few hundredths of a cent per page):
 
 Meta Global AI Developer Hackathon (Oct 26–Nov 4 2026), Indie Developer track, solo participant.
 - Problem statement: **Build for Your World** — Meta's models into small-shop paper ledgers in India.
-- Meta models used: `muse-spark-1.3` (image extraction, structured output Q&A, weekly digest), `muse-voice-transcribe-1.0` (voice notes). All calls through `netlify/functions/_lib/ai.js`, `AI_MODE=live|mock`. Demo runs in **mock mode** (fixtures, zero credits); live mode is wired and ready for a key.
+- Meta models used: page reads + the owner's Q&A on **Muse Spark Open** (Modal shared endpoint, OpenAI-compatible `/chat/completions`; env-driven via `MODEL_BASE_URL`/`MODEL_API_KEY`/`MODEL_NAME`), voice notes on `muse-voice-transcribe-1.0` (Meta Model API). All calls through `netlify/functions/_lib/ai.js`, `AI_MODE=live|mock`. Demo runs in **mock mode** (fixtures, zero credits); live mode is wired and verified with `scripts/check-model.js` before anything relies on it. In live mode a photo of the owner's own page is sent to the reading model - stated in the app's privacy sheet.
 - Submission: public repo ✅ (https://github.com/Izaansherif/page-ledger), public live URL (Netlify, Stage 7), 3-minute demo video (docs/DEMO-SCRIPT.md, Stage 7), due **Wed Nov 4, 9:00 PM ET** via the CV platform.
 - See `docs/SUBMISSION.md` for the full submission checklist and judging-rubric mapping.
