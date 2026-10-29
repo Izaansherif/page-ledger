@@ -86,7 +86,14 @@ function toToken(dateStr, baseISO) {
   return days === 0 ? "{{TODAY}}" : days > 0 ? `{{TODAY+${days}}}` : `{{TODAY${days}}}`;
 }
 
-const results = [];
+// Pass 1 - read every sample into memory and PROVE each read is real before
+// a single byte is written. The `fixture` argument must NOT be passed here:
+// in ai.js a mockFixture forces the baked-sample path in ANY mode (that is
+// what keeps sample picks free for visitors in the live app), so passing one
+// records the OLD fixture and labels it "real" - the exact dishonesty this
+// script exists to prevent (caught in a real run 2026-10-29: model came back
+// as "mock-fixture"). No fixture argument = the live gateway path.
+const reads = [];
 for (const sample of SAMPLES) {
   const b64 = fs.readFileSync(sample.image).toString("base64");
   process.stdout.write(`[record] ${sample.slug}: sending to ${AI_CONFIG.model || "(MODEL_NAME unset)"} … `);
@@ -95,9 +102,12 @@ for (const sample of SAMPLES) {
     imageBase64: b64,
     mime: "image/jpeg",
     baseDate: todayISO(),
-    fixture: sample.slug, // ignored in live mode; kept for traceability
   });
-  const cost = estimateCostUSD(res.usage);
+  if (!res || res.model === "mock-fixture" || !res.usage) {
+    console.log(`\n[record] ABORT: ${sample.slug} came back as a MOCK read (model=${res?.model ?? "none"}, usage=${res?.usage ? "present" : "none"}).`);
+    console.log("[record] Nothing was written. A real recording is never faked (rule 7).");
+    process.exit(1);
+  }
   const extraction = res.extraction;
 
   // apply the single documented rewrite: absolute follow-up dates -> tokens
@@ -109,11 +119,20 @@ for (const sample of SAMPLES) {
     }
   }
 
+  reads.push({ sample, extraction, res, shifted });
+  process.stdout.write(
+    `ok rows=${extraction.rows.length} model=${res.model} tokensIn=${res.usage?.input ?? "?"} tokensOut=${res.usage?.output ?? "?"} latency=${Date.now() - t0}ms\n`,
+  );
+}
+
+// Pass 2 - every read proven real: only now write anything.
+const results = [];
+for (const { sample, extraction, res, shifted } of reads) {
+  const cost = estimateCostUSD(res.usage);
   fs.writeFileSync(
     path.join(ROOT, "fixtures", `${sample.slug}.json`),
     JSON.stringify(extraction, null, 2) + "\n",
   );
-
   results.push({
     id: sample.slug,
     date: todayISO(),
@@ -123,11 +142,7 @@ for (const sample of SAMPLES) {
     tokensOut: res.usage?.output ?? null,
     structured: res.responseFormat ?? "unknown",
   });
-  process.stdout.write(
-    `ok rows=${extraction.rows.length} model=${res.model} tokensIn=${results.at(-1).tokensIn} tokensOut=${results.at(-1).tokensOut} ` +
-    `costUSD=${cost == null ? "?" : cost.toFixed(4)} latency=${Date.now() - t0}ms ` +
-    `structured=${results.at(-1).structured} follow-up-dates→tokens=${shifted}\n`,
-  );
+  console.log(`[record] wrote ${sample.slug} (rows=${extraction.rows.length}, follow-up-dates→tokens=${shifted}, structured=${res.responseFormat ?? "unknown"})`);
 }
 
 // regenerate js/recorded-fixtures.js - the client reads this to label cards

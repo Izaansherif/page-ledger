@@ -73,26 +73,35 @@ try {
   });
   const text = await res.text();
   if (!res.ok) {
-    console.error(`[check-model] GET /models failed: HTTP ${res.status}`);
-    console.error(text.slice(0, 600));
-    process.exit(1);
+    if (AI_CONFIG.model) {
+      console.log(`[check-model] GET /models failed: HTTP ${res.status} - continuing with the pinned MODEL_NAME (${AI_CONFIG.model}).`);
+    } else {
+      console.error(`[check-model] GET /models failed: HTTP ${res.status}`);
+      console.error(text.slice(0, 600));
+      process.exit(1);
+    }
+  } else {
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.log("[check-model] GET /models returned non-JSON - continuing with the pinned MODEL_NAME.");
+    }
+    if (data) {
+      const list = Array.isArray(data) ? data : (data?.data ?? data?.models ?? []);
+      ids = list.map((m) => (typeof m === "string" ? m : m?.id)).filter(Boolean);
+      console.log(`[check-model] models served (${ids.length}):`);
+      for (const id of ids) console.log(`   - ${id}`);
+      if (!ids.length) console.log("   (the endpoint listed none - vision reads may still work; continuing)");
+    }
   }
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    console.error("[check-model] GET /models returned non-JSON:");
-    console.error(text.slice(0, 600));
-    process.exit(1);
-  }
-  const list = Array.isArray(data) ? data : (data?.data ?? data?.models ?? []);
-  ids = list.map((m) => (typeof m === "string" ? m : m?.id)).filter(Boolean);
-  console.log(`[check-model] models served (${ids.length}):`);
-  for (const id of ids) console.log(`   - ${id}`);
-  if (!ids.length) console.log("   (the endpoint listed none - vision reads may still work; continuing)");
 } catch (e) {
-  console.error(`[check-model] GET /models could not run: ${e.message}`);
-  process.exit(1);
+  if (AI_CONFIG.model) {
+    console.log(`[check-model] GET /models could not run (${e.message}) - continuing with the pinned MODEL_NAME.`);
+  } else {
+    console.error(`[check-model] GET /models could not run: ${e.message}`);
+    process.exit(1);
+  }
 }
 
 // Pick the model to read with.

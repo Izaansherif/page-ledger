@@ -2,6 +2,14 @@
 // The extraction prompt from the project doc, kept EXACTLY as written
 // (that text is the core of the product - do not reword it casually).
 // Only the {{today in YYYY-MM-DD}} placeholder is substituted at call time.
+//
+// 2026-10-29 ADDENDUM (below the original rules, original text untouched):
+// the gateway check (scripts/check-model.js) against the real endpoint showed
+// two concrete misreads on the dental sample: the model dropped the nameless
+// payment line ("Cr. By Cash · counter sale · ₹500") and put every amount in
+// amount_paid (reading "collection · वसूली" dues as paid). The addendum states
+// the Indian-ledger conventions the page itself follows; it adds conventions,
+// it does not reword the core rules.
 
 export const EXTRACTION_PROMPT_TEMPLATE = `You read photos of pages from handwritten or printed business notebooks and ledgers kept by small businesses in India. Text may mix English, Hindi, Malayalam or other Indian languages. Extract every customer row on the page.
 
@@ -19,6 +27,13 @@ RULES:
 - If the page shows a written total, return it as page_total_written, otherwise null.
 - confidence: 0 to 1 for each field you return.
 - page_warnings: anything that affects reliability (cut off, blurry, shadow, rows overlapping, tilted).
+
+PAGE CONVENTIONS (India) - use these to decide paid vs due when the page has no column headings, and to never lose a line:
+- Every ruled or written line on the page gets a row, even one without a customer name (set name: null) - never drop a line.
+- A line that records money received now - "Cr. By Cash", "By Cash", "Received", "Cash", "collected", "जमा" - is amount_paid, and add "payment line" to row flags.
+- A work or item line for a person with an amount and no received-money wording is money still owed: amount_due.
+- "collection", "वसूली", "उसूली" with an amount means dues being recovered from the person: amount_due, not paid.
+- If you are still unsure between paid and due, choose amount_due and add "amount_ambiguous" to row flags - a human confirms before anything is saved.
 
 BASE_DATE: {{today in YYYY-MM-DD}}
 
