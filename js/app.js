@@ -1984,7 +1984,7 @@ function wire() {
     const rec = RECORDED[card.dataset.fixture];
     if (rec) {
       const tag = card.querySelector(".sample-card__tag");
-      if (tag) tag.textContent = `Real reading recorded ${niceDay(rec.date)} · replayed free`;
+      if (tag) tag.textContent = `Real reading recorded ${niceDay(rec.date)} with ${rec.model || "Muse Spark Open"} · replayed free`;
     }
     card.onclick = () => readSamplePage(card.dataset.fixture, card.dataset.image);
   });

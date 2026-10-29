@@ -2,17 +2,22 @@
 // scripts/record-fixtures.js
 // ============================================================================
 // ONE command to record REAL model readings of the sample pages
-// (run it once you have Meta API credits, from pagebook/):
+// (run it once the gateway key works - verified first by scripts/check-model.js):
 //
-//   PowerShell:  $env:AI_MODE = "live"; $env:META_API_KEY = "<your key>"; node scripts/record-fixtures.js
+//   PowerShell:  $env:AI_MODE = "live"; $env:MODEL_API_KEY = "wk-..."; node scripts/record-fixtures.js
+//   (MODEL_BASE_URL / MODEL_NAME come from .env or the environment; see
+//    scripts/check-model.js for discovering the exact model id)
 //
-// For every made-for-demo sample page (fixtures/made/*.jpg) this sends the
+// For ALL FIVE sample pages - the four made-for-demo pages (fixtures/made/*.jpg)
+// and the 1860s museum scan (fixtures/demo-pages/page1.jpg) - this sends the
 // actual photo through the SAME pipeline the app uses - extractPage(): live
-// Meta muse-spark-1.3 call, strict JSON schema, validation, one retry on
-// failure. The validated output is written as that sample's demo fixture
-// (fixtures/made/<id>.json), and the recording facts (date + real token cost)
-// go into js/recorded-fixtures.js so the sample cards can honestly upgrade
-// their label to "Real reading recorded <date>".
+// Muse Spark Open call on the Modal shared endpoint, strict JSON schema (with
+// the automatic prompt fallback when the endpoint does not enforce it),
+// validation, one retry on failure. The validated output is written as that
+// sample's demo fixture (fixtures/made/<id>.json, fixtures/spike/page1.json),
+// and the recording facts (date + model + real token cost) go into
+// js/recorded-fixtures.js so the sample cards can honestly upgrade their label
+// to "Real reading recorded <date> with <model>".
 //
 // HONESTY RULES (project rules 5 and 7):
 // - rows / raw text / amounts / flags / confidences / bboxes are stored
@@ -21,8 +26,8 @@
 //   day are rewritten to {{TODAY±n}} tokens relative to that day, so demo
 //   replays stay believable forever (same mechanism the older fixtures use).
 //   This is stated in fixtures/made/README.md and in every run's output.
-// - Without META_API_KEY / AI_MODE=live this script changes NOTHING and exits
-//   with instructions. It never invents a fake "recording".
+// - Without the gateway key / AI_MODE=live this script changes NOTHING and
+//   exits with instructions. It never invents a fake "recording".
 // ============================================================================
 import fs from "node:fs";
 import path from "node:path";
@@ -38,15 +43,29 @@ const { extractPage, AI_CONFIG, estimateCostUSD } = await import(
 );
 const { MADE_PAGES } = await import(`file:///${ROOT.replace(/\\/g, "/")}/scripts/sample-pages-spec.js`);
 
-const isLive = AI_CONFIG.mode === "live" && !!process.env.META_API_KEY;
+// The five samples the picker shows: four made-for-demo pages + the 1860s
+// public-domain museum scan (its photo lives in fixtures/demo-pages/).
+const SAMPLES = [
+  ...MADE_PAGES.map((p) => ({
+    slug: `made/${p.id}`,
+    image: path.join(ROOT, "fixtures", "made", `${p.id}.jpg`),
+  })),
+  {
+    slug: "spike/page1",
+    image: path.join(ROOT, "fixtures", "demo-pages", "page1.jpg"),
+  },
+];
+
+const isLive = AI_CONFIG.mode === "live" && !!AI_CONFIG.apiKey;
 if (!isLive) {
   console.log(`
 [record-fixtures] Not running: AI_MODE is "${AI_CONFIG.mode}" and this script
 only records REAL model passes (it must never fake one - project rule 7).
 
-When you have a Meta API key, run from the pagebook folder:
+When the gateway key works (verify first with:  node scripts/check-model.js ),
+run from the pagebook folder:
 
-  PowerShell:  $env:AI_MODE = "live"; $env:META_API_KEY = "<key>"; node scripts/record-fixtures.js
+  PowerShell:  $env:AI_MODE = "live"; $env:MODEL_API_KEY = "wk-..."; node scripts/record-fixtures.js
 
 Until then the demo keeps its clearly-labeled demo fixtures - which is honest
 and free.`);
@@ -68,16 +87,15 @@ function toToken(dateStr, baseISO) {
 }
 
 const results = [];
-for (const page of MADE_PAGES) {
-  const imgPath = path.join(ROOT, "fixtures", "made", `${page.id}.jpg`);
-  const b64 = fs.readFileSync(imgPath).toString("base64");
-  process.stdout.write(`[record] ${page.id}: sending to live model… `);
+for (const sample of SAMPLES) {
+  const b64 = fs.readFileSync(sample.image).toString("base64");
+  process.stdout.write(`[record] ${sample.slug}: sending to ${AI_CONFIG.model || "(MODEL_NAME unset)"} … `);
   const t0 = Date.now();
   const res = await extractPage({
     imageBase64: b64,
     mime: "image/jpeg",
     baseDate: todayISO(),
-    fixture: `made/${page.id}`, // ignored in live mode; kept for traceability
+    fixture: sample.slug, // ignored in live mode; kept for traceability
   });
   const cost = estimateCostUSD(res.usage);
   const extraction = res.extraction;
@@ -92,27 +110,45 @@ for (const page of MADE_PAGES) {
   }
 
   fs.writeFileSync(
-    path.join(ROOT, "fixtures", "made", `${page.id}.json`),
+    path.join(ROOT, "fixtures", `${sample.slug}.json`),
     JSON.stringify(extraction, null, 2) + "\n",
   );
 
   results.push({
-    id: `made/${page.id}`,
+    id: sample.slug,
     date: todayISO(),
+    model: res.model,
     costUSD: cost,
-    tokensIn: res.usage?.input_tokens ?? res.usage?.inputTokens ?? null,
-    tokensOut: res.usage?.output_tokens ?? res.usage?.outputTokens ?? null,
+    tokensIn: res.usage?.input ?? null,
+    tokensOut: res.usage?.output ?? null,
+    structured: res.responseFormat ?? "unknown",
   });
   process.stdout.write(
-    `ok rows=${extraction.rows.length} tokensIn=${results.at(-1).tokensIn} tokensOut=${results.at(-1).tokensOut} ` +
-    `costUSD=${cost == null ? "?" : cost.toFixed(4)} latency=${Date.now() - t0}ms follow-up-dates→tokens=${shifted}\n`,
+    `ok rows=${extraction.rows.length} model=${res.model} tokensIn=${results.at(-1).tokensIn} tokensOut=${results.at(-1).tokensOut} ` +
+    `costUSD=${cost == null ? "?" : cost.toFixed(4)} latency=${Date.now() - t0}ms ` +
+    `structured=${results.at(-1).structured} follow-up-dates→tokens=${shifted}\n`,
   );
 }
 
 // regenerate js/recorded-fixtures.js - the client reads this to label cards
-const recBody = `// js/recorded-fixtures.js\n// ============================================================================\n// GENERATED by scripts/record-fixtures.js on ${todayISO()} - do not hand-edit.\n//\n// Each entry: the date a REAL muse-spark-1.3 pass was recorded for that sample\n// (AI_MODE=live, schema-validated, fixtures/made/<id>.json saved verbatim -\n// follow-up dates were turned into {{TODAY}} tokens for replays, see the\n// script header). Cost is the real API cost of that pass in USD.\n// ============================================================================\nexport const RECORDED = ${JSON.stringify(Object.fromEntries(results.map((r) => [r.id, { date: r.date, costUSD: r.costUSD }])), null, 2)};\n`;
+const recBody = `// js/recorded-fixtures.js
+// ============================================================================
+// GENERATED by scripts/record-fixtures.js on ${todayISO()} - do not hand-edit.
+//
+// Each entry: a REAL reading of that sample page, recorded live through the
+// Muse Spark Open gateway (Modal shared endpoint) with the app's own
+// extraction pipeline - schema-validated, one retry, saved verbatim to
+// fixtures/<id>.json (follow-up dates were turned into {{TODAY}} tokens for
+// replays, see the script header). model is the exact model id that did the
+// reading; cost is the real API cost of that pass in USD (null when no price
+// is configured).
+// ============================================================================
+export const RECORDED = ${JSON.stringify(Object.fromEntries(results.map((r) => [r.id, { date: r.date, model: r.model, costUSD: r.costUSD, tokensIn: r.tokensIn, tokensOut: r.tokensOut }])), null, 2)};
+`;
 fs.writeFileSync(path.join(ROOT, "js", "recorded-fixtures.js"), recBody);
 
 console.log(`\n[record-fixtures] Done. ${results.length} fixtures updated, js/recorded-fixtures.js regenerated.`);
-for (const r of results) console.log(`  ${r.id}  ${r.date}  costUSD=${r.costUSD == null ? "?" : r.costUSD.toFixed(4)}`);
-console.log(`\nSample cards in the app will now say "Real reading recorded ${todayISO()}" after a reload.`);
+for (const r of results) {
+  console.log(`  ${r.id}  ${r.date}  model=${r.model}  costUSD=${r.costUSD == null ? "?" : r.costUSD.toFixed(4)}  tokensIn=${r.tokensIn} tokensOut=${r.tokensOut}`);
+}
+console.log(`\nSample cards in the app will now say "Real reading recorded ${todayISO()} with ${results[0]?.model ?? "the model"}" after a reload.`);
