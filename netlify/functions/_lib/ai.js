@@ -388,9 +388,8 @@ export function parseJsonLoose(text) {
 export function estimateCostUSD(usage) {
   if (!AI_CONFIG.pricingPer1M) return null;
   if (!usage || usage.input == null || usage.output == null) return null;
-  const inTok = Math.max(0, usage.input - (usage.cachedInput ?? 0));
   const cost =
-    (inTok / 1e6) * AI_CONFIG.pricingPer1M.input +
+    (usage.input / 1e6) * AI_CONFIG.pricingPer1M.input +
     ((usage.cachedInput ?? 0) / 1e6) * AI_CONFIG.pricingPer1M.cachedInput +
     (usage.output / 1e6) * AI_CONFIG.pricingPer1M.output;
   return Math.round(cost * 1e6) / 1e6; // keep 6 decimals (fractions of a cent)

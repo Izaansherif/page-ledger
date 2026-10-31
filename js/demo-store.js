@@ -157,6 +157,7 @@ export async function uploadPagePhoto() {
 }
 
 export async function savePage({ takenOn, pageTotalWritten, pageWarnings, rows, thumb, demo }) {
+  ensureSession(); // demo mode: the browser is the account, no sign-in wall
   const u = session?.user;
   if (!u) throw new Error("Please sign in first.");
   const store = read();
@@ -246,7 +247,13 @@ export async function recordPayment(allocations) {
     const page = store.pages.find((p) => p.id === a.pageId);
     const row = page?.page_rows.find((r) => r.id === a.rowId);
     if (!row) continue;
-    if (a.amountPaid !== undefined) row.amount_paid = a.amountPaid;
+    if (a.amountPaid !== undefined) {
+      row.amount_paid = a.amountPaid;
+      if (row.amount_due !== null && row.amount_due !== undefined && a.amountDue === undefined) {
+        const remaining = row.amount_due - a.amountPaid;
+        row.amount_due = remaining <= 0 ? null : remaining;
+      }
+    }
     if (a.amountDue !== undefined) row.amount_due = a.amountDue;
     if (a.followUpDone !== undefined) row.follow_up_done = !!a.followUpDone;
   }
