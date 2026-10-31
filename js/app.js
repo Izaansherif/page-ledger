@@ -110,6 +110,8 @@ function showView(name) {
     return;
   }
   if (location.hash !== target) history.pushState({ view: name }, "", target);
+  // render home view data when landing is shown
+  if (name === "view-landing") renderHomeView();
 }
 
 /* ------------------------------------------------- phone bottom action bar */
@@ -1095,6 +1097,66 @@ function applyPeopleData(data) {
   }
 }
 
+/* ------------------------------------------------------------ home view: dues + all customers */
+function renderHomeView() {
+  const data = peopleCache.data;
+  if (!data || !data.all) return;
+
+  const all = data.all ?? [];
+  const dues = all.filter(p => p.due > 0).sort((a, b) => b.due - a.due || String(a.name ?? "").localeCompare(String(b.name ?? "")));
+
+  // --- Dues list ---
+  const duesList = $("#home-dues-list");
+  const duesEmpty = $("#home-dues-empty");
+  const duesTotal = $("#home-dues-total");
+  const duesSection = $("#home-dues");
+
+  if (dues.length === 0) {
+    duesSection.hidden = true;
+    duesEmpty.hidden = false;
+  } else {
+    duesSection.hidden = false;
+    duesEmpty.hidden = true;
+    duesTotal.textContent = `₹${ppl.fmtRupees(data.totals.due)} due`;
+    duesList.innerHTML = dues.map(p => {
+      const contact = p.waOk ? `+${p.digits}` : String(p.phone ?? "");
+      return `
+        <div class="home-row" data-key="${escapeAttr(p.key)}" role="button" tabindex="0" aria-label="${escapeHTML(p.name || "Unknown")}, due ₹${ppl.fmtRupees(p.due)}">
+          <div class="home-row-name">${escapeHTML(p.nameMissing ? "Name missing" : p.name)}</div>
+          <div class="home-row-meta">
+            <span class="home-money due">₹${ppl.fmtRupees(p.due)} due</span>
+            <span class="home-phone">${contact || "no phone"}</span>
+          </div>
+        </div>`;
+      }).join("");
+  }
+
+  // --- All customers list ---
+  const allList = $("#home-all-list");
+  const allEmpty = $("#home-all-empty");
+  const allSection = $("#home-all");
+
+  if (all.length === 0) {
+    allSection.hidden = true;
+    allEmpty.hidden = false;
+  } else {
+    allSection.hidden = false;
+    allEmpty.hidden = true;
+    allList.innerHTML = all.map(p => {
+      const contact = p.waOk ? `+${p.digits}` : String(p.phone ?? "");
+      return `
+        <div class="home-row" data-key="${escapeAttr(p.key)}" role="button" tabindex="0" aria-label="${escapeHTML(p.name || "Unknown")}">
+          <div class="home-row-name">${escapeHTML(p.nameMissing ? "Name missing" : p.name)}</div>
+          <div class="home-row-meta">
+            <span class="home-meta">${escapeHTML(contact || "no phone")}</span>
+            <span class="home-meta">${p.lastOn ? niceDay(p.lastOn) : "no visit yet"}</span>
+          </div>
+        </div>`;
+      }).join("");
+  }
+}
+
+
 /* --------------------------------------------------------- the CRM mode */
 // "Demo pages" = pages saved from the made-for-demo samples; "My pages" =
 // pages the owner photographed themselves. Cloud pages carry no demo flag
@@ -1988,8 +2050,12 @@ function wire() {
     }
     card.onclick = () => readSamplePage(card.dataset.fixture, card.dataset.image);
   });
-  // the big primary button opens the demo picker (the 5 sample pages)
-  $("#btn-sample-primary").onclick = () => showView("view-picker");
+  // the big primary button opens the camera (one-tap daily photo capture)
+  $("#btn-camera-home").onclick = () => {
+    showView("view-upload");
+    $("#btn-camera")?.focus({ preventScroll: true });
+  };
+  // "Use my own page" - also opens camera
   $("#btn-own-page").onclick = () => {
     showView("view-upload");
     $("#btn-camera")?.focus({ preventScroll: true });
@@ -2337,6 +2403,16 @@ function wire() {
 
   $("#today-list").addEventListener("click", onPeopleAction);
   $("#people-list").addEventListener("click", onPeopleAction);
+
+  // Home view: tap a due or customer row to open their person panel
+  $("#home-dues-list").addEventListener("click", (e) => {
+    const row = e.target.closest(".home-row[data-key]");
+    if (row) openPersonSheet(row.dataset.key, row);
+  });
+  $("#home-all-list").addEventListener("click", (e) => {
+    const row = e.target.closest(".home-row[data-key]");
+    if (row) openPersonSheet(row.dataset.key, row);
+  });
   $("#btn-sheet-close").onclick = closeMsgSheet;
   $("#sheet-backdrop").onclick = closeMsgSheet;
   // browser Back/Forward walks the saved views instead of leaving the app

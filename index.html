@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <!-- deploy marker: env-check 2026-10-29 (gateway muse-spark-open, recorded fixtures) -->
 <head>
@@ -85,80 +85,37 @@
          One headline, one sentence, two buttons, one trust line - and the 3D
          scene as the main visual. Everything else moved to the picker, the
          own-page flow or the More menu. -->
-    <section id="view-landing" class="home" aria-labelledby="landing-title" hidden>
-      <div class="hero hero--landing">
-        <div class="hero__copy">
-          <h1 class="hero-title" id="landing-title">Your notebook, turned into a&nbsp;CRM.</h1>
-          <p class="hero-sub">
-            Photograph a page. Page Ledger reads the people and the money -
-            and you check every line before anything is kept.
-          </p>
-          <div class="landing-cta">
-            <button id="btn-sample-primary" class="btn btn--primary btn--block btn--xl" type="button">
-              View demo
-            </button>
-            <button id="btn-own-page" class="btn btn--ghost btn--block btn--xl" type="button">
-              Use my own page
-            </button>
-          </div>
-          <p class="landing-trust">AI reads. You confirm. Nothing is sent without you.</p>
-        </div>
+        <section id="view-landing" class="home" aria-labelledby="landing-title" hidden>
+      <h1 class="home-title" id="landing-title">Today's patients</h1>
 
-      <!-- 3D scene: a photographed page -> the JSON the reader produced ->
-           the mini-CRM on a phone. Three real 3D planes (perspective +
-           preserve-3d); the page shown is one of the actual bundled samples. -->
-        <div class="hero__scene">
-          <div class="scene" id="hero-scene" aria-hidden="true">
-            <div class="s3d__world">
-              <div class="s3d s3d--page">
-                <img src="/fixtures/made/dental-thumb.jpg" width="300" height="424" alt="" />
-                <span class="s3d__tag">an actual sample page</span>
-              </div>
-
-              <div class="s3d s3d--json">
-                <div class="s3d__bar"><i></i><i></i><i></i><em>what the reader produced</em></div>
-<pre class="s3d__code"><span class="jp">{</span>
-  <span class="jk">"rows"</span><span class="jp">: [</span>
-    <span class="jp">{</span> <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"Ravi K."</span>,
-      <span class="jk">"phone"</span><span class="jp">:</span> <span class="js">"9876500021"</span>,
-      <span class="jk">"amount_due"</span><span class="jp">:</span> <span class="jn">300</span> <span class="jp">},</span>
-    <span class="jp">{</span> <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"Sanju G."</span>,
-      <span class="jk">"flags"</span><span class="jp">: [</span> <span class="jf">"struck_out"</span> <span class="jp">] },</span>
-    <span class="jp">{</span> <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"Manu R."</span>,
-      <span class="jk">"amount_due"</span><span class="jp">:</span> <span class="jn">null</span> <span class="jp">},</span>
-  <span class="jp">],</span>
-  <span class="jk">"page_total_written"</span><span class="jp">:</span> <span class="jn">null</span>
-<span class="jp">}</span></pre>
-              </div>
-
-              <div class="s3d s3d--phone">
-                <div class="s3d-phone">
-                  <div class="s3d-phone__notch"></div>
-                  <div class="s3d-phone__head">
-                    <strong>Smile Care Clinic</strong>
-                    <span>ortho notes &middot; today</span>
-                  </div>
-                  <div class="s3d-phone__rows">
-                    <span class="s3d-phone__row"><i>Ravi K.</i><b class="due">due &#8377;300</b></span>
-                    <span class="s3d-phone__row"><i>Priya S.</i><b class="due">due &#8377;150</b></span>
-                    <span class="s3d-phone__row is-struck"><i>Sanju G.</i><b>struck out</b></span>
-                  </div>
-                  <div class="s3d-phone__bottom">
-                    <span class="s3d-phone__call"><i></i>Call today &middot; Aishu</span>
-                    <span class="s3d-phone__wa">templates only &middot; you send</span>
-                  </div>
-                </div>
-              </div>
-
-              <span class="s3d-chip">you check every line</span>
-            </div>
-          </div>
-
-          </div>
-        </div>
+      <!-- One dominant action: photograph today's notebook page -->
+      <div class="home-primary">
+        <button id="btn-camera-home" class="btn btn--primary btn--block btn--xl" type="button">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2l.9-1.4A1.5 1.5 0 0 1 9.9 4h4.2a1.5 1.5 0 0 1 1.3.6L16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12.4" r="3.1" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+          Take photo of today's page
+        </button>
       </div>
 
-      <p class="landing-foot">Built with <b>Muse Spark Open</b> &middot; the sample pages read free, from saved files</p>
+      <!-- Who owes me: dues list -->
+      <div class="home-section" id="home-dues" hidden>
+        <div class="home-section-head">
+          <h2 class="home-section-title">Who owes me</h2>
+          <span id="home-dues-total" class="home-dues-total">â‚¹0 due</span>
+        </div>
+        <div id="home-dues-list" class="home-dues-list"></div>
+        <p class="home-empty" id="home-dues-empty" hidden>No dues yet. Save a page and people with amounts owed appear here.</p>
+      </div>
+
+      <!-- All customers -->
+      <div class="home-section" id="home-all" hidden>
+        <div class="home-section-head">
+          <h2 class="home-section-title">All customers</h2>
+        </div>
+        <div id="home-all-list" class="home-all-list"></div>
+        <p class="home-empty" id="home-all-empty" hidden>No customers yet. Take a photo of a page to add your first one.</p>
+      </div>
+
+      <p class="landing-foot">Built with <b>Muse Spark Open</b> &middot; sample pages read free, from saved files</p>
     </section>
 
     <!-- ============================================== own-page flow -->
@@ -474,16 +431,16 @@
        general thank-you, and the one personal line is a marked placeholder
        the owner writes themselves. "Skip to demo" stays one tap away. -->
   <div id="story" class="story" hidden>
-    <!-- scene 1 · dedication: the shop lamp -->
+    <!-- scene 1 Â· dedication: the shop lamp -->
     <section class="story-scene story-scene--lamp" data-scene="1">
       <div class="story-lamp" aria-hidden="true"></div>
       <div class="story-center">
         <p class="story-line">For the dukandars who kept us going when everything shut.</p>
-        <p class="story-thanks"><span lang="hi">शुक्रिया</span> · <span lang="ml">നന്ദി</span> · Thank you.</p>
+        <p class="story-thanks"><span lang="hi">à¤¶à¥à¤•à¥à¤°à¤¿à¤¯à¤¾</span> Â· <span lang="ml">à´¨à´¨àµà´¦à´¿</span> Â· Thank you.</p>
       </div>
     </section>
 
-    <!-- scene 2 · the notebook (the 3D hero's little sibling) -->
+    <!-- scene 2 Â· the notebook (the 3D hero's little sibling) -->
     <section class="story-scene" data-scene="2">
       <div class="s-book" aria-hidden="true">
         <div class="s-book__inner">
@@ -504,7 +461,7 @@
       </div>
     </section>
 
-    <!-- scene 3 · the hard part: promises slip between pages -->
+    <!-- scene 3 Â· the hard part: promises slip between pages -->
     <section class="story-scene" data-scene="3">
       <div class="s-lost" aria-hidden="true">
         <div class="s-lost__page s-lost__page--a"></div>
@@ -517,7 +474,7 @@
       </div>
     </section>
 
-    <!-- scene 4 · the idea: keep the notebook, photograph the page -->
+    <!-- scene 4 Â· the idea: keep the notebook, photograph the page -->
     <section class="story-scene" data-scene="4">
       <div class="s-scan" aria-hidden="true">
         <img class="s-scan__photo" src="/fixtures/made/kirana-thumb.jpg" width="150" height="240" alt="" />
@@ -533,7 +490,7 @@
       </div>
     </section>
 
-    <!-- scene 5 · you stay in charge -->
+    <!-- scene 5 Â· you stay in charge -->
     <section class="story-scene" data-scene="5">
       <div class="story-center">
         <p class="story-line">You stay in charge:</p>
@@ -643,10 +600,10 @@
         <button id="btn-pay-open" class="btn btn--ghost btn--small" type="button">Record payment</button>
         <span class="person-pay__form" hidden>
           <label class="person-pay__amount" for="person-pay-amt">
-            <span aria-hidden="true">₹</span>
+            <span aria-hidden="true">â‚¹</span>
             <input type="number" id="person-pay-amt" min="1" step="any" inputmode="decimal" aria-label="Amount received" placeholder="Amount" />
           </label>
-          <button id="btn-pay-full" class="pill person-move__btn" type="button">Full ₹<span id="pay-full-amt">0</span></button>
+          <button id="btn-pay-full" class="pill person-move__btn" type="button">Full â‚¹<span id="pay-full-amt">0</span></button>
           <button id="btn-pay-save" class="btn btn--primary btn--small" type="button">Save</button>
         </span>
       </div>
@@ -702,3 +659,4 @@
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>
+
