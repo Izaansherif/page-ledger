@@ -387,6 +387,12 @@ function rowCardHTML(row, index, noAnim = false) {
     .map((fl) => `<span class="flag">${FLAG_LABELS[fl] ?? escapeAttr(fl)}</span>`)
     .join("");
 
+  // "Existing customer" badge: this extracted row matches an existing patient
+  const existingBadge = row.existingPatient
+    ? `<span class="flag flag--existing">Existing customer</span>`
+    : "";
+
+
   const struckToggle = row.struckOut
     ? `<label class="included-toggle"><input type="checkbox" data-act="include" data-id="${row.id}" ${row.included ? "checked" : ""}/> keep</label>`
     : "";
@@ -418,7 +424,7 @@ function rowCardHTML(row, index, noAnim = false) {
     <div class="rowcard__top">
       <span class="rowcard__num"><i class="conf-dot${dotCls}" title="How sure the read is" aria-hidden="true"></i>${index + 1}</span>
       <div class="rowcard__flags">${flagsHTML}</div>
-      <div class="rowcard__tools">${okBtn}${struckToggle}${rawBtn}
+      <div class="rowcard__tools">${okBtn}${struckToggle}${rawBtn}${existingBadge}
         <button class="row-del" type="button" data-act="del" data-id="${row.id}" title="Remove this row" aria-label="Remove this row">&#10005;</button>
       </div>
     </div>
@@ -543,6 +549,27 @@ function renderRows() {
   syncBboxOverlay();
 }
 
+/* ------------------------------------------------------------ duplicate matching
+   Match extracted rows against existing patients by phone + name. When a match
+   is found, mark the row as "existing customer" so that saving updates the
+   existing record instead of creating a duplicate. */
+async function renderDuplicateBadges() {
+  const rows = state.rows.filter((r) => r.phone && r.name);
+  if (!rows.length) return;
+
+  // Match each extracted row against existing patients
+  const matches = await sb.findSamePatient(rows[0].phone, rows[0].name);
+  // Actually match each row individually since different rows may match different patients
+  for (const r of state.rows) {
+    if (!r.phone || !r.name) continue;
+    const matches = await sb.findSamePatient(r.phone, r.name);
+    if (matches.length) {
+      r.existingPatient = matches[0]; // first match wins
+    }
+  }
+  renderRows(); // re-render to show "Existing customer" badges
+}
+
 function renderWarnings(extraction) {
   const el = $("#warnings");
   const w = extraction?.page_warnings ?? [];
@@ -663,6 +690,7 @@ function renderReview() {
   showView("view-review");
   state.reveal = true; // first paint: lines appear one by one (renderRows clears it)
   renderRows();
+  renderDuplicateBadges(); // match extracted patients against existing customers
   renderWarnings(state.extraction);
   updateReadbox();
   state.animateTotalsNext = true;
@@ -1891,7 +1919,7 @@ async function handleSave() {
     showAuth();
     return;
   }
-  const btn = $("#btn-save");
+  const btn = $("btn-save");
   const st = $("#save-status");
   state.saving = true;
   btn.disabled = true;
@@ -1915,7 +1943,36 @@ async function handleSave() {
       const up = await sb.uploadPagePhoto(pageId, state.jpegBlob);
       photoPath = up.path;
     }
-    const rowsPayload = state.rows.map((r, i) => ({
+
+    // Separate existing-patient rows (update) from new rows (insert)
+    const existingRows = state.rows.filter((r) => r.existingPatient);
+    const newRows = state.rows.filter((r) => !r.existingPatient);
+
+    // 1) Update existing patient rows in place
+    for (const r of existingRows) {
+      await sb.updatePatientRow(r.existingPatient.id, {
+        name: r.fields.name.value ?? "",
+        phone: r.fields.phone.value || null,
+        note: r.fields.note?.value ?? null,
+        amountPaid: r.fields.amountPaid.value,
+        amountDue: r.fields.amountDue.value,
+        followUpText: r.follow.text,
+        followUpDate: r.follow.date,
+        followUpConfirmed: r.follow.confirmed,
+        struckOut: r.struckOut,
+        included: r.included !== false,
+        raw_text: r.raw ?? null,
+        confidence: {
+          name: r.fields.name.conf, phone: r.fields.phone.conf,
+          amount_paid: r.fields.amountPaid.conf, amount_due: r.fields.amountDue.conf,
+          follow_up_date: r.follow.conf,
+        },
+        flags: r.flags,
+      });
+    }
+
+    // 2) Save new patients as a new page
+    const rowsPayload = newRows.map((r, i) => ({
       rowIndex: i,
       name: r.fields.name.value ?? "",
       phone: r.fields.phone.value || null,
@@ -1937,58 +1994,59 @@ async function handleSave() {
       flags: r.flags,
     }));
 
-    if (state.demoStore) {
-      // keep a readable thumbnail with the demo page; full photo stays in-session
-      const res = await demo.savePage({
-        takenOn: state.lastRequest?.baseDate || null,
-        pageTotalWritten: state.extraction.page_total_written ?? null,
-        pageWarnings: state.extraction.page_warnings ?? [],
-        rows: rowsPayload,
-        thumb: await shrinkForDemo(state.jpegBlob),
-        demo: !!state.lastRequest?.mockFixture, // sample reads feed the Demo pages side of the CRM
-      });
-      state.savedPageId = res.pageId;
-      st.textContent = `Saved on this device (demo) - ${res.savedRows} lines kept.`;
-      btn.textContent = "Saved ✓";
-      btn.classList.add("is-saved");
-      celebrateTap();
-      await loadRecent();
-      $("#btn-gotop").hidden = false; // the CRM hand-off: who to call, money, both
-      // After a SAMPLE save, land straight on People with the plain-language
-      // nudge (own-photo saves keep the current view + hand-off button).
-      if (state.lastRequest?.mockFixture) {
-        setTimeout(() => {
-          showPeopleNudge();
-          loadPeople().then(() => coach.reach("people"));
-        }, 650);
+    let newPageId = null;
+    if (newRows.length > 0) {
+      if (state.demoStore) {
+        const res = await demo.savePage({
+          takenOn: state.lastRequest?.baseDate || null,
+          pageTotalWritten: state.extraction.page_total_written ?? null,
+          pageWarnings: state.extraction.page_warnings ?? [],
+          rows: rowsPayload,
+          thumb: await shrinkForDemo(state.jpegBlob),
+          demo: !!state.lastRequest?.mockFixture, // sample reads feed the Demo pages side of the CRM
+        });
+        newPageId = res.pageId;
+      } else {
+        const res = await sb.savePage({
+          photoPath,
+          takenOn: state.lastRequest?.baseDate || null,
+          pageTotalWritten: state.extraction.page_total_written ?? null,
+          pageWarnings: state.extraction.page_warnings ?? [],
+          rows: rowsPayload,
+          userId,
+        });
+        newPageId = res.pageId;
       }
-      return;
     }
 
-    const res = await sb.savePage({
-      photoPath,
-      takenOn: state.lastRequest?.baseDate || null,
-      pageTotalWritten: state.extraction.page_total_written ?? null,
-      pageWarnings: state.extraction.page_warnings ?? [],
-      rows: rowsPayload,
-      userId,
-    });
-    state.savedPageId = res.pageId;
-    st.textContent = `Saved - ${res.savedRows} lines and the photo are in your account.`;
-    btn.innerHTML = "Saved ✓";
+    state.savedPageId = newPageId || existingRows[0]?.existingPatient?.pageId;
+    st.textContent = state.demoStore
+      ? `Saved on this device (demo) - ${newRows.length + existingRows.length} lines kept.`
+      : "Saved - " + (newRows.length + existingRows.length) + " lines kept.";
+    btn.textContent = "Saved ✓";
     btn.classList.add("is-saved");
     celebrateTap();
     await loadRecent();
-    $("#btn-gotop").hidden = false;
+    $("#btn-gotop").hidden = false; // the CRM hand-off: who to call, money, both
+    // After a SAMPLE save, land straight on People with the plain-language
+    // nudge (own-photo saves keep the current view + hand-off button).
+    if (state.lastRequest?.mockFixture) {
+      setTimeout(() => {
+        showPeopleNudge();
+        loadPeople().then(() => coach.reach("people"));
+      }, 650);
+    }
   } catch (e2) {
     st.classList.add("save-error");
     st.textContent = e2.message || "Could not save. Try again.";
     btn.disabled = false;
-    btn.innerHTML = "Confirm and open my CRM";
+    btn.textContent = "Confirm and open my CRM";
   } finally {
     state.saving = false;
   }
 }
+
+
 
 /* --------------------------------------------------------------- wires */
 function wire() {

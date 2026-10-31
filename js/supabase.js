@@ -218,6 +218,42 @@ export async function listRecentPages() {
   return data ?? [];
 }
 
+// Find existing patients matching both phone and name (same customer across pages).
+// Returns matching patient rows with their page id for updating.
+export async function findSamePatient(phone, name) {
+  await withFreshToken();
+  if (!session?.access) return [];
+  const pages = await listRecentPages();
+  const normPhone = String(phone ?? "").replace(/\D/g, "");
+  const normName = String(name ?? "").trim().toLowerCase();
+  const matches = [];
+  for (const p of pages) {
+    for (const r of p.page_rows ?? []) {
+      const rPhone = String(r.phone ?? "").replace(/\D/g, "");
+      const rName = String(r.name ?? "").trim().toLowerCase();
+      if (rPhone === normPhone && rName === normName && rPhone !== "") {
+        matches.push({ pageId: p.id, ...r });
+      }
+    }
+  }
+  return matches;
+}
+
+// Update an existing patient row (used when a scanned patient matches an
+// existing customer - we update instead of creating a duplicate).
+export async function updatePatientRow(rowId, updates) {
+  await withFreshToken();
+  if (!session?.access) throw new Error("Please sign in first.");
+  const { res } = await call(`/rest/v1/page_rows?id=eq.${encodeURIComponent(rowId)}`, {
+    method: "PATCH",
+    auth: true,
+    extraHeaders: { Prefer: "return=minimal" },
+    body: updates,
+  });
+  if (!res.ok) throw new Error(`Could not update patient row (${res.status}). Try again.`);
+  return { ok: true };
+}
+
 // People view "Done" tap on a follow-up.
 export async function setFollowUpDone(rowId, done = true) {
   await withFreshToken();
