@@ -1775,6 +1775,7 @@ async function moveFollowUpTo(f, newDate) {
     return;
   }
   await loadPeople();
+  renderHomeView();
   if (key && !$("#sheet-person").hidden) openPersonSheet(key, personReturnFocus);
   showUndo(`Follow-up moved to ${niceDay(newDate)}`, async () => {
     try {
@@ -1838,6 +1839,7 @@ async function recordPaymentFor(amount) {
     return;
   }
   await loadPeople();
+  renderHomeView();
   if (key && !$("#sheet-person").hidden) openPersonSheet(key, personReturnFocus);
   const settled = applied >= dueBefore;
   showUndo(

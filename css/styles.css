@@ -3058,3 +3058,107 @@ html { scrollbar-color: var(--line-strong) transparent; }
   .pcard { transition: border-color 0.15s ease, transform 0.12s ease; }
   .pcard:hover { transform: translateY(-1px); }
 }
+/* ============================================================
+   Home screen: phone-first layout
+   ============================================================ */
+.home-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.home-primary {
+  margin: 24px 0 26px;
+}
+
+.home-primary .btn--primary {
+  font-size: 1.1rem;
+  padding: 16px 24px;
+  min-height: 64px;
+}
+
+.home-section {
+  margin: 0 0 20px;
+}
+
+.home-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.home-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home-dues-total {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.home-dues-list,
+.home-all-list {
+  display: grid;
+  gap: 8px;
+}
+
+.home-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.home-row:hover {
+  border-color: var(--accent-line);
+  background: var(--card-2);
+}
+
+.home-row-name {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+  flex: 1;
+}
+
+.home-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.home-money {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.home-money.due {
+  color: var(--amber-strong);
+}
+
+.home-meta {
+  color: var(--ink-soft);
+}
+
+.home-empty {
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 14px;
+  padding: 24px 0;
+}
