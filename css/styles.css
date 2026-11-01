@@ -378,7 +378,7 @@ body {
   .people-nudge, .coach__ring, .coach__tip { animation: none; transition: none; }
   .coach__tip--pulse { animation: none; }
 }
-.btn--small { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+.btn--small { min-height: 44px; padding: 6px 12px; font-size: 14px; }
 .btn__hint {
   font-weight: 500;
   font-size: 12.5px;
@@ -1433,8 +1433,8 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
 .recent__del {
   flex: none;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   border: 1px solid transparent;
   background: transparent;
@@ -3162,56 +3162,83 @@ html { scrollbar-color: var(--line-strong) transparent; }
   font-size: 14px;
   padding: 24px 0;
 }
-/* ============================================================
-   Add customer form
-   ============================================================ */
-.add-customer-form {
-  display: grid;
-  gap: 16px;
+
+/* ------------------------------------------- add customer by hand (sheet) */
+.home-add {
+  margin-top: 10px;
+  gap: 8px;
 }
-.add-customer-form .field {
+
+.add-customer-form {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-.add-customer-form label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--ink-faint);
-}
-.add-customer-form input {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 14px;
-  font-size: 16px;
-  font-family: inherit;
-  color: var(--ink);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-}
-.add-customer-form input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: var(--focus);
-}
-.add-customer-actions {
-  display: flex;
-  gap: 10px;
+  gap: 16px;
   margin-top: 8px;
 }
-.amount-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+
+.add-customer-form .field input {
+  font-size: 17px;
+  min-height: 52px;
 }
-.amount-affix {
-  font-weight: 600;
+
+.add-customer-form .field label {
+  font-size: 12.5px;
+}
+
+.field-hint {
+  margin: 2px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
   color: var(--ink-soft);
 }
-.phone-hint {
-  font-size: 0.85rem;
-  color: var(--ink-faint);
-  margin-top: 4px;
+
+.add-customer-existing {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.add-customer-saved {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.add-customer-details-btn {
+  align-self: flex-start;
+}
+
+.add-customer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.add-customer-form .form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.add-customer-form .form-actions .btn {
+  width: 100%;
+  min-height: 48px;
+}
+
+@media (max-width: 380px) {
+  .add-customer-form .form-actions {
+    grid-template-columns: 1fr;
+  }
 }
