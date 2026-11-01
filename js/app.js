@@ -1,6 +1,6 @@
-// js/app.js
+﻿// js/app.js
 // ===========================================================================
-// Page Ledger — Stage 1 controller.
+// Page Ledger â€” Stage 1 controller.
 // Views: upload -> loading -> review (or error). When the server reports
 // demoMode, the UI says so instead of pretending to be live.
 // Stage 1 saves nothing: this screen's job is a trustworthy read + review.
@@ -93,6 +93,17 @@ function showUndo(label, undoFn) {
   undoTimer = setTimeout(clear, 5500);
 }
 
+function showToast(msg, durationMs = 3000) {
+  const toast = $("#undo-toast");
+  if (!toast) return;
+  $("#undo-text").textContent = msg;
+  toast.hidden = false;
+  const clear = () => { toast.hidden = true; clearTimeout(undoTimer); };
+  toast.hidden = false;
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(clear, durationMs);
+}
+
 /* Browser Back/Forward feels native: every stable view is one history entry
    (loading/error/auth stay transient - they are never history destinations). */
 const HISTORY_VIEWS = new Set(["view-landing", "view-upload", "view-picker", "view-review", "view-people"]);
@@ -154,7 +165,7 @@ function setBadge() {
     return;
   }
   badge.hidden = false;
-  badge.textContent = state.lastRequest?.mockFixture ? "Sample page · demo" : "Demo reading · your photo kept";
+  badge.textContent = state.lastRequest?.mockFixture ? "Sample page Â· demo" : "Demo reading Â· your photo kept";
 }
 
 function resetToUpload() {
@@ -244,7 +255,7 @@ function updateTotals() {
   if (sig === lastTotalsSig) return;
   lastTotalsSig = sig;
   const n = activeRows().length;
-  $("#review-summary").textContent = `${names.size} ${names.size === 1 ? "person" : "people"} · ${n} ${n === 1 ? "line" : "lines"} · due ₹${fmtMoney(b.due)} — check line by line with the photo, then confirm`;
+  $("#review-summary").textContent = `${names.size} ${names.size === 1 ? "person" : "people"} Â· ${n} ${n === 1 ? "line" : "lines"} Â· due â‚¹${fmtMoney(b.due)} â€” check line by line with the photo, then confirm`;
   $("#review-totals").innerHTML = `
     <span class="stat"><span class="stat__label">People</span><span class="stat__value">${names.size}</span></span>
     <span class="stat"><span class="stat__label">Paid</span><span class="stat__value">&#8377;${fmtMoney(b.paid)}</span></span>
@@ -263,7 +274,7 @@ function animateCounts(root) {
   const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
   if (reduced || !root) return;
   for (const el of root.querySelectorAll("strong, .stat__value")) {
-    const m = String(el.textContent).match(/^(₹)?([\d,]+)$/);
+    const m = String(el.textContent).match(/^(â‚¹)?([\d,]+)$/);
     if (!m) continue;
     const target = Number(m[2].replace(/,/g, ""));
     if (!Number.isFinite(target) || target === 0) continue;
@@ -457,8 +468,8 @@ const micStatus = { rowId: null, mode: null, message: null };
 
 function micStatusHint(row) {
   if (micStatus.rowId !== row.id) return { text: "speak it or type it", cls: "", isError: false };
-  if (micStatus.mode === "recording") return { text: "listening… tap the mic to stop", cls: " mic-btn--rec", isError: false };
-  if (micStatus.mode === "transcribing") return { text: "checking your voice note…", cls: " mic-btn--busy", isError: false };
+  if (micStatus.mode === "recording") return { text: "listeningâ€¦ tap the mic to stop", cls: " mic-btn--rec", isError: false };
+  if (micStatus.mode === "transcribing") return { text: "checking your voice noteâ€¦", cls: " mic-btn--busy", isError: false };
   if (micStatus.mode === "error") return { text: micStatus.message || "The mic did not work - type the note.", cls: " mic-btn--err", isError: true };
   if (micStatus.mode === "desc") return { text: micStatus.message || "", cls: "", isError: false };
   return { text: "speak it or type it", cls: "", isError: false };
@@ -588,7 +599,7 @@ function renderWarnings(extraction) {
   }
 }
 
-/* ---------------------------------------------- photo ↔ row locate (bbox) */
+/* ---------------------------------------------- photo â†” row locate (bbox) */
 // Rows can carry a normalized [x,y,w,h] (0-1000) position on the photo.
 // A tap on a row highlights that line ON the photo; a tap on a highlighted
 // photo area scrolls to its row. Everything degrades silently when the
@@ -751,17 +762,17 @@ function updateReadbox() {
     state.latencyMs != null ? `${(state.latencyMs / 1000).toFixed(1)}s read time` : null,
     state.retries ? `${state.retries} retr${state.retries === 1 ? "y" : "ies"}` : null,
     state.usage ? `${state.usage.input} + ${state.usage.output} tokens` : null,
-    state.estCostUSD != null ? `≈ $${state.estCostUSD} this read` : "no charge (demo fixture)",
+    state.estCostUSD != null ? `â‰ˆ $${state.estCostUSD} this read` : "no charge (demo fixture)",
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" Â· ");
 
   $("#readbox-body").innerHTML = `
     <div class="readbox__grid">
       <span><strong>${kept}</strong> line${kept === 1 ? "" : "s"} kept for your check</span>
       ${struck ? `<span><strong>${struck}</strong> struck out and excluded</span>` : ""}
       ${blanksTotal ? `<span><strong>${blanksTotal}</strong> field${blanksTotal === 1 ? "" : "s"} left blank - not stated (or unclear) on the page; fill any you know</span>` : ""}
-      ${avg != null ? `<span>reading confidence ≈ <strong>${avg}%</strong> over ${confCount} value${confCount === 1 ? "" : "s"}</span>` : ""}
+      ${avg != null ? `<span>reading confidence â‰ˆ <strong>${avg}%</strong> over ${confCount} value${confCount === 1 ? "" : "s"}</span>` : ""}
       ${flagsCount ? `<span><strong>${flagsCount}</strong> check-flag${flagsCount === 1 ? "" : "s"} marked for your eye</span>` : ""}
       ${warns.length ? `<span><strong>${warns.length}</strong> whole-page note${warns.length === 1 ? "" : "s"} (in the yellow box)</span>` : ""}
     </div>
@@ -950,7 +961,7 @@ async function showSignedInHome() {
   setPeopleVisible();
   if (state.demoStore) {
     // no sign-out: this browser IS the account; the erase button covers resets
-    $("#account-email").textContent = "Saved on this device · demo";
+    $("#account-email").textContent = "Saved on this device Â· demo";
     $("#btn-signout").hidden = true;
     $("#btn-reset-demo").hidden = false;
   } else {
@@ -1014,7 +1025,7 @@ async function handleAuthSubmit(e) {
   err.hidden = true;
   btn.disabled = true;
   const saveLabel = btn.textContent;
-  btn.textContent = authMode === "signin" ? "Signing in…" : "Creating account…";
+  btn.textContent = authMode === "signin" ? "Signing inâ€¦" : "Creating accountâ€¦";
   try {
     const email = $("#auth-email").value.trim();
     const password = $("#auth-password").value;
@@ -1081,7 +1092,7 @@ async function loadRecent() {
         const day = (p.taken_on || String(p.created_at).slice(0, 10)) + "";
         return `<div class="recent__row">
           <span class="recent__when">${escapeAttr(day)}</span>
-          <span class="recent__stats">${people} ${people === 1 ? "person" : "people"} · ${rows.length} lines · due ₹${fmtMoney(due)}</span>
+          <span class="recent__stats">${people} ${people === 1 ? "person" : "people"} Â· ${rows.length} lines Â· due â‚¹${fmtMoney(due)}</span>
           <button class="recent__del" data-del-page="${escapeAttr(p.id)}" type="button" title="Remove this page from your ledger" aria-label="Remove this page from your ledger">
             <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2m-7 0 1 13h8l1-13M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
@@ -1119,9 +1130,9 @@ function applyPeopleData(data) {
   if (data.totals.people === 0) {
     sub.textContent = "Save a page to begin";
   } else if (data.totals.toCall > 0) {
-    sub.textContent = `${data.totals.toCall} to call today · ${data.totals.people} people`;
+    sub.textContent = `${data.totals.toCall} to call today Â· ${data.totals.people} people`;
   } else {
-    sub.textContent = `${data.totals.people} people · due ₹${ppl.fmtRupees(data.totals.due)} · paid ₹${ppl.fmtRupees(data.totals.paid)}`;
+    sub.textContent = `${data.totals.people} people Â· due â‚¹${ppl.fmtRupees(data.totals.due)} Â· paid â‚¹${ppl.fmtRupees(data.totals.paid)}`;
   }
 }
 
@@ -1145,14 +1156,14 @@ function renderHomeView() {
   } else {
     duesSection.hidden = false;
     duesEmpty.hidden = true;
-    duesTotal.textContent = `₹${ppl.fmtRupees(data.totals.due)} due`;
+    duesTotal.textContent = `â‚¹${ppl.fmtRupees(data.totals.due)} due`;
     duesList.innerHTML = dues.map(p => {
       const contact = p.waOk ? `+${p.digits}` : String(p.phone ?? "");
       return `
-        <div class="home-row" data-key="${escapeAttr(p.key)}" role="button" tabindex="0" aria-label="${escapeHTML(p.name || "Unknown")}, due ₹${ppl.fmtRupees(p.due)}">
+        <div class="home-row" data-key="${escapeAttr(p.key)}" role="button" tabindex="0" aria-label="${escapeHTML(p.name || "Unknown")}, due â‚¹${ppl.fmtRupees(p.due)}">
           <div class="home-row-name">${escapeHTML(p.nameMissing ? "Name missing" : p.name)}</div>
           <div class="home-row-meta">
-            <span class="home-money due">₹${ppl.fmtRupees(p.due)} due</span>
+            <span class="home-money due">â‚¹${ppl.fmtRupees(p.due)} due</span>
             <span class="home-phone">${contact || "no phone"}</span>
           </div>
         </div>`;
@@ -1296,14 +1307,14 @@ async function handleAsk(kind) {
   const el = $("#ask-answer");
   el.hidden = false;
   el.classList.add("ask__a--busy");
-  el.textContent = "Working it out from your figures…";
+  el.textContent = "Working it out from your figuresâ€¦";
   try {
     const token = auth().getSession()?.access || null;
     const res = await askLedger({ question: ASK_QS[kind] ?? kind, brief: buildAskBrief(), token });
     el.classList.remove("ask__a--busy");
     el.innerHTML = `
       <p class="ask__text">${escapeHTML(res.answer)}</p>
-      ${res.basedOn?.length ? `<p class="ask__based">From your figures: ${res.basedOn.map((b) => `<span>${escapeHTML(b)}</span>`).join(" · ")}</p>` : ""}
+      ${res.basedOn?.length ? `<p class="ask__based">From your figures: ${res.basedOn.map((b) => `<span>${escapeHTML(b)}</span>`).join(" Â· ")}</p>` : ""}
       ${res.demoMode ? `<p class="ask__demo">Demo answer - the sample data, not your pages (a key switches this live)</p>` : ""}`;
   } catch (e) {
     el.classList.remove("ask__a--busy");
@@ -1327,58 +1338,34 @@ function summaryChips(data) {
     </button>`;
   return [
     card("To call", t.toCall, t.toCall > 0 ? "due" : "", "today"),
-    card("Total due", `₹${ppl.fmtRupees(t.due)}`, "", "owes"),
-    card("Collected", `₹${ppl.fmtRupees(t.paid)}`, "", "paid"),
+    card("Total due", `â‚¹${ppl.fmtRupees(t.due)}`, "", "owes"),
+    card("Collected", `â‚¹${ppl.fmtRupees(t.paid)}`, "", "paid"),
   ].join("");
 }
 
 function personCard(p, todayList) {
-  // one-letter disc: amber when this person is a today-call, quiet otherwise
   const initial = [...(p.nameMissing ? "?" : String(p.name).trim())][0]?.toUpperCase() || "?";
   const ava = `<span class="pcard__ava${p.toCall ? " pcard__ava--due" : ""}" aria-hidden="true">${escapeHTML(initial)}</span>`;
-
-  const money = [
-    p.due > 0 ? `<span class="money money--due">due ₹${ppl.fmtRupees(p.due)}</span>` : "",
-    p.paid > 0 ? `<span class="money money--in">in ₹${ppl.fmtRupees(p.paid)}</span>` : "",
-  ].filter(Boolean).join("") || `<span class="money money--none">no amounts yet</span>`;
-
-  const seen = p.pagesCount ? `${p.pagesCount} ${p.pagesCount === 1 ? "page" : "pages"}${p.lastOn ? ` · last ${niceDay(p.lastOn)}` : ""}` : "";
-  const contact = p.waOk ? `+${escapeHTML(p.digits)}` : escapeHTML(String(p.phone ?? "")) || "no phone yet";
-
-  let follow = "";
-  if (p.followUp) {
-    const f = p.followUp;
-    const overdue = f.date < ppl.localToday();
-    const when = f.date === ppl.localToday() ? "today" : niceDay(f.date);
-    const dueTag = overdue ? ' <span class="fc fc--amber">overdue</span>' : "";
-    const doneBtn =
-      f.rowId
-        ? `<button class="pcard__done" data-page-id="${escapeAttr(f.pageId)}" data-row-id="${escapeAttr(f.rowId)}" type="button" aria-label="Mark follow-up done">Done</button>`
-        : "";
-    // red = the promise already slipped; amber = due today
-    const tone = overdue ? " pcard__follow--over" : p.toCall ? " pcard__follow--due" : "";
-    follow = `<div class="pcard__follow${tone}">
-        <div class="pcard__follow-text">Follow-up · ${escapeHTML(when)}${f.text ? ` · ${escapeHTML(f.text)}` : ""} ${dueTag}</div>
-        ${doneBtn}
-      </div>`;
-  }
-
-  // history and Call/WhatsApp actions moved into the person side panel
-  // (openPersonSheet) - the card stays a calm, tappable summary line.
-
+  
+  const money = p.due > 0 ? `<span class="money money--due">${ppl.fmtRupees(p.due)} due</span>` : 
+                p.paid > 0 ? `<span class="money money--in">${ppl.fmtRupees(p.paid)} paid</span>` : `<span class="money money--none">Free</span>`;
+  
+  const contact = p.waOk ? `+${escapeHTML(p.digits)}` : escapeHTML(String(p.phone ?? "")) || "no phone";
+  
   return `<article class="pcard${p.toCall ? " pcard--due" : ""}" role="listitem" data-key="${escapeAttr(p.key)}">
-    <div class="pcard__line" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Open ${escapeAttr(p.name)} - history, call and message">
-      ${ava}
+    <div class="pcard__line" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Open ${escapeAttr(p.name)} - call and message">
       <div class="pcard__who">
-        <h3 class="pcard__name">${p.nameMissing ? `Name missing <span class="chip chip--amber">check the page</span>` : escapeHTML(p.name)}</h3>
-        <p class="pcard__meta">${contact}${seen ? ` · ${escapeHTML(seen)}` : ""}</p>
+        <div class="pcard__avatar">${ava}</div>
+        <div class="pcard__details">
+          <h3 class="pcard__name">${p.nameMissing ? `Name missing <span class="chip chip--amber">check the page</span>` : escapeHTML(p.name)}</h3>
+          <span class="pcard__contact">${escapeHTML(contact)}</span>
+        </div>
       </div>
       <div class="pcard__money">${money}</div>
     </div>
-    ${follow}
+    ${p.followUp && p.followUp.date < ppl.localToday() ? `<div class="pcard__overdue">Overdue since ${ppl.fmtRupees(p.due)}</div>` : ""}
   </article>`;
 }
-
 /* ------------------------------------------------ people search + filters */
 // Chips scope the list; the summary chips above always show the WHOLE truth.
 // Sort re-orders the Everyone list only - Call today stays urgency-ordered
@@ -1462,7 +1449,7 @@ function renderPeople(data, pagesCount, fromFilter = false) {
   const sk = $("#people-skipped");
   if (data.skipped) {
     sk.hidden = false;
-    sk.textContent = `Also on your pages: ${data.skipped.count} line${data.skipped.count === 1 ? "" : "s"} with no name or phone (due ₹${ppl.fmtRupees(data.skipped.due)}). Fix them on the page and they join in.`;
+    sk.textContent = `Also on your pages: ${data.skipped.count} line${data.skipped.count === 1 ? "" : "s"} with no name or phone (due â‚¹${ppl.fmtRupees(data.skipped.due)}). Fix them on the page and they join in.`;
   } else {
     sk.hidden = true;
   }
@@ -1641,14 +1628,14 @@ function openPersonSheet(key, triggerEl = null) {
   personReturnFocus = triggerEl instanceof HTMLElement ? triggerEl : document.activeElement;
 
   $("#person-name").textContent = p.nameMissing ? "Name missing - check the page" : p.name;
-  const seen = p.pagesCount ? `${p.pagesCount} ${p.pagesCount === 1 ? "page" : "pages"}${p.lastOn ? ` · last ${niceDay(p.lastOn)}` : ""}` : "";
+  const seen = p.pagesCount ? `${p.pagesCount} ${p.pagesCount === 1 ? "page" : "pages"}${p.lastOn ? ` Â· last ${niceDay(p.lastOn)}` : ""}` : "";
   $("#person-meta").textContent = [p.waOk ? `+${p.digits}` : String(p.phone ?? "") || "no phone yet", seen]
     .filter(Boolean)
-    .join(" · ");
+    .join(" Â· ");
 
   const moneyBits = [
-    p.due > 0 ? `<div class="person-money__item"><span>Due</span><strong class="money money--due">₹${ppl.fmtRupees(p.due)}</strong></div>` : "",
-    p.paid > 0 ? `<div class="person-money__item"><span>Collected</span><strong class="money money--in">₹${ppl.fmtRupees(p.paid)}</strong></div>` : "",
+    p.due > 0 ? `<div class="person-money__item"><span>Due</span><strong class="money money--due">â‚¹${ppl.fmtRupees(p.due)}</strong></div>` : "",
+    p.paid > 0 ? `<div class="person-money__item"><span>Collected</span><strong class="money money--in">â‚¹${ppl.fmtRupees(p.paid)}</strong></div>` : "",
   ].filter(Boolean).join("");
   $("#person-money").innerHTML =
     moneyBits || `<div class="person-money__item"><span>Amounts</span><strong class="money money--none">none yet</strong></div>`;
@@ -1678,7 +1665,7 @@ function openPersonSheet(key, triggerEl = null) {
     // same language as the cards: red = the promise slipped, amber = due today
     const tone = overdue ? " pcard__follow--over" : p.toCall ? " pcard__follow--due" : "";
     $("#person-follow").innerHTML = `<div class="pcard__follow${tone}">
-      <div class="pcard__follow-text">Follow-up · ${escapeHTML(when)}${f.text ? ` · ${escapeHTML(f.text)}` : ""}${overdue ? ' <span class="fc fc--amber">overdue</span>' : ""}</div>
+      <div class="pcard__follow-text">Follow-up Â· ${escapeHTML(when)}${f.text ? ` Â· ${escapeHTML(f.text)}` : ""}${overdue ? ' <span class="fc fc--amber">overdue</span>' : ""}</div>
     </div>`;
   } else {
     $("#person-follow").innerHTML = "";
@@ -1703,8 +1690,8 @@ function openPersonSheet(key, triggerEl = null) {
   const rows = (p.history ?? [])
     .map((h) => {
       const amt = [
-        h.paid ? `<span class="ph__amt money money--in">₹${ppl.fmtRupees(h.paid)} in</span>` : "",
-        h.due ? `<span class="ph__amt money money--due">₹${ppl.fmtRupees(h.due)} due</span>` : "",
+        h.paid ? `<span class="ph__amt money money--in">â‚¹${ppl.fmtRupees(h.paid)} in</span>` : "",
+        h.due ? `<span class="ph__amt money money--due">â‚¹${ppl.fmtRupees(h.due)} due</span>` : "",
       ].filter(Boolean).join(" ");
       return `<li class="ph__row"><span class="ph__d">${escapeHTML(niceDay(h.d))}</span><span class="ph__note">${escapeHTML(h.note || "")}</span>${amt}</li>`;
     })
@@ -1746,6 +1733,123 @@ function closePersonSheet() {
   if (hadFocus && personReturnFocus) personReturnFocus.focus({ preventScroll: true });
   personReturnFocus = null;
 }
+
+/* ------------------------------------------------------------ add customer form */
+let addCustomerSheetOpen = false;
+
+function openAddCustomerSheet() {
+  const sh = $("#sheet-add-customer");
+  if (!sh) return;
+  const form = $("#add-customer-form");
+  if (form) form.reset();
+  const phoneInput = $("#add-customer-phone");
+  const nameInput = $("#add-customer-name");
+  if (phoneInput) phoneInput.value = "";
+  if (nameInput) nameInput.value = "";
+  const phoneHint = $("#add-customer-phone-hint");
+  if (phoneHint) phoneHint.hidden = true;
+  const detailsRow = $("#add-customer-details-row");
+  if (detailsRow) detailsRow.hidden = true;
+  const addAnotherBtn = $("#btn-add-customer-another");
+  if (addAnotherBtn) addAnotherBtn.hidden = true;
+  sh.hidden = false;
+  sh.querySelector(".sheet__panel").focus({ preventScroll: true });
+  nameInput?.focus();
+}
+
+function closeAddCustomerSheet() {
+  const sh = $("#sheet-add-customer");
+  if (!sh) return;
+  sh.hidden = true;
+  addCustomerSheetOpen = false;
+}
+
+async function handleAddCustomerSubmit(e) {
+  e.preventDefault();
+  const btn = $("#btn-add-customer-save");
+  const btnText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    const name = $("#add-customer-name").value.trim();
+    const phone = $("#add-customer-phone").value.trim();
+    const amountDue = parseFloat($("#add-customer-amount-due")?.value) || null;
+
+    if (!name || !phone) {
+      showToast("Please fill in name and phone number.");
+      btn.disabled = false;
+      btn.textContent = btnText;
+      return;
+    }
+
+    const user = auth().getSession()?.user;
+
+    if (state.demoStore) {
+      const store = demo.read();
+      const pageId = crypto.randomUUID();
+      const newPage = {
+        id: pageId,
+        owner: user?.id || "owner@this-device",
+        created_at: new Date().toISOString(),
+        taken_on: new Date().toISOString(),
+        demo: true,
+        phone: phone,
+        phone_rows: [{
+          id: crypto.randomUUID(),
+          row_index: 0,
+          name: name,
+          phone: phone,
+          amount_paid: null,
+          amount_due: amountDue,
+          note: "",
+          language: "en",
+          payments: [],
+        }],
+      };
+      const storeData = demo.read();
+      storeData.pages.unshift(newPage);
+      demo.write(storeData);
+    } else {
+      const res = await sb.savePage({
+        photoPath: null,
+        takenOn: new Date().toISOString(),
+        pageTotalWritten: null,
+        pageWarnings: [],
+        rows: [{
+          rowIndex: 0,
+          name: name,
+          phone: phone,
+          note: "",
+          amountPaid: null,
+          amountDue: amountDue,
+          followUpText: null,
+          followUpDate: null,
+          followUpConfirmed: false,
+          struckOut: false,
+          included: true,
+          raw: name + " " + phone + (amountDue ? " " + amountDue : ""),
+          confidence: {},
+          flags: [],
+        }],
+        userId: user?.id,
+      });
+    }
+
+    await loadPeople();
+    renderHomeView();
+
+    btn.textContent = btnText;
+    btn.disabled = false;
+    closeAddCustomerSheet();
+    showToast("Added " + name);
+  } catch (e) {
+    console.error("Add customer error:", e);
+    btn.disabled = false;
+    btn.textContent = "Save customer";
+  }
+}
+
 
 async function handleFollowDone(pageId, rowId) {
   try {
@@ -1843,7 +1947,7 @@ async function recordPaymentFor(amount) {
   if (key && !$("#sheet-person").hidden) openPersonSheet(key, personReturnFocus);
   const settled = applied >= dueBefore;
   showUndo(
-    settled ? `Settled - ₹${ppl.fmtRupees(applied)} recorded` : `Recorded ₹${ppl.fmtRupees(applied)}`,
+    settled ? `Settled - â‚¹${ppl.fmtRupees(applied)} recorded` : `Recorded â‚¹${ppl.fmtRupees(applied)}`,
     async () => {
       try {
         await auth().recordPayment(undo);
@@ -1925,12 +2029,12 @@ async function handleSave() {
   const st = $("#save-status");
   state.saving = true;
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = "Savingâ€¦";
   st.hidden = false;
   st.classList.remove("save-error");
   st.textContent = state.demoStore
-    ? "Saving to this device (demo mode)…"
-    : "Uploading the photo, then your rows…";
+    ? "Saving to this device (demo mode)â€¦"
+    : "Uploading the photo, then your rowsâ€¦";
 
   // a short, honest confirmation buzz on Android; no-op elsewhere
   const celebrateTap = () => {
@@ -2025,7 +2129,7 @@ async function handleSave() {
     st.textContent = state.demoStore
       ? `Saved on this device (demo) - ${newRows.length + existingRows.length} lines kept.`
       : "Saved - " + (newRows.length + existingRows.length) + " lines kept.";
-    btn.textContent = "Saved ✓";
+    btn.textContent = "Saved âœ“";
     btn.classList.add("is-saved");
     celebrateTap();
     await loadRecent();
@@ -2106,7 +2210,7 @@ function wire() {
     const rec = RECORDED[card.dataset.fixture];
     if (rec) {
       const tag = card.querySelector(".sample-card__tag");
-      if (tag) tag.textContent = `Real reading recorded ${niceDay(rec.date)} with ${rec.model || "Muse Spark Open"} · replayed free`;
+      if (tag) tag.textContent = `Real reading recorded ${niceDay(rec.date)} with ${rec.model || "Muse Spark Open"} Â· replayed free`;
     }
     card.onclick = () => readSamplePage(card.dataset.fixture, card.dataset.image);
   });
@@ -2189,7 +2293,7 @@ function wire() {
 
   // undo snapshots for plain edits: taken at FIRST focus of an edit session
   // (a Map keyed by row+field - refreshRow replaces the focused node, firing
-  // focusout→focusin, and the snapshot must survive that), offered on blur.
+  // focusoutâ†’focusin, and the snapshot must survive that), offered on blur.
   const editSnaps = new Map();
   const snapKey = (id, key) => `${id}:${key}`;
   rowsEl.addEventListener("focusin", (e) => {
@@ -2215,7 +2319,7 @@ function wire() {
     const now = snap.kind === "follow" ? String(row.follow.date ?? "") : String(row.fields[snap.key]?.value ?? "");
     if (now === snap.prev) return;
     const label = FIELD_UNDO_LABELS[snap.key] ?? "edit";
-    showUndo(`Changed ${label} (${snap.prev} → ${now})`, () => {
+    showUndo(`Changed ${label} (${snap.prev} â†’ ${now})`, () => {
       if (snap.kind === "follow") row.follow.date = snap.prev || null;
       else if (row.fields[snap.key]) {
         row.fields[snap.key].value = snap.key === "amountPaid" || snap.key === "amountDue"
@@ -2226,7 +2330,7 @@ function wire() {
     });
   });
 
-  // Enter = confirm the row; ↓ / ↑ walk the same field across rows
+  // Enter = confirm the row; â†“ / â†‘ walk the same field across rows
   rowsEl.addEventListener("keydown", (e) => {
     const t = e.target;
     if (!t.matches?.("input[data-act='edit']")) return;
@@ -2473,8 +2577,13 @@ function wire() {
     const row = e.target.closest(".home-row[data-key]");
     if (row) openPersonSheet(row.dataset.key, row);
   });
+  $("#btn-add-customer-home").onclick = () => openAddCustomerSheet();
   $("#btn-sheet-close").onclick = closeMsgSheet;
   $("#sheet-backdrop").onclick = closeMsgSheet;
+  // add customer form
+  $("#btn-add-customer-home").onclick = () => openAddCustomerSheet();
+  $("#add-customer-backdrop").onclick = closeAddCustomerSheet;
+  $("#add-customer-form").addEventListener("submit", handleAddCustomerSubmit);
   // browser Back/Forward walks the saved views instead of leaving the app
   window.addEventListener("popstate", () => {
     const name = (location.hash || "").replace(/^#/, "");
@@ -2772,3 +2881,5 @@ setAuthMode("signin");
     scene.style.transform = "";
   });
 })();
+
+

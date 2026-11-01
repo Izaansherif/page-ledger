@@ -3162,3 +3162,56 @@ html { scrollbar-color: var(--line-strong) transparent; }
   font-size: 14px;
   padding: 24px 0;
 }
+/* ============================================================
+   Add customer form
+   ============================================================ */
+.add-customer-form {
+  display: grid;
+  gap: 16px;
+}
+.add-customer-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.add-customer-form label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.add-customer-form input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.add-customer-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus);
+}
+.add-customer-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.amount-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.amount-affix {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.phone-hint {
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  margin-top: 4px;
+}
