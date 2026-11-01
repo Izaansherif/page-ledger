@@ -1,0 +1,23 @@
+{
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 60,
+      "includeFiles": "fixtures/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/extract", "destination": "/api/extract" },
+    { "source": "/transcribe", "destination": "/api/transcribe" },
+    { "source": "/ask", "destination": "/api/ask" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "same-origin" }
+      ]
+    }
+  ]
+}

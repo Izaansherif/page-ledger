@@ -136,7 +136,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Generic Netlify-function routing (extract, config, ...) for POST JSON.
-  const fnMatch = pathname.match(/^\/\.netlify\/functions\/([a-zA-Z0-9_-]+)$/);
+  const fnMatch = pathname.match(/^\/(?:\.netlify\/functions|api)\/([a-zA-Z0-9_-]+)$/);
   if (fnMatch) {
     const name = fnMatch[1];
     if (!FUNCTIONS.has(name)) return send(res, 404, { "Content-Type": "application/json" }, '{"ok":false,"error":"No such function"}');

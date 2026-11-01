@@ -10,7 +10,7 @@ export async function extractPage({ imageBase64, mime, baseDate, mockFixture }, 
 
   let res;
   try {
-    res = await fetch("/.netlify/functions/extract", {
+    res = await fetch("/api/extract", {
       method: "POST",
       headers,
       body: JSON.stringify({ imageBase64, mime, baseDate, mockFixture }),
@@ -44,7 +44,7 @@ export async function transcribeAudio({ wavBase64, token = null }) {  const head
 
   let res;
   try {
-    res = await fetch("/.netlify/functions/transcribe", {
+    res = await fetch("/api/transcribe", {
       method: "POST",
       headers,
       body: JSON.stringify({ audioBase64: wavBase64 }),
@@ -79,7 +79,7 @@ export async function askLedger({ question, brief, token = null }) {
 
   let res;
   try {
-    res = await fetch("/.netlify/functions/ask", {
+    res = await fetch("/api/ask", {
       method: "POST",
       headers,
       body: JSON.stringify({ question, brief }),
