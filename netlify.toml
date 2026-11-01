@@ -8,6 +8,13 @@
   publish = "."
   functions = "netlify/functions"
 
+  # The Meta model id is public documentation (README, docs, recorded
+  # fixtures legitimately contain it). The real secret, MODEL_API_KEY, is
+  # never in the repo and is still scanned. Netlify otherwise fails the
+  # build because SKIM finds MODEL_NAME's value in those public files.
+  [build.environment]
+    SECRETS_SCAN_OMIT_KEYS = "MODEL_NAME"
+
 # Netlify must bundle the mock fixtures with the functions so AI_MODE=mock
 # works in production (demo mode for judges).
 [functions]
