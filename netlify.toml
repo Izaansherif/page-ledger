@@ -2,6 +2,9 @@
 # Same function files that dev-server.js runs locally.
 
 [build]
+  # Static site: there is no build step. Naming one explicitly stops Netlify
+  # from running a detected/empty script that fails the deploy.
+  command = "echo no build step"
   publish = "."
   functions = "netlify/functions"
 
