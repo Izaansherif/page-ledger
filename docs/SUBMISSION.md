@@ -12,7 +12,7 @@
 The product now opens with its story before the tool:
 
 - **Story opening** (once per browser): five short scenes — a dedication to
-  the dukandars with the amber shop lamp (शुक्रिया · നന്ദി · Thank you), the
+  the dukandars with a glowing shop lamp (शुक्रिया · നന്ദി · Thank you), the
   3D notebook, the lost promise, the photograph-the-page idea, and the three
   trust rules. "Skip to demo" is always one tap away; reduced-motion users
   get a plain stacked page; returning visitors go straight to the landing.
@@ -25,9 +25,10 @@ The product now opens with its story before the tool:
   keeps sample pages and the owner's own photographs clearly separated.
   Everything administrative (privacy, erase demo, sign out, how it was
   built) moved into a **More** menu.
-- **Dark premium identity**: deep warm ink, one amber accent (the shop lamp),
-  glass panels with 1px borders, a faint living grid, and a glow reserved for
-  the primary button. No purple gradients, no emoji headings.
+- **Clean white-and-blue identity**: white panels with 1px borders on a soft
+  blue-white background, deep navy text, one trust-blue accent, a faint living
+  grid, and a glow reserved for the primary button. Paid is green, due is
+  amber, overdue is red. No purple gradients, no emoji headings.
 - **Honesty pass**: plain words everywhere (no "project keys" or "database
   rules" in the UI), the privacy note states both modes truthfully before any
   upload (samples never leave the device; in live mode a photo is sent to the
